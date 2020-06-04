@@ -200,8 +200,8 @@ expList :
 
 ``` bnf
 statement :
-    IF_SYMBOL OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL THEN_SYMBOL compoundBlock ELSE_SYMBOL compoundBlock
-    | IF_SYMBOL OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL THEN_SYMBOL compoundBlock
+    IF_SYMBOL OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL compoundBlock ELSE_SYMBOL compoundBlock
+    | IF_SYMBOL OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL compoundBlock
     | FOR_SYMBOL OPEN_PAR_SYMBOL compoundBlock SEMICOLON_SYMBOL exp SEMICOLON_SYMBOL exp CLOSE_PAR_SYMBOL compoundBlock
     | jumpStatement
 ;
