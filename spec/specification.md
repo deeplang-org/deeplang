@@ -113,6 +113,7 @@ IDENTIFIER:
 
 ``` bnf
 // TODO: left-recursive eliminate
+// TODO: operator precedence
 exp :
     CONST
     | IDENTIFIER
