@@ -9,9 +9,9 @@ deeplang的独特安全特性帮助其具有一定的竞争力。作者正在持
 ## 1 Overview
 
 ## 2 Syntactic and Lexical Grammars
-### 2.0 Reversed Words and Keywords
+### 2.0 Reserved Words and Keywords
 
-#### 2.0.0 Reversed words
+#### 2.0.0 Reserved words
 ``` dp
 let  letmut  fun  class  interface  extends  impl
 public  private  if  then  else  switch  case  for
