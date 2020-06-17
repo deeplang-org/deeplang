@@ -30,9 +30,6 @@
 #include "antlr4-runtime.h"
 
 
-#include "MySQLBaseLexer.h"
-
-
 
 
 class PARSERS_PUBLIC_TYPE DLLexer : public DLBaseLexer {
