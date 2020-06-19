@@ -23,21 +23,6 @@ parser grammar DLParser;
  * 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/*
- * Merged in all changes up to mysql-trunk git revision [65e41a818c0] (28. May 2019).
- *
- * MySQL grammar for ANTLR 4.5+ with language features from MySQL 5.6.0 up to MySQL 8.0.
- * The server version in the generated parser can be switched at runtime, making it so possible
- * to switch the supported feature set dynamically.
- *
- * The coverage of the MySQL language should be 100%, but there might still be bugs or omissions.
- *
- * To use this grammar you will need a few support classes (which should be close to where you found this grammar).
- * These classes implement the target specific action code, so we don't clutter the grammar with that
- * and make it simpler to adjust it for other targets. See the demo/test project for further details.
- *
- * Written by Mike Lischke. Direct all bug reports, omissions etc. to mike.lischke@oracle.com.
- */
 
 //----------------------------------------------------------------------------------------------------------------------
 
