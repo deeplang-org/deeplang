@@ -1,8 +1,8 @@
 
 
 class QuickSort {
-
-    public sig qs::Array, Int, Int -> void
+    public
+    sig qs::Array, Int, Int -> void
     fun qs(arr, low, high) {
         if (high <= low) return;
         int i = low;

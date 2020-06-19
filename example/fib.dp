@@ -2,7 +2,8 @@ class Solver {
     constructor () {
     };
 
-    public sig solve::int -> void
+    public
+    sig solve::Int -> Int
     fun solve (i) {
         if (i == 0) {
             return 0;
