@@ -22,7 +22,7 @@
  */
 
 
-// Generated from F:/Orga/deepLang\DLParser.g4 by ANTLR 4.8
+// Generated from DLParser.g4 by ANTLR 4.7.2
 
 #pragma once
 
@@ -36,7 +36,7 @@
  * This class defines an abstract visitor for a parse tree
  * produced by DLParser.
  */
-class PARSERS_PUBLIC_TYPE DLParserVisitor : public antlr4::tree::AbstractParseTreeVisitor {
+class  DLParserVisitor : public antlr4::tree::AbstractParseTreeVisitor {
 public:
 
   /**
@@ -44,17 +44,7 @@ public:
    */
     virtual antlrcpp::Any visitExp(DLParser::ExpContext *context) = 0;
 
-    virtual antlrcpp::Any visitArrayExp(DLParser::ArrayExpContext *context) = 0;
-
-    virtual antlrcpp::Any visitArrayAccessExp(DLParser::ArrayAccessExpContext *context) = 0;
-
-    virtual antlrcpp::Any visitArrayPatternMatchExp(DLParser::ArrayPatternMatchExpContext *context) = 0;
-
-    virtual antlrcpp::Any visitCallExp(DLParser::CallExpContext *context) = 0;
-
-    virtual antlrcpp::Any visitPointExp(DLParser::PointExpContext *context) = 0;
-
-    virtual antlrcpp::Any visitOpExp(DLParser::OpExpContext *context) = 0;
+    virtual antlrcpp::Any visitExpPost(DLParser::ExpPostContext *context) = 0;
 
     virtual antlrcpp::Any visitAryOp(DLParser::AryOpContext *context) = 0;
 
@@ -73,6 +63,8 @@ public:
     virtual antlrcpp::Any visitJumpStatement(DLParser::JumpStatementContext *context) = 0;
 
     virtual antlrcpp::Any visitType(DLParser::TypeContext *context) = 0;
+
+    virtual antlrcpp::Any visitTypeTail(DLParser::TypeTailContext *context) = 0;
 
     virtual antlrcpp::Any visitFunctionType(DLParser::FunctionTypeContext *context) = 0;
 

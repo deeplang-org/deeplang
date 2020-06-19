@@ -22,7 +22,7 @@
  */
 
 
-// Generated from F:/Orga/deepLang\DLParser.g4 by ANTLR 4.8
+// Generated from DLParser.g4 by ANTLR 4.7.2
 
 #pragma once
 
@@ -35,34 +35,14 @@
  * This class provides an empty implementation of DLParserVisitor, which can be
  * extended to create a visitor which only needs to handle a subset of the available methods.
  */
-class PARSERS_PUBLIC_TYPE DLParserBaseVisitor : public DLParserVisitor {
+class  DLParserBaseVisitor : public DLParserVisitor {
 public:
 
   virtual antlrcpp::Any visitExp(DLParser::ExpContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitArrayExp(DLParser::ArrayExpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitArrayAccessExp(DLParser::ArrayAccessExpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitArrayPatternMatchExp(DLParser::ArrayPatternMatchExpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitCallExp(DLParser::CallExpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitPointExp(DLParser::PointExpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitOpExp(DLParser::OpExpContext *ctx) override {
+  virtual antlrcpp::Any visitExpPost(DLParser::ExpPostContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -99,6 +79,10 @@ public:
   }
 
   virtual antlrcpp::Any visitType(DLParser::TypeContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitTypeTail(DLParser::TypeTailContext *ctx) override {
     return visitChildren(ctx);
   }
 
