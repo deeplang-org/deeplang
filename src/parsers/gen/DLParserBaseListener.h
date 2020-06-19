@@ -22,7 +22,7 @@
  */
 
 
-// Generated from F:/Orga/deepLang\DLParser.g4 by ANTLR 4.8
+// Generated from DLParser.g4 by ANTLR 4.7.2
 
 #pragma once
 
@@ -36,29 +36,14 @@
  * which can be extended to create a listener which only needs to handle a subset
  * of the available methods.
  */
-class PARSERS_PUBLIC_TYPE DLParserBaseListener : public DLParserListener {
+class  DLParserBaseListener : public DLParserListener {
 public:
 
   virtual void enterExp(DLParser::ExpContext * /*ctx*/) override { }
   virtual void exitExp(DLParser::ExpContext * /*ctx*/) override { }
 
-  virtual void enterArrayExp(DLParser::ArrayExpContext * /*ctx*/) override { }
-  virtual void exitArrayExp(DLParser::ArrayExpContext * /*ctx*/) override { }
-
-  virtual void enterArrayAccessExp(DLParser::ArrayAccessExpContext * /*ctx*/) override { }
-  virtual void exitArrayAccessExp(DLParser::ArrayAccessExpContext * /*ctx*/) override { }
-
-  virtual void enterArrayPatternMatchExp(DLParser::ArrayPatternMatchExpContext * /*ctx*/) override { }
-  virtual void exitArrayPatternMatchExp(DLParser::ArrayPatternMatchExpContext * /*ctx*/) override { }
-
-  virtual void enterCallExp(DLParser::CallExpContext * /*ctx*/) override { }
-  virtual void exitCallExp(DLParser::CallExpContext * /*ctx*/) override { }
-
-  virtual void enterPointExp(DLParser::PointExpContext * /*ctx*/) override { }
-  virtual void exitPointExp(DLParser::PointExpContext * /*ctx*/) override { }
-
-  virtual void enterOpExp(DLParser::OpExpContext * /*ctx*/) override { }
-  virtual void exitOpExp(DLParser::OpExpContext * /*ctx*/) override { }
+  virtual void enterExpPost(DLParser::ExpPostContext * /*ctx*/) override { }
+  virtual void exitExpPost(DLParser::ExpPostContext * /*ctx*/) override { }
 
   virtual void enterAryOp(DLParser::AryOpContext * /*ctx*/) override { }
   virtual void exitAryOp(DLParser::AryOpContext * /*ctx*/) override { }
@@ -86,6 +71,9 @@ public:
 
   virtual void enterType(DLParser::TypeContext * /*ctx*/) override { }
   virtual void exitType(DLParser::TypeContext * /*ctx*/) override { }
+
+  virtual void enterTypeTail(DLParser::TypeTailContext * /*ctx*/) override { }
+  virtual void exitTypeTail(DLParser::TypeTailContext * /*ctx*/) override { }
 
   virtual void enterFunctionType(DLParser::FunctionTypeContext * /*ctx*/) override { }
   virtual void exitFunctionType(DLParser::FunctionTypeContext * /*ctx*/) override { }

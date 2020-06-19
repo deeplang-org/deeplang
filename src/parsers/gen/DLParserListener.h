@@ -22,7 +22,7 @@
  */
 
 
-// Generated from F:/Orga/deepLang\DLParser.g4 by ANTLR 4.8
+// Generated from DLParser.g4 by ANTLR 4.7.2
 
 #pragma once
 
@@ -34,29 +34,14 @@
 /**
  * This interface defines an abstract listener for a parse tree produced by DLParser.
  */
-class PARSERS_PUBLIC_TYPE DLParserListener : public antlr4::tree::ParseTreeListener {
+class  DLParserListener : public antlr4::tree::ParseTreeListener {
 public:
 
   virtual void enterExp(DLParser::ExpContext *ctx) = 0;
   virtual void exitExp(DLParser::ExpContext *ctx) = 0;
 
-  virtual void enterArrayExp(DLParser::ArrayExpContext *ctx) = 0;
-  virtual void exitArrayExp(DLParser::ArrayExpContext *ctx) = 0;
-
-  virtual void enterArrayAccessExp(DLParser::ArrayAccessExpContext *ctx) = 0;
-  virtual void exitArrayAccessExp(DLParser::ArrayAccessExpContext *ctx) = 0;
-
-  virtual void enterArrayPatternMatchExp(DLParser::ArrayPatternMatchExpContext *ctx) = 0;
-  virtual void exitArrayPatternMatchExp(DLParser::ArrayPatternMatchExpContext *ctx) = 0;
-
-  virtual void enterCallExp(DLParser::CallExpContext *ctx) = 0;
-  virtual void exitCallExp(DLParser::CallExpContext *ctx) = 0;
-
-  virtual void enterPointExp(DLParser::PointExpContext *ctx) = 0;
-  virtual void exitPointExp(DLParser::PointExpContext *ctx) = 0;
-
-  virtual void enterOpExp(DLParser::OpExpContext *ctx) = 0;
-  virtual void exitOpExp(DLParser::OpExpContext *ctx) = 0;
+  virtual void enterExpPost(DLParser::ExpPostContext *ctx) = 0;
+  virtual void exitExpPost(DLParser::ExpPostContext *ctx) = 0;
 
   virtual void enterAryOp(DLParser::AryOpContext *ctx) = 0;
   virtual void exitAryOp(DLParser::AryOpContext *ctx) = 0;
@@ -84,6 +69,9 @@ public:
 
   virtual void enterType(DLParser::TypeContext *ctx) = 0;
   virtual void exitType(DLParser::TypeContext *ctx) = 0;
+
+  virtual void enterTypeTail(DLParser::TypeTailContext *ctx) = 0;
+  virtual void exitTypeTail(DLParser::TypeTailContext *ctx) = 0;
 
   virtual void enterFunctionType(DLParser::FunctionTypeContext *ctx) = 0;
   virtual void exitFunctionType(DLParser::FunctionTypeContext *ctx) = 0;

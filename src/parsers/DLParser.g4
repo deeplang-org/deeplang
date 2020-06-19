@@ -30,9 +30,7 @@ parser grammar DLParser;
 // $antlr-format useTab off, allowShortRulesOnASingleLine off, allowShortBlocksOnASingleLine on, alignSemicolons ownLine
 
 options {
-    superClass = DLBaseRecognizer;
     tokenVocab = DLLexer;
-    exportMacro = PARSERS_PUBLIC_TYPE;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,57 +59,35 @@ options {
  */
 }
 
-//@postinclude {
-//#include "MySQLBaseRecognizer.h"
-//}
+@postinclude {
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 
 exp :
-    CONST
-    | IDENTIFIER
-    | QUOTED_STRING
-    | OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL
-    | arrayExp
-    | callExp
-    | pointExp
-    | opExp
-    | newExp
+    CONST expPost
+    | IDENTIFIER expPost
+    | QUOTED_STRING expPost
+    | OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL expPost
+    | unAryOp exp expPost
+    | newExp expPost
 ;
 
-// 数组表达式中，可以通过 @ 调用数组模式匹配方法
-arrayExp :
-    OPEN_SQUARE_SYMBOL expList CLOSE_SQUARE_SYMBOL
-    | OPEN_SQUARE_SYMBOL CLOSE_SQUARE_SYMBOL
-    | arrayAccessExp
-    | arrayPatternMatchExp
-;
-
-arrayAccessExp :
-	exp OPEN_SQUARE_SYMBOL exp CLOSE_SQUARE_SYMBOL
-;
-
-arrayPatternMatchExp :
-	exp AT_SIGN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL
-;
-
-// 函数调用表达式
-
-callExp :
-    exp OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL
-    | exp OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL
-;
-
-pointExp :
-    exp DOT_SYMBOL IDENTIFIER
+expPost :
+    OPEN_SQUARE_SYMBOL expList CLOSE_SQUARE_SYMBOL expPost
+    | OPEN_SQUARE_SYMBOL CLOSE_SQUARE_SYMBOL expPost
+	| OPEN_SQUARE_SYMBOL exp CLOSE_SQUARE_SYMBOL expPost
+	| AT_SIGN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL expPost
+    | OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL expPost
+    | OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL expPost
+    | DOT_SYMBOL IDENTIFIER expPost
+    | aryOp exp expPost
+    |  /* epsilon */ 
 ;
 
 
-// 一元表达式和二元表达式
-opExp :
-    exp aryOp exp
-    | unAryOp exp
-;
+
+
 
 aryOp :
     PLUS_OPERATOR

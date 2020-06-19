@@ -31,9 +31,7 @@ lexer grammar DLLexer;
 
 // TODO: predefined.tokens
 options {
-    superClass = DLBaseLexer;
     tokenVocab = DLLexer; // Certain tokens in a predefined order for simpler checks.
-    exportMacro = PARSERS_PUBLIC_TYPE;
 }
 
 tokens {
@@ -46,9 +44,8 @@ tokens {
     ULONGLONG_NUMBER
 }
 
-//@postinclude {
-//#include "MySQLBaseLexer.h"
-//}
+@postinclude {
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -110,7 +107,7 @@ LOGICAL_AND_OPERATOR: '&&';
 BITWISE_AND_OPERATOR: '&';
 
 LOGICAL_OR_OPERATOR:
-    '||' { setType(isSqlModeActive(PipesAsConcat) ? CONCAT_PIPES_SYMBOL : LOGICAL_OR_OPERATOR); }
+    '||' 
 ;
 BITWISE_OR_OPERATOR: '|';
 
@@ -186,7 +183,7 @@ INTEGERCONST: NONZERODIGIT | (NONZERODIGIT DIGITS);
 //HEX_NUMBER: ('0x' HEXDIGIT+) | ('x\'' HEXDIGIT+ '\'');
 //BIN_NUMBER: ('0b' [01]+) | ('b\'' [01]+ '\'');
 
-INT_NUMBER: DIGITS { setType(determineNumericType(getText())); };
+INT_NUMBER: DIGITS {  };
 
 // Float types must be handled first or the DOT_IDENTIIFER rule will make them to identifiers
 // (if there is no leading digit before the dot).
@@ -330,7 +327,7 @@ fragment NONDIGIT: [a-zA-Z_]; //TODO: define Chars
 
 
 // As defined in https://dev.mysql.com/doc/refman/8.0/en/identifiers.html.
-fragment LETTER_WHEN_UNQUOTED: DIGIT | LETTER_WHEN_UNQUOTED_NO_DIGIT;
+fragment LETTER_WHEN_UNQUOTED: DIGIT | LETTER_WHEN_UNQUOTED_NO_DIGIT | WHITESPACE;
 
 fragment LETTER_WHEN_UNQUOTED_NO_DIGIT: [a-zA-Z_$];//\u0080-\uffff];
 
