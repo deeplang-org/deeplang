@@ -22,7 +22,7 @@
  */
 
 
-// Generated from F:/Orga/deepLang\DLParser.g4 by ANTLR 4.8
+// Generated from DLParser.g4 by ANTLR 4.7.2
 
 #pragma once
 
@@ -30,12 +30,11 @@
 #include "antlr4-runtime.h"
 
 
-#include "MySQLBaseRecognizer.h"
 
 
 
 
-class PARSERS_PUBLIC_TYPE DLParser : public DLBaseRecognizer {
+class  DLParser : public antlr4::Parser {
 public:
   enum {
     ACCOUNT_SYMBOL = 1, ASCII_SYMBOL = 2, ALWAYS_SYMBOL = 3, BACKUP_SYMBOL = 4, 
@@ -145,32 +144,38 @@ public:
     USER_SYMBOL = 364, USE_FRM_SYMBOL = 365, VARIABLES_SYMBOL = 366, VIEW_SYMBOL = 367, 
     VALUE_SYMBOL = 368, WARNINGS_SYMBOL = 369, WAIT_SYMBOL = 370, WEEK_SYMBOL = 371, 
     WORK_SYMBOL = 372, WEIGHT_STRING_SYMBOL = 373, X509_SYMBOL = 374, XID_SYMBOL = 375, 
-    XML_SYMBOL = 376, YEAR_SYMBOL = 377, CONST = 378, IDENTIFIER = 379, 
-    QUOTED_STRING = 380, OPEN_PAR_SYMBOL = 381, CLOSE_PAR_SYMBOL = 382, 
-    OPEN_SQUARE_SYMBOL = 383, CLOSE_SQUARE_SYMBOL = 384, AT_SIGN_SYMBOL = 385, 
-    DOT_SYMBOL = 386, PLUS_OPERATOR = 387, MINUS_OPERATOR = 388, MULT_OPERATOR = 389, 
-    DIV_OPERATOR = 390, MOD_OPERATOR = 391, ASSIGN_OPERATOR = 392, EQUAL_OPERATOR = 393, 
-    LOGICAL_AND_OPERATOR = 394, LOGICAL_OR_OPERATOR = 395, BITWISE_AND_OPERATOR = 396, 
-    LOGICAL_NOT_OPERATOR = 397, BITWISE_NOT_OPERATOR = 398, COMMA_SYMBOL = 399, 
-    IF_SYMBOL = 400, THEN_SYMBOL = 401, ELSE_SYMBOL = 402, FOR_SYMBOL = 403, 
-    SEMICOLON_SYMBOL = 404, OPEN_CURLY_SYMBOL = 405, CLOSE_CURLY_SYMBOL = 406, 
-    BREAK_SYMBOL = 407, RETURN_SYMBOL = 408, JSON_SEPARATOR_SYMBOL = 409, 
-    MUT_SYMBOL = 410, SIG_SYMBOL = 411, ALIAS_SYMBOL = 412, FUN_SYMBOL = 413, 
-    LET_SYMBOL = 414, COLON_SYMBOL = 415, LETMUT_SYMBOL = 416, CLASS_SYMBOL = 417, 
-    EXTENDS_SYMBOL = 418, IMPL_SYMBOL = 419, CONSTRUCTOR_SYMBOL = 420, PRIVATE_SYMBOL = 421, 
-    PUBLIC_SYMBOL = 422, INTERFACE_SYMBOL = 423
+    XML_SYMBOL = 376, YEAR_SYMBOL = 377, NOT2_SYMBOL = 378, CONCAT_PIPES_SYMBOL = 379, 
+    INT_NUMBER = 380, LONG_NUMBER = 381, ULONGLONG_NUMBER = 382, ASSIGN_OPERATOR = 383, 
+    EQUAL_OPERATOR = 384, GREATER_OR_EQUAL_OPERATOR = 385, GREATER_THAN_OPERATOR = 386, 
+    LESS_OR_EQUAL_OPERATOR = 387, LESS_THAN_OPERATOR = 388, NOT_EQUAL_OPERATOR = 389, 
+    PLUS_OPERATOR = 390, MINUS_OPERATOR = 391, MULT_OPERATOR = 392, DIV_OPERATOR = 393, 
+    MOD_OPERATOR = 394, BITWISE_XOR_OPERATOR = 395, LOGICAL_NOT_OPERATOR = 396, 
+    BITWISE_NOT_OPERATOR = 397, LOGICAL_AND_OPERATOR = 398, BITWISE_AND_OPERATOR = 399, 
+    LOGICAL_OR_OPERATOR = 400, BITWISE_OR_OPERATOR = 401, DOT_SYMBOL = 402, 
+    COMMA_SYMBOL = 403, SEMICOLON_SYMBOL = 404, COLON_SYMBOL = 405, OPEN_PAR_SYMBOL = 406, 
+    CLOSE_PAR_SYMBOL = 407, OPEN_CURLY_SYMBOL = 408, CLOSE_CURLY_SYMBOL = 409, 
+    OPEN_SQUARE_SYMBOL = 410, CLOSE_SQUARE_SYMBOL = 411, ALIAS_SYMBOL = 412, 
+    JSON_SEPARATOR_SYMBOL = 413, SEPARATOR_SYMBOL = 414, AT_SIGN_SYMBOL = 415, 
+    PARAM_MARKER = 416, DOLLAR_SYMBOL = 417, CONST = 418, INTEGERCONST = 419, 
+    DECIMAL_NUMBER = 420, FLOAT_NUMBER = 421, LETMUT_SYMBOL = 422, LET_SYMBOL = 423, 
+    FUN_SYMBOL = 424, CLASS_SYMBOL = 425, INTERFACE_SYMBOL = 426, EXTENDS_SYMBOL = 427, 
+    IMPL_SYMBOL = 428, PUBLIC_SYMBOL = 429, PRIVATE_SYMBOL = 430, IF_SYMBOL = 431, 
+    THEN_SYMBOL = 432, ELSE_SYMBOL = 433, SWITCH_SYMBOL = 434, CASE_SYMBOL = 435, 
+    FOR_SYMBOL = 436, WHILE_SYMBOL = 437, LOOP_SYMBOL = 438, PROP_SYMBOL = 439, 
+    THIS_SYMBOL = 440, BREAK_SYMBOL = 441, RETURN_SYMBOL = 442, MUT_SYMBOL = 443, 
+    SIG_SYMBOL = 444, CONSTRUCTOR_SYMBOL = 445, WHITESPACE = 446, IDENTIFIER = 447, 
+    QUOTED_STRING = 448, BLOCK_COMMENT = 449, SLASHSLASH_COMMET = 450, NOT_EQUAL2_OPERATOR = 451
   };
 
   enum {
-    RuleExp = 0, RuleArrayExp = 1, RuleArrayAccessExp = 2, RuleArrayPatternMatchExp = 3, 
-    RuleCallExp = 4, RulePointExp = 5, RuleOpExp = 6, RuleAryOp = 7, RuleUnAryOp = 8, 
-    RuleNewExp = 9, RuleExpList = 10, RuleStatement = 11, RuleCompoundBlock = 12, 
-    RuleBlockList = 13, RuleJumpStatement = 14, RuleType = 15, RuleFunctionType = 16, 
-    RuleRefType = 17, RuleDecl = 18, RuleFunctionDecl = 19, RuleSignature = 20, 
-    RuleFunctionDef = 21, RuleParamList = 22, RuleVarDecl = 23, RuleClassDecl = 24, 
-    RuleClassHead = 25, RuleClassBody = 26, RuleConstructor = 27, RuleAccessSpecifier = 28, 
-    RuleInterfaceList = 29, RuleInterfaceDecl = 30, RuleInterfaceHead = 31, 
-    RuleInterfaceBody = 32, RuleProgram = 33
+    RuleExp = 0, RuleExpPost = 1, RuleAryOp = 2, RuleUnAryOp = 3, RuleNewExp = 4, 
+    RuleExpList = 5, RuleStatement = 6, RuleCompoundBlock = 7, RuleBlockList = 8, 
+    RuleJumpStatement = 9, RuleType = 10, RuleTypeTail = 11, RuleFunctionType = 12, 
+    RuleRefType = 13, RuleDecl = 14, RuleFunctionDecl = 15, RuleSignature = 16, 
+    RuleFunctionDef = 17, RuleParamList = 18, RuleVarDecl = 19, RuleClassDecl = 20, 
+    RuleClassHead = 21, RuleClassBody = 22, RuleConstructor = 23, RuleAccessSpecifier = 24, 
+    RuleInterfaceList = 25, RuleInterfaceDecl = 26, RuleInterfaceHead = 27, 
+    RuleInterfaceBody = 28, RuleProgram = 29
   };
 
   DLParser(antlr4::TokenStream *input);
@@ -184,12 +189,7 @@ public:
 
 
   class ExpContext;
-  class ArrayExpContext;
-  class ArrayAccessExpContext;
-  class ArrayPatternMatchExpContext;
-  class CallExpContext;
-  class PointExpContext;
-  class OpExpContext;
+  class ExpPostContext;
   class AryOpContext;
   class UnAryOpContext;
   class NewExpContext;
@@ -199,6 +199,7 @@ public:
   class BlockListContext;
   class JumpStatementContext;
   class TypeContext;
+  class TypeTailContext;
   class FunctionTypeContext;
   class RefTypeContext;
   class DeclContext;
@@ -218,16 +219,19 @@ public:
   class InterfaceBodyContext;
   class ProgramContext; 
 
-  class PARSERS_PUBLIC_TYPE ExpContext : public antlr4::ParserRuleContext {
+  class  ExpContext : public antlr4::ParserRuleContext {
   public:
     ExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *CONST();
+    ExpPostContext *expPost();
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *QUOTED_STRING();
     antlr4::tree::TerminalNode *OPEN_PAR_SYMBOL();
     ExpContext *exp();
     antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
+    UnAryOpContext *unAryOp();
+    NewExpContext *newExp();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -238,106 +242,21 @@ public:
 
   ExpContext* exp();
 
-  class PARSERS_PUBLIC_TYPE ArrayExpContext : public antlr4::ParserRuleContext {
+  class  ExpPostContext : public antlr4::ParserRuleContext {
   public:
-    ArrayExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    ExpPostContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *OPEN_SQUARE_SYMBOL();
-    antlr4::tree::TerminalNode *CLOSE_SQUARE_SYMBOL();
     ExpListContext *expList();
-    ArrayAccessExpContext *arrayAccessExp();
-    ArrayPatternMatchExpContext *arrayPatternMatchExp();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  ArrayExpContext* arrayExp();
-
-  class PARSERS_PUBLIC_TYPE ArrayAccessExpContext : public antlr4::ParserRuleContext {
-  public:
-    ArrayAccessExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    std::vector<ExpContext *> exp();
-    ExpContext* exp(size_t i);
-    antlr4::tree::TerminalNode *OPEN_SQUARE_SYMBOL();
     antlr4::tree::TerminalNode *CLOSE_SQUARE_SYMBOL();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  ArrayAccessExpContext* arrayAccessExp();
-
-  class PARSERS_PUBLIC_TYPE ArrayPatternMatchExpContext : public antlr4::ParserRuleContext {
-  public:
-    ArrayPatternMatchExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
+    ExpPostContext *expPost();
     ExpContext *exp();
     antlr4::tree::TerminalNode *AT_SIGN_SYMBOL();
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *OPEN_PAR_SYMBOL();
-    ExpListContext *expList();
     antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  ArrayPatternMatchExpContext* arrayPatternMatchExp();
-
-  class PARSERS_PUBLIC_TYPE CallExpContext : public antlr4::ParserRuleContext {
-  public:
-    CallExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    ExpContext *exp();
-    antlr4::tree::TerminalNode *OPEN_PAR_SYMBOL();
-    antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
-    ExpListContext *expList();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  CallExpContext* callExp();
-
-  class PARSERS_PUBLIC_TYPE PointExpContext : public antlr4::ParserRuleContext {
-  public:
-    PointExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    ExpContext *exp();
     antlr4::tree::TerminalNode *DOT_SYMBOL();
-    antlr4::tree::TerminalNode *IDENTIFIER();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  PointExpContext* pointExp();
-
-  class PARSERS_PUBLIC_TYPE OpExpContext : public antlr4::ParserRuleContext {
-  public:
-    OpExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    std::vector<ExpContext *> exp();
-    ExpContext* exp(size_t i);
     AryOpContext *aryOp();
-    UnAryOpContext *unAryOp();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -346,9 +265,9 @@ public:
    
   };
 
-  OpExpContext* opExp();
+  ExpPostContext* expPost();
 
-  class PARSERS_PUBLIC_TYPE AryOpContext : public antlr4::ParserRuleContext {
+  class  AryOpContext : public antlr4::ParserRuleContext {
   public:
     AryOpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -371,7 +290,7 @@ public:
 
   AryOpContext* aryOp();
 
-  class PARSERS_PUBLIC_TYPE UnAryOpContext : public antlr4::ParserRuleContext {
+  class  UnAryOpContext : public antlr4::ParserRuleContext {
   public:
     UnAryOpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -388,7 +307,7 @@ public:
 
   UnAryOpContext* unAryOp();
 
-  class PARSERS_PUBLIC_TYPE NewExpContext : public antlr4::ParserRuleContext {
+  class  NewExpContext : public antlr4::ParserRuleContext {
   public:
     NewExpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -407,7 +326,7 @@ public:
 
   NewExpContext* newExp();
 
-  class PARSERS_PUBLIC_TYPE ExpListContext : public antlr4::ParserRuleContext {
+  class  ExpListContext : public antlr4::ParserRuleContext {
   public:
     ExpListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -424,7 +343,7 @@ public:
 
   ExpListContext* expList();
 
-  class PARSERS_PUBLIC_TYPE StatementContext : public antlr4::ParserRuleContext {
+  class  StatementContext : public antlr4::ParserRuleContext {
   public:
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -433,7 +352,6 @@ public:
     std::vector<ExpContext *> exp();
     ExpContext* exp(size_t i);
     antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
-    antlr4::tree::TerminalNode *THEN_SYMBOL();
     std::vector<CompoundBlockContext *> compoundBlock();
     CompoundBlockContext* compoundBlock(size_t i);
     antlr4::tree::TerminalNode *ELSE_SYMBOL();
@@ -451,7 +369,7 @@ public:
 
   StatementContext* statement();
 
-  class PARSERS_PUBLIC_TYPE CompoundBlockContext : public antlr4::ParserRuleContext {
+  class  CompoundBlockContext : public antlr4::ParserRuleContext {
   public:
     CompoundBlockContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -468,7 +386,7 @@ public:
 
   CompoundBlockContext* compoundBlock();
 
-  class PARSERS_PUBLIC_TYPE BlockListContext : public antlr4::ParserRuleContext {
+  class  BlockListContext : public antlr4::ParserRuleContext {
   public:
     BlockListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -487,7 +405,7 @@ public:
 
   BlockListContext* blockList();
 
-  class PARSERS_PUBLIC_TYPE JumpStatementContext : public antlr4::ParserRuleContext {
+  class  JumpStatementContext : public antlr4::ParserRuleContext {
   public:
     JumpStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -504,11 +422,13 @@ public:
 
   JumpStatementContext* jumpStatement();
 
-  class PARSERS_PUBLIC_TYPE TypeContext : public antlr4::ParserRuleContext {
+  class  TypeContext : public antlr4::ParserRuleContext {
   public:
     TypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *IDENTIFIER();
+    TypeTailContext *typeTail();
+    RefTypeContext *refType();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -519,7 +439,24 @@ public:
 
   TypeContext* type();
 
-  class PARSERS_PUBLIC_TYPE FunctionTypeContext : public antlr4::ParserRuleContext {
+  class  TypeTailContext : public antlr4::ParserRuleContext {
+  public:
+    TypeTailContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *COMMA_SYMBOL();
+    TypeTailContext *typeTail();
+    antlr4::tree::TerminalNode *JSON_SEPARATOR_SYMBOL();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  TypeTailContext* typeTail();
+
+  class  FunctionTypeContext : public antlr4::ParserRuleContext {
   public:
     FunctionTypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -536,7 +473,7 @@ public:
 
   FunctionTypeContext* functionType();
 
-  class PARSERS_PUBLIC_TYPE RefTypeContext : public antlr4::ParserRuleContext {
+  class  RefTypeContext : public antlr4::ParserRuleContext {
   public:
     RefTypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -553,7 +490,7 @@ public:
 
   RefTypeContext* refType();
 
-  class PARSERS_PUBLIC_TYPE DeclContext : public antlr4::ParserRuleContext {
+  class  DeclContext : public antlr4::ParserRuleContext {
   public:
     DeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -571,7 +508,7 @@ public:
 
   DeclContext* decl();
 
-  class PARSERS_PUBLIC_TYPE FunctionDeclContext : public antlr4::ParserRuleContext {
+  class  FunctionDeclContext : public antlr4::ParserRuleContext {
   public:
     FunctionDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -587,7 +524,7 @@ public:
 
   FunctionDeclContext* functionDecl();
 
-  class PARSERS_PUBLIC_TYPE SignatureContext : public antlr4::ParserRuleContext {
+  class  SignatureContext : public antlr4::ParserRuleContext {
   public:
     SignatureContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -605,7 +542,7 @@ public:
 
   SignatureContext* signature();
 
-  class PARSERS_PUBLIC_TYPE FunctionDefContext : public antlr4::ParserRuleContext {
+  class  FunctionDefContext : public antlr4::ParserRuleContext {
   public:
     FunctionDefContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -625,7 +562,7 @@ public:
 
   FunctionDefContext* functionDef();
 
-  class PARSERS_PUBLIC_TYPE ParamListContext : public antlr4::ParserRuleContext {
+  class  ParamListContext : public antlr4::ParserRuleContext {
   public:
     ParamListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -642,7 +579,7 @@ public:
 
   ParamListContext* paramList();
 
-  class PARSERS_PUBLIC_TYPE VarDeclContext : public antlr4::ParserRuleContext {
+  class  VarDeclContext : public antlr4::ParserRuleContext {
   public:
     VarDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -663,7 +600,7 @@ public:
 
   VarDeclContext* varDecl();
 
-  class PARSERS_PUBLIC_TYPE ClassDeclContext : public antlr4::ParserRuleContext {
+  class  ClassDeclContext : public antlr4::ParserRuleContext {
   public:
     ClassDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -681,7 +618,7 @@ public:
 
   ClassDeclContext* classDecl();
 
-  class PARSERS_PUBLIC_TYPE ClassHeadContext : public antlr4::ParserRuleContext {
+  class  ClassHeadContext : public antlr4::ParserRuleContext {
   public:
     ClassHeadContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -701,7 +638,7 @@ public:
 
   ClassHeadContext* classHead();
 
-  class PARSERS_PUBLIC_TYPE ClassBodyContext : public antlr4::ParserRuleContext {
+  class  ClassBodyContext : public antlr4::ParserRuleContext {
   public:
     ClassBodyContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -720,7 +657,7 @@ public:
 
   ClassBodyContext* classBody();
 
-  class PARSERS_PUBLIC_TYPE ConstructorContext : public antlr4::ParserRuleContext {
+  class  ConstructorContext : public antlr4::ParserRuleContext {
   public:
     ConstructorContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -729,7 +666,6 @@ public:
     ParamListContext *paramList();
     antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
     CompoundBlockContext *compoundBlock();
-    antlr4::tree::TerminalNode *SEMICOLON_SYMBOL();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -740,7 +676,7 @@ public:
 
   ConstructorContext* constructor();
 
-  class PARSERS_PUBLIC_TYPE AccessSpecifierContext : public antlr4::ParserRuleContext {
+  class  AccessSpecifierContext : public antlr4::ParserRuleContext {
   public:
     AccessSpecifierContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -756,7 +692,7 @@ public:
 
   AccessSpecifierContext* accessSpecifier();
 
-  class PARSERS_PUBLIC_TYPE InterfaceListContext : public antlr4::ParserRuleContext {
+  class  InterfaceListContext : public antlr4::ParserRuleContext {
   public:
     InterfaceListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -773,7 +709,7 @@ public:
 
   InterfaceListContext* interfaceList();
 
-  class PARSERS_PUBLIC_TYPE InterfaceDeclContext : public antlr4::ParserRuleContext {
+  class  InterfaceDeclContext : public antlr4::ParserRuleContext {
   public:
     InterfaceDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -791,7 +727,7 @@ public:
 
   InterfaceDeclContext* interfaceDecl();
 
-  class PARSERS_PUBLIC_TYPE InterfaceHeadContext : public antlr4::ParserRuleContext {
+  class  InterfaceHeadContext : public antlr4::ParserRuleContext {
   public:
     InterfaceHeadContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -809,7 +745,7 @@ public:
 
   InterfaceHeadContext* interfaceHead();
 
-  class PARSERS_PUBLIC_TYPE InterfaceBodyContext : public antlr4::ParserRuleContext {
+  class  InterfaceBodyContext : public antlr4::ParserRuleContext {
   public:
     InterfaceBodyContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -826,7 +762,7 @@ public:
 
   InterfaceBodyContext* interfaceBody();
 
-  class PARSERS_PUBLIC_TYPE ProgramContext : public antlr4::ParserRuleContext {
+  class  ProgramContext : public antlr4::ParserRuleContext {
   public:
     ProgramContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;

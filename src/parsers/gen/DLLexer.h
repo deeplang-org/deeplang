@@ -22,7 +22,7 @@
 */
 
 
-// Generated from F:/Orga/deepLang\DLLexer.g4 by ANTLR 4.8
+// Generated from DLLexer.g4 by ANTLR 4.7.2
 
 #pragma once
 
@@ -32,7 +32,9 @@
 
 
 
-class PARSERS_PUBLIC_TYPE DLLexer : public DLBaseLexer {
+
+
+class  DLLexer : public antlr4::Lexer {
 public:
   enum {
     ACCOUNT_SYMBOL = 1, ASCII_SYMBOL = 2, ALWAYS_SYMBOL = 3, BACKUP_SYMBOL = 4, 
@@ -196,7 +198,6 @@ private:
 
 
   // Individual action functions triggered by action() above.
-  void LOGICAL_OR_OPERATORAction(antlr4::RuleContext *context, size_t actionIndex);
   void INT_NUMBERAction(antlr4::RuleContext *context, size_t actionIndex);
 
   // Individual semantic predicate functions triggered by sempred() above.
