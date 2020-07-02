@@ -7,15 +7,15 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/generated/
         ${PROJECT_SOURCE_DIR}/third_party/antlr_runtime/
         ${PROJECT_SOURCE_DIR}/third_party/antlr_runtime/src
-        ${PROJECT_SOURCE_DIR}/src/parsers/
-        ${PROJECT_SOURCE_DIR}/src/parsers/gen/
+        ${PROJECT_SOURCE_DIR}/src/
+        ${PROJECT_SOURCE_DIR}/src/gen/
 )
 
 set(src_dir
-        ${PROJECT_SOURCE_DIR}/src/parsers/gen/DLLexer.cpp
-        ${PROJECT_SOURCE_DIR}/src/parsers/gen/DLParser.cpp
-        ${PROJECT_SOURCE_DIR}/src/parsers/gen/DLParserVisitor.cpp
-        ${PROJECT_SOURCE_DIR}/src/parsers/gen/DLParserBaseVisitor.cpp
+        ${PROJECT_SOURCE_DIR}/src/gen/DLLexer.cpp
+        ${PROJECT_SOURCE_DIR}/src/gen/DLParser.cpp
+        ${PROJECT_SOURCE_DIR}/src/gen/DLParserVisitor.cpp
+        ${PROJECT_SOURCE_DIR}/src/gen/DLParserBaseVisitor.cpp
 )
 
 file(GLOB antlr_runtime_src
