@@ -7,6 +7,12 @@
 
 # cmake Project
 
+## 用法
+
+src/CMakeLists.txt: 基于antlr生成的C++形式的Parser, Lexer编译
+
+src/cmake: 基于g4文件开始编译。使用时，先将src/cmake/CMakeLists.txt复制并替换src/CMakeLists.txt，进行编译。
+
 ## Documentation for FindANTLR
 
 The module defines the following variables:
