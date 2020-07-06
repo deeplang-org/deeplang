@@ -18,3 +18,185 @@ cd build
 cmake ..
 make
 ```
+---
+# 目录
+1. [注释](#注释)
+1. [程序入口](#程序入口)
+1. [控制语句](#控制语句)
+1. [函数定义](#函数定义)
+1. [变量定义](#变量定义)
+1. [类与接口](#类与接口)
+1. [表达式](#表达式)
+1. [基础类型](#基础类型)
+
+
+# 注释
+单行注释
+``` dp
+// code
+```
+多行注释
+``` dp
+/*
+code
+code
+*/
+```
+
+# 程序入口
+在deeplang程序中，顶层代码没有表达式，只有各类定义。
+
+比如类，函数，变量等：
+``` dp
+class Foo {};
+
+sig bar::void -> void
+fun bar() {};
+
+let a: Int = 1;
+```
+整个程序的入口有且只有一个，就是以main作为名字的函数。
+
+# 控制语句
+条件控制语句
+``` dp
+let t: Bool = true;
+
+if (t) {
+    foo();
+} else {
+    bar();
+};
+```
+循环控制语句，与流行语言不通，deeplang中的for语句初始化需要用花括号包裹
+
+所定义的变量生命周期在退出for循环后结束
+``` dp
+for ({let i: Int = 0}; i < 10, i++) {
+    foo();
+};
+```
+
+# 变量定义
+以let定义的变量是常量，letmut定义的变量是可变的。
+``` dp
+let foo: Int = 1;
+let mut bar: Int = 1;
+
+foo = 2; // illegal
+bar = 2;
+```
+
+# 函数
+## 签名与定义
+函数分为两个部分
+
+1. 首先是函数的签名，以关键字sig开头，函数名后跟双冒号
+2. 然后是函数的定义，以关键字fun开头
+
+签名和定义可以写在一行，也可以分两行。
+
+``` dp
+sig inline:: void -> void fun inline() {};
+
+sig seperate:: void -> void
+fun seperate() {};
+```
+
+如果是多参数函数，在sig中，以逗号分隔参数
+``` dp
+sig multiParam::Int, Int -> void
+fun multiParam(x, y) {};
+```
+
+# 类与接口
+## 类定义
+在deeplang中，一个class可以单继承，也可以impl多个interface。
+
+每个类定义中，都需要定义一个构造函数，即constructor。
+
+在类体内部的代码都要求写访问控制权限，目前只提供public，private两种访问控制操作。
+
+``` dp
+class Foo extends Bar impl Foo1, Foo2 {
+    constructor() {};
+
+    private sig foo1::void -> void
+    fun foo1() {};
+
+    public let foo2: Int;
+    
+};
+```
+
+## 接口定义
+interface的定义与class类似，也可以单继承interface。
+
+interface体内只有声明，不能有具体的定义。
+
+``` dp
+interface Foo {};
+
+interface Bar extends Foo {
+    public let a: Int;
+    private sig b:: void -> void;
+};
+```
+
+## 实例化class
+可以使用new操作符来实例化一个class, 并且可以使用point操作符来访问实例中的方法和属性。
+``` dp
+let foo: Foo = new Foo();
+
+foo.bar();
+```
+
+# 表达式
+## 常量表达式
+目前deeplang中有两种常量表达式
+1. Int
+2. String
+``` dp
+let i: Int = 1;
+let s: String = "str";
+```
+## 算术，逻辑，一元表达式
+``` dp
+1 + 1;
+2 * 2;
+3 - 3;
+4 / 4;
+5 < 6;
+7 == 7;
+9 > 8;
+
+5 >> 1;
+5 << 1;
+
+let foo: Bool = true;
+
+false == !foo;
+
+```
+
+## 宏调用表达式
+目前deeplang不支持自定义宏，并只提供builtin的数组方法宏，可以用来简化数组操作
+
+宏调用以 @ 操作符开始，后跟调用的宏名
+``` dp
+let arr: [Int] = [];
+arr@match([s] == 1, [s + 10] == 1);
+```
+
+# 基础类型
+TODO
+## 数组
+数组作为一种builtin的参数化类型，可以与其他类型结合实例化(proposed)
+比如Array和Int，那么类型表达式就是 [Int]
+``` dp
+let arr: [Int] = [];
+```
+
+
+
+
