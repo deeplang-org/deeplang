@@ -4,16 +4,21 @@ project(Deeplang)
 set(CMAKE_CXX_STANDARD 14)
 
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+
+elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+
 endif()
 
 
 add_executable(DeepParser src/main.cpp)
 
-set_target_properties(DeepParser PROPERTIES
-    OUTPUT_NAME  deepr
-    )
+#set_target_properties(DeepParser PROPERTIES
+#    VERSION      0.1
+#    OUTPUT_NAME  deepr
+#    )
 
 target_include_directories(DeepParser 
     PRIVATE
