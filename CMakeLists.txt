@@ -4,6 +4,10 @@ project(Deeplang)
 set(CMAKE_CXX_STANDARD 14)
 
 
+option(DEEPLANG_TESTS "Build GTest-based tests" OFF)
+option(DEEPLANG_ANTLR4_GEN "Use Anltr4 generate codes" ON)
+
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
@@ -13,16 +17,16 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 endif()
 
 # generate parser lexer parser from g4
-execute_process(COMMAND 
-    antlr4
-    -Werror -Dlanguage=Cpp -listener -visitor
-    ${PROJECT_SOURCE_DIR}/src/parsing/DLLexer.g4
-    ${PROJECT_SOURCE_DIR}/src/parsing/DLParser.g4
-    -o ${PROJECT_SOURCE_DIR}/gen)
-
-
-
-
+if (DEEPLANG_ANTLR4_GEN)
+    execute_process(COMMAND 
+        antlr4
+        -Werror -Dlanguage=Cpp -listener -visitor
+        -lib src/parsing
+        src/parsing/DLLexer.g4
+        src/parsing/DLParser.g4
+        -o gen
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 add_executable(DeepParser src/main.cpp)
 
@@ -39,13 +43,18 @@ target_sources(DeepParser
     gen/DLParser.cpp
     gen/DLParserVisitor.cpp
     gen/DLParserBaseVisitor.cpp
-)
+    )
 
-
+# Link antlr_runtime
 add_subdirectory(third_party/antlr_runtime)
 target_link_libraries(DeepParser antlr4_static)
 
-
+# Link wabt
+option(BUILD_TESTS "Don't need wabt test" OFF)
+option(BUILD_TOOLS "Don't need wabt binary tools" OFF)
+option(BUILD_LIBWASM "Don't need wabt shared library" OFF)
+add_subdirectory(third_party/wabt)
+target_link_libraries(DeepParser wabt)
 
 
 # Download and unpack googletest at configure time
@@ -96,3 +105,4 @@ target_sources(cctest
     gen/DLParserBaseVisitor.cpp
 )
 target_link_libraries(cctest antlr4_static gtest_main)
+
