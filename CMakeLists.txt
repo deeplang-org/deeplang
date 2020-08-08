@@ -28,17 +28,17 @@ add_executable(DeepParser src/main.cpp)
 
 target_include_directories(DeepParser 
     PRIVATE
-    ${PROJECT_SOURCE_DIR}/gen/
-    ${PROJECT_SOURCE_DIR}/third_party/antlr_runtime/
-    ${PROJECT_SOURCE_DIR}/third_party/antlr_runtime/src
+    gen/
+    third_party/antlr_runtime/
+    third_party/antlr_runtime/src
     )
 
 target_sources(DeepParser 
     PRIVATE
-    ${PROJECT_SOURCE_DIR}/gen/DLLexer.cpp
-    ${PROJECT_SOURCE_DIR}/gen/DLParser.cpp
-    ${PROJECT_SOURCE_DIR}/gen/DLParserVisitor.cpp
-    ${PROJECT_SOURCE_DIR}/gen/DLParserBaseVisitor.cpp
+    gen/DLLexer.cpp
+    gen/DLParser.cpp
+    gen/DLParserVisitor.cpp
+    gen/DLParserBaseVisitor.cpp
 )
 
 
@@ -49,16 +49,16 @@ target_link_libraries(DeepParser antlr4_static)
 
 
 # Download and unpack googletest at configure time
-configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+configure_file(CMakeLists.txt.in ${CMAKE_SOURCE_DIR}/third_party/googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
   RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/googletest-download )
 if(result)
   message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
   RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/googletest-download )
 if(result)
   message(FATAL_ERROR "Build step for googletest failed: ${result}")
 endif()
@@ -69,8 +69,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Add googletest directly to our build. This defines
 # the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
+add_subdirectory(third_party/googletest-src
                  EXCLUDE_FROM_ALL)
 
 # The gtest/gtest_main targets carry header search path
@@ -83,17 +82,17 @@ add_executable(cctest test/cctest/cctest.cc)
 
 target_include_directories(cctest 
     PRIVATE
-    ${PROJECT_SOURCE_DIR}/gen/
-    ${PROJECT_SOURCE_DIR}/third_party/antlr_runtime/
-    ${PROJECT_SOURCE_DIR}/third_party/antlr_runtime/src
-    ${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/include/gtest
+    gen/
+    third_party/antlr_runtime/
+    third_party/antlr_runtime/src
+    third_party/googletest-src/googletest/include/gtest
     )
 
 target_sources(cctest 
     PRIVATE
-    ${PROJECT_SOURCE_DIR}/gen/DLLexer.cpp
-    ${PROJECT_SOURCE_DIR}/gen/DLParser.cpp
-    ${PROJECT_SOURCE_DIR}/gen/DLParserVisitor.cpp
-    ${PROJECT_SOURCE_DIR}/gen/DLParserBaseVisitor.cpp
+    gen/DLLexer.cpp
+    gen/DLParser.cpp
+    gen/DLParserVisitor.cpp
+    gen/DLParserBaseVisitor.cpp
 )
 target_link_libraries(cctest antlr4_static gtest_main)
