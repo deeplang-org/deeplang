@@ -83,9 +83,9 @@ if (DEEPLANG_BUILD_TESTS)
     if (NOT PYTHONINTERP_FOUND)
         message(FATAL_ERROR "Python 3 is required for testing.")
     endif()
-    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest)
-        message(FATAL_ERROR "Can't find third_party/googletest. Run git submodule update --init.")
-    endif()
+    # if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest/googletest)
+    #     message(FATAL_ERROR "Can't find third_party/googletest. Run git submodule update --init.")
+    # endif()
     
     # gtest
     include_directories(
