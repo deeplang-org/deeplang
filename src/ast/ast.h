@@ -1,7 +1,7 @@
 
 namespace dp {
 namespace internal {
-	// TODO: visitor pattern?
+	// TODO: visitor pattern
 
 class ASTNode {
 	std::string type;
@@ -139,11 +139,6 @@ public:
 }
 
 
-
-
 } // inernal namespace 
 } // dp namespace
-
-
-
 

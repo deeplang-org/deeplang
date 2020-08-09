@@ -3,10 +3,10 @@
 #include "src/parsing/parsing.h"
 
 TEST(testCase, codegen){
-		
 		dp::internal::Literal e1(1, "1");
 		dp::internal::Literal e2(2, "2");
 		dp::internal::BinaryExpression addexp("+", std::make_unique(e1), std::make_unique(e2));
+
 		
 		dp::inernal::CodeGen gen;
 

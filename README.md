@@ -50,8 +50,7 @@ code
 ``` dp
 class Foo {};
 
-sig bar::void -> void
-fun bar() {};
+fun bar() -> () {};
 
 let a: Int = 1;
 ```
@@ -89,24 +88,15 @@ bar = 2;
 
 # 函数
 ## 签名与定义
-函数分为两个部分
-
-1. 首先是函数的签名，以关键字sig开头，函数名后跟双冒号
-2. 然后是函数的定义，以关键字fun开头
-
-签名和定义可以写在一行，也可以分两行。
+函数签名分为两个部分，一个是参数类型，一个是返回值类型
 
 ``` dp
-sig inline:: void -> void fun inline() {};
-
-sig seperate:: void -> void
-fun seperate() {};
+fun foo(bar: Bar) -> Foo {};
 ```
 
-如果是多参数函数，在sig中，以逗号分隔参数
+如果是多参数函数，以逗号分隔参数
 ``` dp
-sig multiParam::Int, Int -> void
-fun multiParam(x, y) {};
+fun multiParam(x: i32, y: i32) {};
 ```
 
 # 类与接口
@@ -121,10 +111,11 @@ fun multiParam(x, y) {};
 class Foo extends Bar impl Foo1, Foo2 {
     constructor() {};
 
-    private sig foo1::void -> void
-    fun foo1() {};
+    private fun foo1(bar: Bar, foo: Foo) {
+        
+    };
 
-    public let foo2: Int;
+    public let foo2: i32;
     
 };
 ```
@@ -138,8 +129,8 @@ interface体内只有声明，不能有具体的定义。
 interface Foo {};
 
 interface Bar extends Foo {
-    public let a: Int;
-    private sig b:: void -> void;
+    public let a: i32;
+    private fun b(Bar) -> ();
 };
 ```
 
@@ -189,13 +180,27 @@ arr@match([s] == 1, [s + 10] == 1);
 ```
 
 # 基础类型
-TODO
+## 基本类型
+``` dp
+object
+    bool
+    tuple                // empty tuple alias Unit type
+    i8, i16, i32, i64
+    u8, u16, u32, u64
+    f32, f64
+    char                 // 16bit
+    array: [T; N]        // T is a parameter type, N is length
+    list: [T]
+    lambda: ->
+```
 ## 数组
 数组作为一种builtin的参数化类型，可以与其他类型结合实例化(proposed)
-比如Array和Int，那么类型表达式就是 [Int]
+比如array和i32，那么类型表达式就是 [i32; 10]
 ``` dp
-let arr: [Int] = [];
+let arr: [i32;10] = [];
 ```
+
+
 
 
 
