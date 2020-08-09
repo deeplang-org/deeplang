@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-#include "src/ast/ast.h"
-#include "src/parsing/parsing.h"
+#include "gtest/gtest.h"
+#include "ast/ast.h"
+#include "parsing/parsing.h"
 
 TEST(testCase, codegen){
 		dp::internal::Literal e1(1, "1");
@@ -8,7 +8,7 @@ TEST(testCase, codegen){
 		dp::internal::BinaryExpression addexp("+", std::make_unique(e1), std::make_unique(e2));
 
 		
-		dp::inernal::CodeGen gen;
+		dp::internal::CodeGen gen;
 
 		std::string source = "(i32.add        \
 													 (get_local $1) \
