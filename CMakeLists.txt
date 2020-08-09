@@ -34,6 +34,9 @@ function (deeplang_executable)
     set(EXE_INCLUDES
         PRIVATE
         gen/
+        third_party/
+        ${WABT_SOURCE_DIR}
+        ${WABT_BINARY_DIR}
 
         ${EXE_INCLUDES}
     )
