@@ -6,13 +6,15 @@ project(Deeplang)
 option(DEEPLANG_BUILD_TESTS "Build GTest-based tests" ON)
 option(DEEPLANG_ANTLR4_GEN "Use Antlr4 generating parser codes" ON)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CXX_STANDARD_REQUIRED ON)
+
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-
+else ()
 endif()
 
 # generate parser lexer parser from g4
@@ -57,8 +59,6 @@ function (deeplang_executable)
     add_executable(${EXE_NAME} ${EXE_SOURCES})
     target_include_directories(${EXE_NAME} ${EXE_INCLUDES})
     target_link_libraries(${EXE_NAME} ${EXE_LIBS})
-    set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD 14)
-    set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 endfunction()
 
 
