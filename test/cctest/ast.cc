@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-#include "src/ast/ast.h"
-#include "src/parsing/parsing.h"
+#include "gtest/gtest.h"
+#include "ast/ast.h"
+#include "parsing/parsing.h"
 
 TEST(testCase, ast){
     dp::internal::Declaration decl(

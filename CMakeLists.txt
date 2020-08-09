@@ -36,6 +36,10 @@ function (deeplang_executable)
     set(EXE_INCLUDES
         PRIVATE
         gen/
+        src/
+        third_party/
+        ${WABT_SOURCE_DIR}
+        ${WABT_BINARY_DIR}
 
         ${EXE_INCLUDES}
     )
@@ -45,6 +49,11 @@ function (deeplang_executable)
         gen/DLParser.cpp
         gen/DLParserVisitor.cpp
         gen/DLParserBaseVisitor.cpp
+
+        src/ast/ast.h
+        src/ast/ast.cpp
+        src/codegen/codegen.h
+        src/codegen/codegen.cpp
 
         ${EXE_SOURCES}
     )
@@ -107,4 +116,10 @@ if (DEEPLANG_BUILD_TESTS)
         SOURCES test/cctest/cctest.cc
         LIBS gtest gtest_main
     )
+
+    #deeplang_executable(
+    #    NAME dp_codegen
+    #    SOURCES test/cctest/codegen.cc
+    #    LIBS gtest gtest_main
+    #)
 endif()
