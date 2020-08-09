@@ -3,11 +3,11 @@
 namespace dp {
 namespace internal {
 
-std::string ASTNode::retType(){
+NodeType ASTNode::retType(){
 	return type;
 }
 
-void ASTNode::setType(std::string newType){
+void ASTNode::setType(NodeType newType){
 	type = newType;
 }
 
