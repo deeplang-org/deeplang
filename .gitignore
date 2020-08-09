@@ -1,3 +1,5 @@
+.vs/
 build/
 gen/
-third_party/googletest*
+out/
+dist/
