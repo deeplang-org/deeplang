@@ -10,13 +10,11 @@ deeplang的独特安全特性帮助其具有一定的竞争力。作者正在持
 # How to build
 
 ``` bash
-cd src/parsers
-antlr4 -Dlanguage=Cpp DLLexer.g4  DLParser.g4 -visitor -o ./gen
-cd ../..
-mkdir build
-cd build
-cmake ..
-make
+$ git submodule update --init --recursive
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make -j4
 ```
 ---
 # 目录
