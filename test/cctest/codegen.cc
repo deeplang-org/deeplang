@@ -5,7 +5,10 @@
 TEST(testCase, codegen){
 		dp::internal::Literal e1(1, "1");
 		dp::internal::Literal e2(2, "2");
-		dp::internal::BinaryExpression addexp("+", std::make_unique(e1), std::make_unique(e2));
+		dp::internal::BinaryExpression addexp(dp::internal::BinaryOperator::Plus,
+			dynamic_cast<dp::internal::ASTNode*>(&e1),
+			dynamic_cast<dp::internal::ASTNode*>(&e2)
+		);
 
 		
 		dp::internal::CodeGen gen;
