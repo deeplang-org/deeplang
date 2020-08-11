@@ -1,113 +1,132 @@
-#include <vector>
-#include <string>
-#include <memory>
+#pragma once
+#include "common.h"
 
 namespace dp {
 namespace internal {
-	// TODO: visitor pattern
 
+enum class AstKind {
+	Module,
+	Identifier,
+	Literal,
+	ArrayExpression,
+	NewExpression,
+	CallExpression,
+	BinaryExpression,
+	UnaryExpression,
+	UpdateExpression,
+	BlockStatement,
+	FunctionType,
+	FunctionDeclaration,
+	VariableDeclaration
+};
 
 class ASTNode {
 public:
-	enum class NodeType {
-		Program,
-		Identifier,
-		Literal,
-		ArrayExpression,
-		NewExpression,
-		CallExpression,
-		BinaryExpression,
-		UnaryExpression,
-		UpdateExpression,
-		BlockStatement,
-		FunctionType,
-		FunctionDeclaration,
-		VariableDeclaration
-	};
-	NodeType type;
-
-	ASTNode(NodeType type) : type(type) {}
-	~ASTNode() {}
-
-	void setType(NodeType newType);
-	NodeType retType();
+	AstKind kind;
+	ASTNode(AstKind kind)
+			: kind(kind) {
+	}
+	~ASTNode() {
+	}
 };
 
-class ProgramNode : public ASTNode {
+class ModuleNode : public ASTNode {
 public:
 	std::vector<ASTNode*> body;
-	
-	ProgramNode() : ASTNode(NodeType::Program) {}
-	ProgramNode(std::vector<ASTNode*> body) : 
-		ASTNode(NodeType::Program), body(body) {}
-	~ProgramNode() {}
+
+	ModuleNode()
+			: ASTNode(AstKind::Module) {
+	}
+	ModuleNode(std::vector<ASTNode*> body)
+			: ASTNode(AstKind::Module), body(body) {
+	}
+	~ModuleNode() {
+	}
 };
 
 class Identifier : public ASTNode {
 public:
 	std::string name;
 
-	Identifier(std::string name) :
-		ASTNode(NodeType::Identifier), name(name) {}
-	~Identifier() {}
+	Identifier(std::string name)
+			: ASTNode(AstKind::Identifier), name(name) {
+	}
+	~Identifier() {
+	}
 };
 
 class Literal : public ASTNode {
 public:
-	double value;
-	std::string raw;
+	union {
+		int         i32val;
+		long        i64val;
+		float       f32val;
+		double      f64val;
+		std::string strval;
+	};
 
-	Literal(double value, std::string raw) :
-		ASTNode(NodeType::Literal), value(value), raw(raw) {}
-	~Literal() {}
+	Literal(int value)
+			: ASTNode(AstKind::Literal), i32val(value) {
+	}
+	~Literal() {
+	}
 };
 
 class ArrayExpression : public ASTNode {
 public:
 	std::vector<ASTNode*> elements;
 
-	ArrayExpression(std::vector<ASTNode*> elements) :
-		ASTNode(NodeType::ArrayExpression), elements(elements) {}
-	~ArrayExpression() {}
+	ArrayExpression(std::vector<ASTNode*> elements)
+			: ASTNode(AstKind::ArrayExpression), elements(elements) {
+	}
+	~ArrayExpression() {
+	}
 };
 
 class NewExpression : public ASTNode {
 public:
 	std::unique_ptr<ASTNode> callee;
-	std::vector<ASTNode*> arguments;
+	std::vector<ASTNode*>    arguments;
 
-	NewExpression(ASTNode* callee, std::vector<ASTNode*> arguments) :
-		ASTNode(NodeType::NewExpression), callee(callee), arguments(arguments) {}
-	~NewExpression() {}
+	NewExpression(ASTNode* callee, std::vector<ASTNode*> arguments)
+			: ASTNode(AstKind::NewExpression), callee(callee), arguments(arguments) {
+	}
+	~NewExpression() {
+	}
 };
 
 class CallExpression : public ASTNode {
 public:
 	std::shared_ptr<ASTNode> callee;
-	std::vector<ASTNode*> arguments;
+	std::vector<ASTNode*>    arguments;
 
-	CallExpression(std::shared_ptr<ASTNode> callee, std::vector<ASTNode*> arguments) :
-		ASTNode(NodeType::CallExpression), callee(callee), arguments(arguments) {}
-	~CallExpression() {}
+	CallExpression(std::shared_ptr<ASTNode> callee, std::vector<ASTNode*> arguments)
+			: ASTNode(AstKind::CallExpression), callee(callee), arguments(arguments) {
+	}
+	~CallExpression() {
+	}
+};
+
+enum class BinaryOperator {
+	Plus,
+	Minus,
+	Mult,
+	Div,
+	BitwiseAnd,
+	BitwiseOr,
 };
 
 class BinaryExpression : public ASTNode {
 public:
-	enum class BinaryOperator {
-		Plus,
-		Minus,
-		Mult,
-		Div,
-		BitwiseAnd,
-		BitwiseOr,
-	};
-	BinaryOperator op;
+	BinaryOperator           op;
 	std::unique_ptr<ASTNode> left;
 	std::unique_ptr<ASTNode> right;
 
-	BinaryExpression(BinaryOperator op, ASTNode* left, ASTNode* right) :
-		ASTNode(NodeType::BinaryExpression), op(op), left(left), right(right) {}
-	~BinaryExpression() {}
+	BinaryExpression(BinaryOperator op, ASTNode* left, ASTNode* right)
+			: ASTNode(AstKind::BinaryExpression), op(op), left(left), right(right) {
+	}
+	~BinaryExpression() {
+	}
 };
 
 class UnaryExpression : public ASTNode {
@@ -115,13 +134,15 @@ public:
 	enum class UnaryOperator {
 		Minus,
 	};
-	UnaryOperator op;
-	bool prefix;
+	UnaryOperator            op;
+	bool                     prefix;
 	std::unique_ptr<ASTNode> argument;
 
-	UnaryExpression(UnaryOperator op, bool prefix, ASTNode* argument) :
-		ASTNode(NodeType::UnaryExpression), op(op), prefix(prefix), argument(argument) {}
-	~UnaryExpression() {}
+	UnaryExpression(UnaryOperator op, bool prefix, ASTNode* argument)
+			: ASTNode(AstKind::UnaryExpression), op(op), prefix(prefix), argument(argument) {
+	}
+	~UnaryExpression() {
+	}
 };
 
 class UpdateExpression : public ASTNode {
@@ -130,13 +151,15 @@ public:
 		Increment,
 		Decrement,
 	};
-	UpdateOperator op;
-	bool prefix;
+	UpdateOperator           op;
+	bool                     prefix;
 	std::unique_ptr<ASTNode> argument;
 
-	UpdateExpression(UpdateOperator op, bool prefix, ASTNode* argument) :
-		ASTNode(NodeType::UpdateExpression), op(op), prefix(prefix), argument(argument) {}
-	~UpdateExpression() {}
+	UpdateExpression(UpdateOperator op, bool prefix, ASTNode* argument)
+			: ASTNode(AstKind::UpdateExpression), op(op), prefix(prefix), argument(argument) {
+	}
+	~UpdateExpression() {
+	}
 };
 
 // Statement
@@ -145,56 +168,58 @@ class BlockStatement : public ASTNode {
 public:
 	std::vector<ASTNode*> body;
 
-	BlockStatement(std::vector<ASTNode*> body) :
-		ASTNode(NodeType::BlockStatement), body(body) {}
-	~BlockStatement() {}
+	BlockStatement(std::vector<ASTNode*> body)
+			: ASTNode(AstKind::BlockStatement), body(body) {
+	}
+	~BlockStatement() {
+	}
 };
 
 // Type
 
-class FunctionType : public ASTNode {
-public:
-	std::vector<Identifier*> params;
-	std::vector<ASTNode*> results;
-
-	FunctionType(std::vector<Identifier*> params, std::vector<ASTNode*> results) :
-		ASTNode(NodeType::FunctionType), params(params), results(results) {}
-	~FunctionType() {}
-};
-
-// Declaration
-
-class FunctionDeclaration : public ASTNode {
-public:
-	std::unique_ptr<Identifier> id;
-	std::unique_ptr<FunctionType> signature;
-	std::unique_ptr<BlockStatement> body;
-	FunctionDeclaration(Identifier* id, FunctionType* signature, BlockStatement* body) :
-		ASTNode(NodeType::FunctionDeclaration), id(id), signature(signature), body(body) {}
-	~FunctionDeclaration() {}
+enum class VariableType {
+	i32,
+	i64
 };
 
 class VariableDeclaration : public ASTNode {
 public:
-	enum class VariableType {
-		i32,
-		i64
-	};
-	std::unique_ptr<Identifier> id;
+	Identifier   id;
 	VariableType vartype;
-	std::string init;
+	std::string  init;
 
-	VariableDeclaration(Identifier* id, VariableType vartype, std::string init) :
-		ASTNode(NodeType::VariableDeclaration), id(id), vartype(vartype), init(init) {}
-	~VariableDeclaration() {}
+	VariableDeclaration(Identifier id, VariableType vartype, std::string init)
+			: ASTNode(AstKind::VariableDeclaration), id(id), vartype(vartype), init(init) {
+	}
+	~VariableDeclaration() {
+	}
 };
 
+class FunctionType : public ASTNode {
+public:
+	std::vector<VariableDeclaration> Params;
+	std::vector<VariableType>        Results;
 
+	FunctionType(std::vector<VariableDeclaration> params, std::vector<VariableType> results)
+			: ASTNode(AstKind::FunctionType), Params(params), Results(results) {
+	}
+	~FunctionType() {
+	}
+};
 
+// Declaration
 
-} // inernal namespace 
-} // dp namespace
+class FunctionStatement : public ASTNode {
+public:
+	Identifier     id;
+	FunctionType   signature;
+	BlockStatement body;
+	FunctionStatement(Identifier id, FunctionType signature, BlockStatement body)
+			: ASTNode(AstKind::FunctionDeclaration), id(id), signature(signature), body(body) {
+	}
+	~FunctionStatement() {
+	}
+};
 
-
-
-
+} // namespace internal
+} // namespace dp
