@@ -1,15 +1,18 @@
 #pragma once
 
-#include "common.h"
 #include "ast/ast.h"
+#include "common.h"
 
 namespace dp {
 namespace internal {
-	class CodeGen {
-	public:
-		CodeGen();
 
-		std::string generate(BinaryExpression bexp);
-	};
-} // inernal namespace 
-} // dp namespace
+class CodeGen {
+public:
+	CodeGen();
+
+	std::string generateWat(BinaryExpression& bexp);
+	std::string generateWasm(BinaryExpression& bexp);
+};
+
+} // namespace internal
+} // namespace dp
