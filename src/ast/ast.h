@@ -6,33 +6,29 @@ namespace internal {
 
 enum class AstKind {
 	Module,
-	Identifier,
-	Literal,
+
+	// Statement
+	ExpressionStatement,
+	FunctionDeclaration,
+	VariableDeclaration,
 
 	// Expression
 	ArrayExpression,
-	NewExpression,
-	CallExpression,
 	BinaryExpression,
+	BlockExpression,
+	CallExpression,
+	LiteralExpression,
+	NewExpression,
 	UnaryExpression,
 	UpdateExpression,
-
-	// Statement
-	BlockStatement,
-
-	// Declaration
-	FunctionDeclaration,
-	VariableDeclaration,
 
 	// Type
 	Type,
 	FunctionType,
 	VariableType
-
 };
 
 // forward decl
-class ASTNode;
 class Identifier;
 class Literal;
 class Expression;
@@ -50,46 +46,19 @@ public:
 	}
 };
 
-class Identifier : public ASTNode {
+class Module : public ASTNode {
 public:
-	std::string name;
-
-	Identifier(std::string name)
-			: ASTNode(AstKind::Identifier), name(name) {
-	}
-	~Identifier() {
-	}
-};
-
-class Literal : public ASTNode {
-public:
-	union {
-		int         i32val;
-		long        i64val;
-		float       f32val;
-		double      f64val;
-		std::string strval;
-	};
-
-	Literal(int value)
-			: ASTNode(AstKind::Literal), i32val(value) {
-	}
-	~Literal() {
-	}
+	std::vector<std::unique_ptr<Declaration>> stmts;
 };
 
 class Expression : public ASTNode {
 public:
-	Type* expTyp;
+	std::unique_ptr<Type> expTyp;
 
 	Expression(AstKind kind)
 			: ASTNode(kind) {
 	}
 	~Expression() {
-	}
-
-	bool isBinaryExp() const {
-		return kind == AstKind::BinaryExpression;
 	}
 };
 
@@ -100,26 +69,14 @@ public:
 	}
 	~Statement() {
 	}
-
-	bool isBlockStatement() const {
-		return kind == AstKind::BlockStatement;
-	}
 };
 
-class Declaration : public ASTNode {
+class Declaration : public Statement {
 public:
 	Declaration(AstKind kind)
-			: ASTNode(kind) {
+			: Statement(kind) {
 	}
 	~Declaration() {
-	}
-
-	bool isFunctionDecl() const {
-		return kind == AstKind::FunctionDeclaration;
-	}
-
-	bool isVariableDeclaration() const {
-		return kind == AstKind::VariableDeclaration;
 	}
 };
 
@@ -172,13 +129,45 @@ public:
 
 class FunctionType : public Type {
 public:
-	std::vector<Type*> Params;
-	Type*              Result;
+	std::vector<std::unique_ptr<Type>> Params;
+	std::unique_ptr<Type>              Result;
 
-	FunctionType(std::vector<Type*> params, Type* result)
-			: Type(AstKind::FunctionType), Params(std::move(params)), Result(result) {
+	FunctionType()
+			: Type(AstKind::FunctionType) {
 	}
 	~FunctionType() {
+	}
+};
+
+// Identifier
+
+class Identifier {
+public:
+	std::string name;
+
+	Identifier(std::string name)
+			: name(name) {
+	}
+	~Identifier() {
+	}
+};
+
+// Expression
+
+class Literal : public Expression {
+public:
+	union {
+		int         i32val;
+		long        i64val;
+		float       f32val;
+		double      f64val;
+		std::string strval;
+	};
+
+	Literal(int value)
+			: Expression(AstKind::LiteralExpression), i32val(value) {
+	}
+	~Literal() {
 	}
 };
 
@@ -228,12 +217,12 @@ enum class BinaryOperator {
 
 class BinaryExpression : public Expression {
 public:
-	BinaryOperator* op;
-	Expression*     left;
-	Expression*     right;
+	BinaryOperator              op;
+	std::unique_ptr<Expression> left;
+	std::unique_ptr<Expression> right;
 
-	BinaryExpression(BinaryOperator* op, Expression* left, Expression* right)
-			: Expression(AstKind::BinaryExpression), op(op), left(left), right(right) {
+	BinaryExpression(BinaryOperator op)
+			: Expression(AstKind::BinaryExpression), op(op) {
 	}
 	~BinaryExpression() {
 	}
@@ -272,29 +261,37 @@ public:
 // 	}
 // };
 
+class BlockExpession : public Expression {
+public:
+	std::vector<std::unique_ptr<Statement>> stmts;
+
+	BlockExpession()
+			: Expression(AstKind::BlockExpression) {
+	}
+	~BlockExpession() {
+	}
+};
+
 // Statement
 
-class BlockStatement : public Statement {
+class ExpressionStatement : public Statement {
 public:
-	std::vector<ASTNode*> body;
-
-	BlockStatement(std::vector<ASTNode*> body)
-			: Statement(AstKind::BlockStatement), body(std::move(body)) {
+	ExpressionStatement(AstKind kind)
+			: Statement(kind) {
 	}
-	~BlockStatement() {
-	}
+	std::unique_ptr<Expression> expr;
 };
 
 // Declaration
 
 class VariableDeclaration : public Declaration {
 public:
-	Identifier* id;
-	Type*       vartype;
-	Expression* init;
+	Identifier                  id;
+	std::unique_ptr<Type>       vartype;
+	std::unique_ptr<Expression> init;
 
-	VariableDeclaration(Identifier* id, Type* vartype, Expression* init)
-			: Declaration(AstKind::VariableDeclaration), id(id), vartype(vartype), init(init) {
+	VariableDeclaration(std::string name)
+			: Declaration(AstKind::VariableDeclaration), id(name) {
 	}
 	~VariableDeclaration() {
 	}
@@ -302,11 +299,12 @@ public:
 
 class FunctionDeclaration : public Declaration {
 public:
-	Identifier*   id;
-	FunctionType* signature;
-	Statement*    body;
-	FunctionDeclaration(Identifier* id, FunctionType* signature, Statement* body)
-			: Declaration(AstKind::FunctionDeclaration), id(id), signature(signature), body(body) {
+	Identifier                      id;
+	std::unique_ptr<FunctionType>   signature;
+	std::unique_ptr<BlockExpession> body;
+
+	FunctionDeclaration(std::string name)
+			: Declaration(AstKind::FunctionDeclaration), id(name) {
 	}
 	~FunctionDeclaration() {
 	}
