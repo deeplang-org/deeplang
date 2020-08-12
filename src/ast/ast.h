@@ -279,7 +279,7 @@ public:
 	std::vector<ASTNode*> body;
 
 	BlockStatement(std::vector<ASTNode*> body)
-			: Statement(std::move(AstKind::BlockStatement)), body(body) {
+			: Statement(AstKind::BlockStatement), body(std::move(body)) {
 	}
 	~BlockStatement() {
 	}
