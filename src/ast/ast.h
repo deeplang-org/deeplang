@@ -8,17 +8,37 @@ enum class AstKind {
 	Module,
 	Identifier,
 	Literal,
+
+	// Expression
 	ArrayExpression,
 	NewExpression,
 	CallExpression,
 	BinaryExpression,
 	UnaryExpression,
 	UpdateExpression,
+
+	// Statement
 	BlockStatement,
-	FunctionType,
+
+	// Declaration
 	FunctionDeclaration,
-	VariableDeclaration
+	VariableDeclaration,
+
+	// Type
+	Type,
+	FunctionType,
+	VariableType
+
 };
+
+// forward decl
+class ASTNode;
+class Identifier;
+class Literal;
+class Expression;
+class Statement;
+class Declaration;
+class Type;
 
 class ASTNode {
 public:
@@ -27,20 +47,6 @@ public:
 			: kind(kind) {
 	}
 	~ASTNode() {
-	}
-};
-
-class ModuleNode : public ASTNode {
-public:
-	std::vector<ASTNode*> body;
-
-	ModuleNode()
-			: ASTNode(AstKind::Module) {
-	}
-	ModuleNode(std::vector<ASTNode*> body)
-			: ASTNode(AstKind::Module), body(body) {
-	}
-	~ModuleNode() {
 	}
 };
 
@@ -72,40 +78,144 @@ public:
 	}
 };
 
-class ArrayExpression : public ASTNode {
+class Expression : public ASTNode {
 public:
-	std::vector<ASTNode*> elements;
+	Type* expTyp;
 
-	ArrayExpression(std::vector<ASTNode*> elements)
-			: ASTNode(AstKind::ArrayExpression), elements(elements) {
+	Expression(AstKind kind)
+			: ASTNode(kind) {
 	}
-	~ArrayExpression() {
+	~Expression() {
+	}
+
+	bool isBinaryExp() const {
+		return kind == AstKind::BinaryExpression;
 	}
 };
 
-class NewExpression : public ASTNode {
+class Statement : public ASTNode {
 public:
-	std::unique_ptr<ASTNode> callee;
-	std::vector<ASTNode*>    arguments;
-
-	NewExpression(ASTNode* callee, std::vector<ASTNode*> arguments)
-			: ASTNode(AstKind::NewExpression), callee(callee), arguments(arguments) {
+	Statement(AstKind kind)
+			: ASTNode(kind) {
 	}
-	~NewExpression() {
+	~Statement() {
+	}
+
+	bool isBlockStatement() const {
+		return kind == AstKind::BlockStatement;
 	}
 };
 
-class CallExpression : public ASTNode {
+class Declaration : public ASTNode {
 public:
-	std::shared_ptr<ASTNode> callee;
-	std::vector<ASTNode*>    arguments;
-
-	CallExpression(std::shared_ptr<ASTNode> callee, std::vector<ASTNode*> arguments)
-			: ASTNode(AstKind::CallExpression), callee(callee), arguments(arguments) {
+	Declaration(AstKind kind)
+			: ASTNode(kind) {
 	}
-	~CallExpression() {
+	~Declaration() {
+	}
+
+	bool isFunctionDecl() const {
+		return kind == AstKind::FunctionDeclaration;
+	}
+
+	bool isVariableDeclaration() const {
+		return kind == AstKind::VariableDeclaration;
 	}
 };
+
+// Type
+
+class Type : public ASTNode {
+public:
+	Type(AstKind kind)
+			: ASTNode(kind) {
+	}
+	~Type() {
+	}
+
+	bool isFunctonType() const {
+		return kind == AstKind::FunctionType;
+	}
+	bool isVariableType() const {
+		return kind == AstKind::VariableType;
+	}
+};
+
+enum class PrimitiveVariableTypes {
+	I32,
+	I64,
+	Unit,
+};
+
+class VariableType : public Type {
+public:
+	PrimitiveVariableTypes typ;
+
+	VariableType(PrimitiveVariableTypes typ)
+			: Type(AstKind::VariableType), typ(typ) {
+	}
+	~VariableType() {
+	}
+
+	bool isI32() const {
+		return typ == PrimitiveVariableTypes::I32;
+	}
+
+	bool isI64() const {
+		return typ == PrimitiveVariableTypes::I64;
+	}
+
+	bool isUnit() const {
+		return typ == PrimitiveVariableTypes::Unit;
+	}
+};
+
+class FunctionType : public Type {
+public:
+	std::vector<Type*> Params;
+	Type*              Result;
+
+	FunctionType(std::vector<Type*> params, Type* result)
+			: Type(AstKind::FunctionType), Params(std::move(params)), Result(result) {
+	}
+	~FunctionType() {
+	}
+};
+
+// class ArrayExpression : public Expression {
+// public:
+// 	std::vector<ASTNode*> elements;
+
+// 	ArrayExpression(std::vector<ASTNode*> elements)
+// 			: ASTNode(AstKind::ArrayExpression), elements(elements) {
+// 	}
+// 	~ArrayExpression() {
+// 	}
+// };
+
+// class NewExpression : public Expression {
+// public:
+// 	std::unique_ptr<ASTNode> callee;
+// 	std::vector<ASTNode*>    arguments;
+
+// 	NewExpression(ASTNode* callee, std::vector<ASTNode*> arguments)
+// 			: ASTNode(AstKind::NewExpression), callee(callee), arguments(arguments) {
+// 	}
+// 	~NewExpression() {
+// 	}
+// };
+
+// class CallExpression : public Expression {
+// public:
+// 	std::shared_ptr<ASTNode> callee;
+// 	std::vector<ASTNode*>    arguments;
+
+// 	CallExpression(std::shared_ptr<ASTNode> callee, std::vector<ASTNode*> arguments)
+// 			: ASTNode(AstKind::CallExpression), callee(callee), arguments(arguments) {
+// 	}
+// 	~CallExpression() {
+// 	}
+// };
 
 enum class BinaryOperator {
 	Plus,
@@ -116,108 +226,89 @@ enum class BinaryOperator {
 	BitwiseOr,
 };
 
-class BinaryExpression : public ASTNode {
+class BinaryExpression : public Expression {
 public:
-	BinaryOperator           op;
-	std::unique_ptr<ASTNode> left;
-	std::unique_ptr<ASTNode> right;
+	BinaryOperator* op;
+	Expression*     left;
+	Expression*     right;
 
-	BinaryExpression(BinaryOperator op, ASTNode* left, ASTNode* right)
-			: ASTNode(AstKind::BinaryExpression), op(op), left(left), right(right) {
+	BinaryExpression(BinaryOperator* op, Expression* left, Expression* right)
+			: Expression(AstKind::BinaryExpression), op(op), left(left), right(right) {
 	}
 	~BinaryExpression() {
 	}
 };
 
-class UnaryExpression : public ASTNode {
-public:
-	enum class UnaryOperator {
-		Minus,
-	};
-	UnaryOperator            op;
-	bool                     prefix;
-	std::unique_ptr<ASTNode> argument;
+// class UnaryExpression : public Expression {
+// public:
+// 	enum class UnaryOperator {
+// 		Minus,
+// 	};
+// 	UnaryOperator            op;
+// 	bool                     prefix;
+// 	std::unique_ptr<ASTNode> argument;
 
-	UnaryExpression(UnaryOperator op, bool prefix, ASTNode* argument)
-			: ASTNode(AstKind::UnaryExpression), op(op), prefix(prefix), argument(argument) {
-	}
-	~UnaryExpression() {
-	}
-};
+// 	UnaryExpression(UnaryOperator op, bool prefix, ASTNode* argument)
+// 			: ASTNode(AstKind::UnaryExpression), op(op), prefix(prefix), argument(argument) {
+// 	}
+// 	~UnaryExpression() {
+// 	}
+// };
 
-class UpdateExpression : public ASTNode {
-public:
-	enum class UpdateOperator {
-		Increment,
-		Decrement,
-	};
-	UpdateOperator           op;
-	bool                     prefix;
-	std::unique_ptr<ASTNode> argument;
+// class UpdateExpression : public Expression {
+// public:
+// 	enum class UpdateOperator {
+// 		Increment,
+// 		Decrement,
+// 	};
+// 	UpdateOperator           op;
+// 	bool                     prefix;
+// 	std::unique_ptr<ASTNode> argument;
 
-	UpdateExpression(UpdateOperator op, bool prefix, ASTNode* argument)
-			: ASTNode(AstKind::UpdateExpression), op(op), prefix(prefix), argument(argument) {
-	}
-	~UpdateExpression() {
-	}
-};
+// 	UpdateExpression(UpdateOperator op, bool prefix, ASTNode* argument)
+// 			: ASTNode(AstKind::UpdateExpression), op(op), prefix(prefix), argument(argument) {
+// 	}
+// 	~UpdateExpression() {
+// 	}
+// };
 
 // Statement
 
-class BlockStatement : public ASTNode {
+class BlockStatement : public Statement {
 public:
 	std::vector<ASTNode*> body;
 
 	BlockStatement(std::vector<ASTNode*> body)
-			: ASTNode(AstKind::BlockStatement), body(body) {
+			: Statement(std::move(AstKind::BlockStatement)), body(body) {
 	}
 	~BlockStatement() {
 	}
 };
 
-// Type
+// Declaration
 
-enum class VariableType {
-	i32,
-	i64
-};
-
-class VariableDeclaration : public ASTNode {
+class VariableDeclaration : public Declaration {
 public:
-	Identifier   id;
-	VariableType vartype;
-	std::string  init;
+	Identifier* id;
+	Type*       vartype;
+	Expression* init;
 
-	VariableDeclaration(Identifier id, VariableType vartype, std::string init)
-			: ASTNode(AstKind::VariableDeclaration), id(id), vartype(vartype), init(init) {
+	VariableDeclaration(Identifier* id, Type* vartype, Expression* init)
+			: Declaration(AstKind::VariableDeclaration), id(id), vartype(vartype), init(init) {
 	}
 	~VariableDeclaration() {
 	}
 };
 
-class FunctionType : public ASTNode {
+class FunctionDeclaration : public Declaration {
 public:
-	std::vector<VariableDeclaration> Params;
-	std::vector<VariableType>        Results;
-
-	FunctionType(std::vector<VariableDeclaration> params, std::vector<VariableType> results)
-			: ASTNode(AstKind::FunctionType), Params(params), Results(results) {
+	Identifier*   id;
+	FunctionType* signature;
+	Statement*    body;
+	FunctionDeclaration(Identifier* id, FunctionType* signature, Statement* body)
+			: Declaration(AstKind::FunctionDeclaration), id(id), signature(signature), body(body) {
 	}
-	~FunctionType() {
-	}
-};
-
-// Declaration
-
-class FunctionStatement : public ASTNode {
-public:
-	Identifier     id;
-	FunctionType   signature;
-	BlockStatement body;
-	FunctionStatement(Identifier id, FunctionType signature, BlockStatement body)
-			: ASTNode(AstKind::FunctionDeclaration), id(id), signature(signature), body(body) {
-	}
-	~FunctionStatement() {
+	~FunctionDeclaration() {
 	}
 };
 
