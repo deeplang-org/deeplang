@@ -117,9 +117,9 @@ if (DEEPLANG_BUILD_TESTS)
         LIBS gtest gtest_main
     )
 
-    #deeplang_executable(
-    #    NAME dp_codegen
-    #    SOURCES test/cctest/codegen.cc
-    #    LIBS gtest gtest_main
-    #)
+    deeplang_executable(
+        NAME dp_codegen
+        SOURCES test/cctest/codegen.cc
+        LIBS gtest gtest_main
+    )
 endif()

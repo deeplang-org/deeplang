@@ -1,26 +1,41 @@
-#include "gtest/gtest.h"
+#include "codegen/codegen.h"
+
 #include "ast/ast.h"
-#include "parsing/parsing.h"
 
-TEST(testCase, codegen){
-		dp::internal::Literal e1(1, "1");
-		dp::internal::Literal e2(2, "2");
-		dp::internal::BinaryExpression addexp(dp::internal::BinaryOperator::Plus,
-			dynamic_cast<dp::internal::ASTNode*>(&e1),
-			dynamic_cast<dp::internal::ASTNode*>(&e2)
-		);
+#include "gtest/gtest.h"
 
-		
-		dp::internal::CodeGen gen;
+using namespace dp;
+using namespace dp::internal;
 
-		std::string source = "(i32.add        \
-													 (get_local $1) \
-													 (get_local $2)	\
-													)";
-    
-    ASSERT_STREQ(gen.genarate(addexp), source);
+TEST(testCase, codegen) {
+	auto mod = std::make_unique<Module>();
+
+	auto mainFunc = std::make_unique<FunctionDeclaration>("main");
+
+	auto sig            = std::make_unique<FunctionType>();
+	mainFunc->signature = std::move(sig);
+
+	auto mainFuncBody = std::make_unique<BlockExpession>();
+
+	auto var1Decl     = std::make_unique<VariableDeclaration>("var");
+	var1Decl->vartype = std::make_unique<VariableType>(PrimitiveVariableTypes::I32);
+
+	auto addExp   = std::make_unique<BinaryExpression>(BinaryOperator::Plus);
+	addExp->left  = std::make_unique<LiteralExpression>(1);
+	addExp->right = std::make_unique<LiteralExpression>(2);
+
+	var1Decl->init = std::move(addExp);
+
+	mainFuncBody->stmts.push_back(std::move(var1Decl));
+	mainFunc->body = std::move(mainFuncBody);
+	mod->stmts.push_back(std::move(mainFunc));
+
+	CodeGen::generateWasm(mod.get());
+
+	//ASSERT_STREQ(gen.genarate(addexp), source);
 }
-int main(int argc,char **argv){
-  testing::InitGoogleTest(&argc,argv);
-  return RUN_ALL_TESTS();
+
+int main(int argc, char** argv) {
+	testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }
