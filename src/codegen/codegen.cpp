@@ -22,6 +22,8 @@ public:
 		return Result::Ok;
 	}
 
+	// Statements
+
 	Result visitStatement(Statement* stmt) {
 		switch (stmt->kind) {
 		case AstKind::ExpressionStatement:
@@ -49,6 +51,8 @@ public:
 		visitFunctionType(funNode->signature.get());
 		visitBlockExpression(funNode->body.get());
 
+		func->exprs.swap(exprs);
+
 		module->AppendField(std::move(func_field));
 		return Result::Ok;
 	}
@@ -57,7 +61,7 @@ public:
 		wabt::Location loc;
 
 		// TODO: params type
-		func->decl.sig.result_types.push_back(wabt::Type::I32);
+		//func->decl.sig.result_types.push_back(wabt::Type::I32);
 
 		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
 		auto type       = std::make_unique<wabt::FuncType>();
@@ -70,11 +74,20 @@ public:
 	}
 
 	Result visitVariableDeclaration(VariableDeclaration* varDecl) {
-		std::string    name = varDecl->id.name;
-		wabt::Type     type = wabt::Type::I32;
+		std::string    name  = varDecl->id.name;
+		int            index = func->local_types.size();
+		wabt::Type     type  = wabt::Type::I32;
 		wabt::Location loc;
-		func->bindings.emplace(name, wabt::Binding(loc, func->local_types.size()));
-		func->local_types.AppendDecl(type, func->local_types.size());
+
+		func->bindings.emplace(name, wabt::Binding(index));
+		func->local_types.AppendDecl(type, 1);
+
+		visitExpression(varDecl->init.get());
+
+		wabt::Var var(name, loc);
+		var.set_index(index);
+		auto expr = std::make_unique<wabt::LocalSetExpr>(var);
+		exprs.push_back(std::move(expr));
 		return Result::Ok;
 	}
 
@@ -82,15 +95,7 @@ public:
 		return visitExpression(exprStmt->expr.get());
 	}
 
-	// Expression
-
-	Result visitLiteral(LiteralExpression* lit) {
-		wabt::Location              loc;
-		std::unique_ptr<wabt::Expr> expr =
-				std::make_unique<wabt::ConstExpr>(wabt::Const::I32(lit->i32val, loc), loc);
-		exprs.push_back(std::move(expr));
-		return Result::Ok;
-	}
+	// Expressions
 
 	Result visitExpression(Expression* expr) {
 		switch (expr->kind) {
@@ -108,6 +113,14 @@ public:
 		default:
 			return Result::Error;
 		}
+		return Result::Ok;
+	}
+
+	Result visitLiteral(LiteralExpression* lit) {
+		wabt::Location              loc;
+		std::unique_ptr<wabt::Expr> expr =
+				std::make_unique<wabt::ConstExpr>(wabt::Const::I32(lit->i32val, loc), loc);
+		exprs.push_back(std::move(expr));
 		return Result::Ok;
 	}
 
@@ -130,6 +143,10 @@ public:
 	Result visitBinaryExpression(BinaryExpression* node) {
 		wabt::Location              loc;
 		std::unique_ptr<wabt::Expr> expr;
+
+		visitExpression(node->right.get());
+		visitExpression(node->left.get());
+
 		switch (node->op) {
 		case BinaryOperator::Plus:
 			expr = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Add, loc);
