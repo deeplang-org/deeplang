@@ -49,6 +49,11 @@ public:
 
 class Module : public ASTNode {
 public:
+	Module()
+			: ASTNode(AstKind::Module) {
+	}
+	~Module() {
+	}
 	std::vector<std::unique_ptr<Declaration>> stmts;
 };
 
