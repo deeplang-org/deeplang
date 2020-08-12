@@ -19,6 +19,7 @@ enum class AstKind {
 	CallExpression,
 	LiteralExpression,
 	NewExpression,
+	PathExpression,
 	UnaryExpression,
 	UpdateExpression,
 
@@ -30,7 +31,7 @@ enum class AstKind {
 
 // forward decl
 class Identifier;
-class Literal;
+class LiteralExpression;
 class Expression;
 class Statement;
 class Declaration;
@@ -154,7 +155,7 @@ public:
 
 // Expression
 
-class Literal : public Expression {
+class LiteralExpression : public Expression {
 public:
 	union {
 		int         i32val;
@@ -164,10 +165,18 @@ public:
 		std::string strval;
 	};
 
-	Literal(int value)
+	LiteralExpression(int value)
 			: Expression(AstKind::LiteralExpression), i32val(value) {
 	}
-	~Literal() {
+	~LiteralExpression() {
+	}
+};
+
+class PathExpression : public Expression {
+public:
+	Identifier id;
+	PathExpression(std::string name)
+			: Expression(AstKind::PathExpression), id(name) {
 	}
 };
 
