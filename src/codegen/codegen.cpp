@@ -44,16 +44,25 @@ public:
 	Result visitFunction(FunctionDeclaration* funNode) {
 		auto           name = funNode->id.name;
 		wabt::Location loc;
-		auto           func_field = std::make_unique<wabt::FuncModuleField>(loc, name);
 
-		func = &func_field->func;
+		auto func_field = std::make_unique<wabt::FuncModuleField>(loc, name);
+		func            = &func_field->func;
 
 		visitFunctionType(funNode->signature.get());
 		visitBlockExpression(funNode->body.get());
-
 		func->exprs.swap(exprs);
 
 		module->AppendField(std::move(func_field));
+
+		if (funNode->isPublic) {
+			auto export_field          = std::make_unique<wabt::ExportModuleField>(loc);
+			export_field->export_.kind = wabt::ExternalKind::Func;
+			export_field->export_.name = name;
+			auto index                 = module->funcs.size() - 1;
+			export_field->export_.var  = wabt::Var(index, loc);
+			module->AppendField(std::move(export_field));
+		}
+
 		return Result::Ok;
 	}
 

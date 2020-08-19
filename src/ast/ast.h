@@ -122,7 +122,7 @@ class BlockExpession;
 class FunctionDeclaration : public StatementMixin<StatementKind::FunctionDeclaration> {
 public:
 	FunctionDeclaration(std::string name, const Location& loc = Location())
-			: StatementMixin<StatementKind::FunctionDeclaration>(loc), id(name) {
+			: StatementMixin<StatementKind::FunctionDeclaration>(loc), id(name), isPublic(true) {
 	}
 	~FunctionDeclaration() {
 	}
@@ -130,6 +130,7 @@ public:
 	Identifier                      id;
 	std::unique_ptr<FunctionType>   signature;
 	std::unique_ptr<BlockExpession> body;
+	bool                            isPublic;
 };
 
 // Expression
