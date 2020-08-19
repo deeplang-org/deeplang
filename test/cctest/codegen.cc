@@ -8,7 +8,7 @@ using namespace dp;
 using namespace dp::internal;
 
 TEST(testCase, codegen) {
-	auto mod = std::make_unique<Module>();
+	auto mod = std::make_unique<Module>("Test");
 
 	auto mainFunc = std::make_unique<FunctionDeclaration>("main");
 

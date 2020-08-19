@@ -25,14 +25,14 @@ public:
 	// Statements
 
 	Result visitStatement(Statement* stmt) {
-		switch (stmt->kind) {
-		case AstKind::ExpressionStatement:
+		switch (stmt->kind()) {
+		case StatementKind::Expression:
 			visitExpressionStatement(static_cast<ExpressionStatement*>(stmt));
 			break;
-		case AstKind::FunctionDeclaration:
+		case StatementKind::FunctionDeclaration:
 			visitFunction(static_cast<FunctionDeclaration*>(stmt));
 			break;
-		case AstKind::VariableDeclaration:
+		case StatementKind::VariableDeclaration:
 			visitVariableDeclaration(static_cast<VariableDeclaration*>(stmt));
 			break;
 		default:
@@ -98,17 +98,17 @@ public:
 	// Expressions
 
 	Result visitExpression(Expression* expr) {
-		switch (expr->kind) {
-		case AstKind::LiteralExpression:
+		switch (expr->kind()) {
+		case ExpressionKind::Literal:
 			visitLiteral(static_cast<LiteralExpression*>(expr));
 			break;
-		case AstKind::PathExpression:
+		case ExpressionKind::Path:
 			visitPathExpression(static_cast<PathExpression*>(expr));
 			break;
-		case AstKind::BinaryExpression:
+		case ExpressionKind::Binary:
 			visitBinaryExpression(static_cast<BinaryExpression*>(expr));
 			break;
-		case AstKind::BlockExpression:
+		case ExpressionKind::Block:
 			visitBlockExpression(static_cast<BlockExpession*>(expr));
 		default:
 			return Result::Error;
