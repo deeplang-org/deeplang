@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "ast/ast.h"
+#include "DLParserVisitor.h"
 
 namespace dp {
 namespace internal {

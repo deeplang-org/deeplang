@@ -2,11 +2,12 @@
 #include <fstream>
 #include "antlr4-runtime.h"
 #include "wabt/src/option-parser.h"
-#include "DLLexer.h"
-#include "DLParser.h"
+// #include "DLLexer.h"
+// #include "DLParser.h"
+#include "parsing/parsing.h"
 
 
-using namespace antlr4;
+// using namespace antlr4;
 using namespace wabt;
 
 
@@ -59,19 +60,21 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  ANTLRInputStream input(infile);
-  DLLexer lexer(&input);
-  CommonTokenStream tokens(&lexer);
+  dp::internal::Parser* parser = new dp::internal::Parser();
+  antlr4::ANTLRInputStream input(infile);
+  parser->parseModule(input);
+  // DLLexer lexer(&input);
+  // CommonTokenStream tokens(&lexer);
 
-  tokens.fill();
-  for (auto token : tokens.getTokens()) {
-    std::cout << token->toString() << std::endl;
-  }
+  // tokens.fill();
+  // for (auto token : tokens.getTokens()) {
+  //   std::cout << token->toString() << std::endl;
+  // }
 
-  DLParser parser(&tokens);
-  tree::ParseTree *tree = parser.program();
+  // DLParser parser(&tokens);
+  // tree::ParseTree *tree = parser.program();
 
-  std::cout << tree->toStringTree(&parser) << std::endl;
+  // std::cout << tree->toStringTree(&parser) << std::endl;
 
   return 0;
 }

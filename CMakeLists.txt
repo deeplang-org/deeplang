@@ -54,6 +54,8 @@ function (deeplang_executable)
         src/ast/ast.cpp
         src/codegen/codegen.h
         src/codegen/codegen.cpp
+        src/parsing/parsing.cc
+        src/parsing/parsing.h
 
         ${EXE_SOURCES}
     )

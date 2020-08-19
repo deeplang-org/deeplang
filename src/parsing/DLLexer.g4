@@ -327,7 +327,7 @@ fragment NONDIGIT: [a-zA-Z_]; //TODO: define Chars
 
 
 // As defined in https://dev.mysql.com/doc/refman/8.0/en/identifiers.html.
-fragment LETTER_WHEN_UNQUOTED: DIGIT | LETTER_WHEN_UNQUOTED_NO_DIGIT | WHITESPACE;
+fragment LETTER_WHEN_UNQUOTED: DIGIT | LETTER_WHEN_UNQUOTED_NO_DIGIT;
 
 fragment LETTER_WHEN_UNQUOTED_NO_DIGIT: [a-zA-Z_$];//\u0080-\uffff];
 
