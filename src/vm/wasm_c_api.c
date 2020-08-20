@@ -8,9 +8,6 @@
 #if WASM_ENABLE_INTERP != 0
 #include "wasm_runtime.h"
 #endif
-#if WASM_ENABLE_AOT != 0
-#include "aot_runtime.h"
-#endif
 
 #define NOT_REACHED() bh_assert(!"should not be reached")
 
@@ -224,9 +221,6 @@ wasm_engine_new()
 #endif
 
     if (INTERP_MODE == mode) {
-#if WASM_ENABLE_INTERP == 0
-        bh_assert(!"does not support INTERP_MODE. Please recompile");
-#endif
     }
     else {
 #if WASM_ENABLE_AOT == 0
@@ -1263,16 +1257,6 @@ wasm_func_new_internal(wasm_store_t *store,
                     : func_interp->u.func->func_type;
 #endif
     }
-    else {
-#if WASM_ENABLE_AOT != 0
-        /* use same index to trace the function type in AOTFuncType **func_types */
-        AOTModuleInstance *inst_aot = (AOTModuleInstance *)inst_comm_rt;
-        AOTFunctionInstance *func_aot =
-          (AOTFunctionInstance *)inst_aot->export_funcs.ptr + func_idx_rt;
-        type_rt = func_aot->is_import_func ? func_aot->u.func_import->func_type
-                                           : func_aot->u.func.func_type;
-#endif
-    }
 
     if (!type_rt) {
         goto failed;
@@ -1751,105 +1735,6 @@ interp_global_get(const WASMModuleInstance *inst_interp,
 }
 #endif
 
-#if WASM_ENABLE_AOT != 0
-static bool
-aot_global_set(const AOTModuleInstance *inst_aot,
-               uint16 global_idx_rt,
-               const wasm_val_t *v)
-{
-    AOTModule *module_aot = inst_aot->aot_module.ptr;
-    uint8 val_type_rt = 0;
-    uint32 data_offset = 0;
-    void *data = NULL;
-    bool ret = true;
-
-    if (global_idx_rt < module_aot->import_global_count) {
-        data_offset = module_aot->import_globals[global_idx_rt].data_offset;
-        val_type_rt = module_aot->import_globals[global_idx_rt].type;
-    }
-    else {
-        data_offset =
-          module_aot->globals[global_idx_rt - module_aot->import_global_count]
-            .data_offset;
-        val_type_rt =
-          module_aot->globals[global_idx_rt - module_aot->import_global_count]
-            .type;
-    }
-
-    data = inst_aot->global_data.ptr + data_offset;
-    switch (val_type_rt) {
-        case VALUE_TYPE_I32:
-            bh_assert(WASM_I32 == v->kind);
-            *((int32 *)data) = v->of.i32;
-            break;
-        case VALUE_TYPE_F32:
-            bh_assert(WASM_F32 == v->kind);
-            *((float32 *)data) = v->of.f32;
-            break;
-        case VALUE_TYPE_I64:
-            bh_assert(WASM_I64 == v->kind);
-            *((int64 *)data) = v->of.i64;
-            break;
-        case VALUE_TYPE_F64:
-            bh_assert(WASM_F64 == v->kind);
-            *((float64 *)data) = v->of.f64;
-            break;
-        default:
-            LOG_DEBUG("unexpected value type %d", val_type_rt);
-            ret = false;
-    }
-    return ret;
-}
-
-static bool
-aot_global_get(const AOTModuleInstance *inst_aot,
-               uint16 global_idx_rt,
-               wasm_val_t *out)
-{
-    AOTModule *module_aot = inst_aot->aot_module.ptr;
-    uint8 val_type_rt = 0;
-    uint32 data_offset = 0;
-    void *data = NULL;
-    bool ret = true;
-
-    if (global_idx_rt < module_aot->import_global_count) {
-        data_offset = module_aot->import_globals[global_idx_rt].data_offset;
-        val_type_rt = module_aot->import_globals[global_idx_rt].type;
-    }
-    else {
-        data_offset =
-          module_aot->globals[global_idx_rt - module_aot->import_global_count]
-            .data_offset;
-        val_type_rt =
-          module_aot->globals[global_idx_rt - module_aot->import_global_count]
-            .type;
-    }
-
-    data = inst_aot->global_data.ptr + data_offset;
-    switch (val_type_rt) {
-        case VALUE_TYPE_I32:
-            out->kind = WASM_I32;
-            out->of.i32 = *((int32 *)data);
-            break;
-        case VALUE_TYPE_F32:
-            out->kind = WASM_F32;
-            out->of.f32 = *((float32 *)data);
-            break;
-        case VALUE_TYPE_I64:
-            out->kind = WASM_I64;
-            out->of.i64 = *((int64 *)data);
-            break;
-        case VALUE_TYPE_F64:
-            out->kind = WASM_F64;
-            out->of.f64 = *((float64 *)data);
-            break;
-        default:
-            LOG_DEBUG("unexpected value type %d", val_type_rt);
-            ret = false;
-    }
-    return ret;
-}
-#endif
 
 void
 wasm_global_set(wasm_global_t *global, const wasm_val_t *v)
@@ -1860,12 +1745,6 @@ wasm_global_set(wasm_global_t *global, const wasm_val_t *v)
 #if WASM_ENABLE_INTERP != 0
         (void)interp_global_set((WASMModuleInstance *)global->inst_comm_rt,
                                 global->global_idx_rt, v);
-#endif
-    }
-    else {
-#if WASM_ENABLE_AOT != 0
-        (void)aot_global_set((AOTModuleInstance *)global->inst_comm_rt,
-                             global->global_idx_rt, v);
 #endif
     }
 }
@@ -1924,25 +1803,6 @@ wasm_global_new_internal(wasm_store_t *store,
         is_mutable = global_interp->is_mutable;
 #endif
     }
-    else {
-#if WASM_ENABLE_AOT != 0
-        AOTModuleInstance *inst_aot = (AOTModuleInstance *)inst_comm_rt;
-        AOTModule *module_aot = inst_aot->aot_module.ptr;
-        if (global_idx_rt < module_aot->import_global_count) {
-            AOTImportGlobal *global_import_aot =
-              module_aot->import_globals + global_idx_rt;
-            val_type_rt = global_import_aot->type;
-            is_mutable = global_import_aot->is_mutable;
-        }
-        else {
-            AOTGlobal *global_aot =
-              module_aot->globals
-              + (global_idx_rt - module_aot->import_global_count);
-            val_type_rt = global_aot->type;
-            is_mutable = global_aot->is_mutable;
-        }
-#endif
-    }
 
     global->type = wasm_globaltype_new_internal(val_type_rt, is_mutable);
     if (!global->type) {
@@ -1958,12 +1818,6 @@ wasm_global_new_internal(wasm_store_t *store,
 #if WASM_ENABLE_INTERP != 0
         interp_global_get((WASMModuleInstance *)inst_comm_rt, global_idx_rt,
                           global->init);
-#endif
-    }
-    else {
-#if WASM_ENABLE_AOT != 0
-        aot_global_get((AOTModuleInstance *)inst_comm_rt, global_idx_rt,
-                       global->init);
 #endif
     }
 
@@ -2214,192 +2068,6 @@ failed:
 }
 #endif /* WASM_ENABLE_INTERP */
 
-#if WASM_ENABLE_AOT != 0
-static bool
-aot_link_func(const wasm_instance_t *inst,
-              const AOTModule *module_aot,
-              uint32 import_func_idx_rt,
-              wasm_func_t *import)
-{
-    AOTImportFunc *import_aot_func = NULL;
-    wasm_func_t *cloned = NULL;
-
-    bh_assert(inst && module_aot && import);
-
-    import_aot_func = module_aot->import_funcs + import_func_idx_rt;
-    bh_assert(import_aot_func);
-
-    cloned = wasm_func_copy(import);
-    if (!cloned || !bh_vector_append((Vector *)inst->imports, &cloned)) {
-        return false;
-    }
-
-    import_aot_func->call_conv_raw = true;
-    import_aot_func->attachment = wasm_func_copy(import);
-    import_aot_func->func_ptr_linked = native_func_trampoline;
-    import->func_idx_rt = import_func_idx_rt;
-
-    return true;
-}
-
-static bool
-aot_link_global(const AOTModule *module_aot,
-                uint16 global_idx_rt,
-                wasm_global_t *import)
-{
-    AOTImportGlobal *import_aot_global = NULL;
-    const wasm_valtype_t *val_type = NULL;
-
-    bh_assert(module_aot && import);
-
-    import_aot_global = module_aot->import_globals + global_idx_rt;
-    bh_assert(import_aot_global);
-
-    val_type = wasm_globaltype_content(wasm_global_type(import));
-    bh_assert(val_type);
-
-    switch (wasm_valtype_kind(val_type)) {
-        case WASM_I32:
-            bh_assert(VALUE_TYPE_I32 == import_aot_global->type);
-            import_aot_global->global_data_linked.i32 = import->init->of.i32;
-            break;
-        case WASM_I64:
-            bh_assert(VALUE_TYPE_I64 == import_aot_global->type);
-            import_aot_global->global_data_linked.i64 = import->init->of.i64;
-            break;
-        case WASM_F32:
-            bh_assert(VALUE_TYPE_F32 == import_aot_global->type);
-            import_aot_global->global_data_linked.f32 = import->init->of.f32;
-            break;
-        case WASM_F64:
-            bh_assert(VALUE_TYPE_F64 == import_aot_global->type);
-            import_aot_global->global_data_linked.f64 = import->init->of.f64;
-            break;
-        default:
-            goto failed;
-    }
-
-    import->global_idx_rt = global_idx_rt;
-    return true;
-
-failed:
-    LOG_DEBUG("%s failed", __FUNCTION__);
-    return false;
-}
-
-static int32
-aot_link(const wasm_instance_t *inst,
-         const AOTModule *module_aot,
-         wasm_extern_t *imports[])
-{
-    uint32 i = 0;
-    uint32 import_func_i = 0;
-    uint32 import_global_i = 0;
-    wasm_extern_t *import = NULL;
-    wasm_func_t *func = NULL;
-    wasm_global_t *global = NULL;
-
-    bh_assert(inst && module_aot && imports);
-
-    while (import_func_i < module_aot->import_func_count
-           || import_global_i < module_aot->import_global_count) {
-        import = imports[i++];
-
-        bh_assert(import);
-
-        switch (wasm_extern_kind(import)) {
-            case WASM_EXTERN_FUNC:
-                bh_assert(import_func_i < module_aot->import_func_count);
-                func = wasm_extern_as_func((wasm_extern_t *)import);
-                if (!aot_link_func(inst, module_aot, import_func_i++, func)) {
-                    goto failed;
-                }
-
-                break;
-            case WASM_EXTERN_GLOBAL:
-                bh_assert(import_global_i < module_aot->import_global_count);
-                global = wasm_extern_as_global((wasm_extern_t *)import);
-                if (!aot_link_global(module_aot, import_global_i++, global)) {
-                    goto failed;
-                }
-
-                break;
-            case WASM_EXTERN_MEMORY:
-                break;
-            case WASM_EXTERN_TABLE:
-                break;
-            default:
-                goto failed;
-        }
-    }
-
-    return i;
-
-failed:
-    LOG_DEBUG("%s failed", __FUNCTION__);
-    return -1;
-}
-
-static bool
-aot_process_export(wasm_store_t *store,
-                   const AOTModuleInstance *inst_aot,
-                   wasm_extern_vec_t *externals)
-{
-    uint32 i = 0;
-    uint32 export_func_i = 0;
-    wasm_extern_t *external = NULL;
-    AOTModule *module_aot = NULL;
-
-    bh_assert(store && inst_aot && externals);
-
-    module_aot = (AOTModule *)inst_aot->aot_module.ptr;
-    bh_assert(module_aot);
-
-    for (i = 0; i < module_aot->export_count; ++i) {
-        AOTExport *export = module_aot->exports + i;
-        wasm_func_t *func = NULL;
-        wasm_global_t *global = NULL;
-
-        switch (export->kind) {
-            case EXPORT_KIND_FUNC:
-                func =
-                  wasm_func_new_internal(store, export_func_i++,
-                                         (WASMModuleInstanceCommon *)inst_aot);
-                if (!func) {
-                    goto failed;
-                }
-
-                external = wasm_func_as_extern(func);
-                break;
-            case EXPORT_KIND_GLOBAL:
-                global = wasm_global_new_internal(
-                  store, export->index, (WASMModuleInstanceCommon *)inst_aot);
-                if (!global) {
-                    goto failed;
-                }
-
-                external = wasm_global_as_extern(global);
-                break;
-            case EXPORT_KIND_MEMORY:
-            case EXPORT_KIND_TABLE:
-                break;
-            default:
-                NOT_REACHED();
-                goto failed;
-        }
-
-        if (!bh_vector_append((Vector *)externals, &external)) {
-            goto failed;
-        }
-    }
-
-    return true;
-
-failed:
-    LOG_DEBUG("%s failed", __FUNCTION__);
-    return false;
-}
-#endif /* WASM_ENABLE_AOT */
 
 wasm_instance_t *
 wasm_instance_new(wasm_store_t *store,
@@ -2433,21 +2101,6 @@ wasm_instance_new(wasm_store_t *store,
 
         import_count = interp_link(instance, (WASMModule *)*module,
                                    (wasm_extern_t **)imports);
-#endif
-    }
-    else {
-#if WASM_ENABLE_AOT != 0
-        import_count = ((AOTModule *)*module)->import_func_count
-                       + ((AOTModule *)*module)->import_global_count
-                       + ((AOTModule *)*module)->import_memory_count
-                       + ((AOTModule *)*module)->import_table_count;
-        INIT_VEC(instance->imports, wasm_extern_vec, import_count);
-        if (!instance->imports) {
-            goto failed;
-        }
-
-        import_count =
-          aot_link(instance, (AOTModule *)*module, (wasm_extern_t **)imports);
 #endif
     }
     if (import_count < 0) {
@@ -2501,21 +2154,6 @@ wasm_instance_new(wasm_store_t *store,
         }
 #endif
     }
-    else {
-#if WASM_ENABLE_AOT != 0
-        uint32 export_cnt =
-          ((AOTModuleInstance *)instance->inst_comm_rt)->export_func_count;
-
-        INIT_VEC(instance->exports, wasm_extern_vec, export_cnt);
-
-        if (!aot_process_export(store,
-                                (AOTModuleInstance *)instance->inst_comm_rt,
-                                instance->exports)) {
-            goto failed;
-        }
-#endif
-    }
-
     /* add it to a watching list in store */
     if (!bh_vector_append((Vector *)store->instances, &instance)) {
         goto failed;

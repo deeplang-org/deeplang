@@ -24,19 +24,8 @@ wasm_exec_env_create_internal(struct WASMModuleInstanceCommon *module_inst,
 
     memset(exec_env, 0, (uint32)total_size);
 
-#if WASM_ENABLE_AOT != 0
-    if (!(exec_env->argv_buf = wasm_runtime_malloc(sizeof(uint32) * 64))) {
-        goto fail1;
-    }
-#endif
 
-#if WASM_ENABLE_THREAD_MGR != 0
-    if (os_mutex_init(&exec_env->wait_lock) != 0)
-        goto fail2;
 
-    if (os_cond_init(&exec_env->wait_cond) != 0)
-        goto fail3;
-#endif
 
     exec_env->module_inst = module_inst;
     exec_env->wasm_stack_size = stack_size;
@@ -45,15 +34,6 @@ wasm_exec_env_create_internal(struct WASMModuleInstanceCommon *module_inst,
     exec_env->wasm_stack.s.top = exec_env->wasm_stack.s.bottom;
     return exec_env;
 
-#if WASM_ENABLE_THREAD_MGR != 0
-fail3:
-    os_mutex_destroy(&exec_env->wait_lock);
-fail2:
-#endif
-#if WASM_ENABLE_AOT != 0
-    wasm_runtime_free(exec_env->argv_buf);
-fail1:
-#endif
     wasm_runtime_free(exec_env);
     return NULL;
 }
@@ -70,13 +50,6 @@ wasm_exec_env_destroy_internal(WASMExecEnv *exec_env)
         jmpbuf = jmpbuf_prev;
     }
 #endif
-#if WASM_ENABLE_THREAD_MGR != 0
-    os_mutex_destroy(&exec_env->wait_lock);
-    os_cond_destroy(&exec_env->wait_cond);
-#endif
-#if WASM_ENABLE_AOT != 0
-    wasm_runtime_free(exec_env->argv_buf);
-#endif
     wasm_runtime_free(exec_env);
 }
 
@@ -88,19 +61,6 @@ wasm_exec_env_create(struct WASMModuleInstanceCommon *module_inst,
                                                           stack_size);
     /* Set the aux_stack_boundary to 0 */
     exec_env->aux_stack_boundary = 0;
-#if WASM_ENABLE_THREAD_MGR != 0
-    WASMCluster *cluster;
-
-    if (!exec_env)
-        return NULL;
-
-    /* Create a new cluster for this exec_env */
-    cluster = wasm_cluster_create(exec_env);
-    if (!cluster) {
-        wasm_exec_env_destroy_internal(exec_env);
-        return NULL;
-    }
-#endif
     return exec_env;
 }
 
@@ -132,19 +92,6 @@ wasm_exec_env_set_thread_info(WASMExecEnv *exec_env)
                                       + RESERVED_BYTES_TO_NATIVE_STACK_BOUNDARY;
 }
 
-#if WASM_ENABLE_THREAD_MGR != 0
-void *
-wasm_exec_env_get_thread_arg(WASMExecEnv *exec_env)
-{
-    return exec_env->thread_arg;
-}
-
-void
-wasm_exec_env_set_thread_arg(WASMExecEnv *exec_env, void *thread_arg)
-{
-    exec_env->thread_arg = thread_arg;
-}
-#endif
 
 #ifdef OS_ENABLE_HW_BOUND_CHECK
 void

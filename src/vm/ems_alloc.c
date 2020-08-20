@@ -376,32 +376,21 @@ gc_alloc_vo_internal(void *vheap, gc_size_t size,
     hmu_set_ut(hmu, HMU_VO);
     hmu_unfree_vo(hmu);
 
-#if BH_ENABLE_GC_VERIFY != 0
-    hmu_init_prefix_and_suffix(hmu, tot_size, file, line);
-#endif
 
     ret = hmu_to_obj(hmu);
     if (tot_size > tot_size_unaligned)
         /* clear buffer appended by GC_ALIGN_8() */
         memset((uint8*)ret + size, 0, tot_size - tot_size_unaligned);
 
-#if BH_ENABLE_MEMORY_PROFILING != 0
-    os_printf("HEAP.ALLOC: heap: %p, size: %u\n", heap, size);
-#endif
 
 finish:
     os_mutex_unlock(&heap->lock);
     return ret;
 }
 
-#if BH_ENABLE_GC_VERIFY == 0
 gc_object_t
 gc_realloc_vo(void *vheap, void *ptr, gc_size_t size)
-#else
-gc_object_t
-gc_realloc_vo_internal(void *vheap, void *ptr, gc_size_t size,
-                       const char *file, int line)
-#endif
+
 {
     gc_heap_t* heap = (gc_heap_t*) vheap;
     hmu_t *hmu = NULL, *hmu_old = NULL, *hmu_next;
@@ -463,15 +452,11 @@ gc_realloc_vo_internal(void *vheap, void *ptr, gc_size_t size,
     hmu_set_ut(hmu, HMU_VO);
     hmu_unfree_vo(hmu);
 
-#if BH_ENABLE_GC_VERIFY != 0
-    hmu_init_prefix_and_suffix(hmu, tot_size, file, line);
-#endif
+
 
     ret = hmu_to_obj(hmu);
 
-#if BH_ENABLE_MEMORY_PROFILING != 0
-    os_printf("HEAP.ALLOC: heap: %p, size: %u\n", heap, size);
-#endif
+
 
 finish:
     os_mutex_unlock(&heap->lock);
@@ -505,14 +490,10 @@ gci_is_heap_valid(gc_heap_t *heap)
     return GC_TRUE;
 }
 
-#if BH_ENABLE_GC_VERIFY == 0
+
 int
 gc_free_vo(void *vheap, gc_object_t obj)
-#else
-int
-gc_free_vo_internal(void *vheap, gc_object_t obj,
-                    const char *file, int line)
-#endif
+
 {
     gc_heap_t* heap = (gc_heap_t*) vheap;
     hmu_t *hmu = NULL;
@@ -532,9 +513,7 @@ gc_free_vo_internal(void *vheap, gc_object_t obj,
 
     if ((gc_uint8 *)hmu >= heap->base_addr
         && (gc_uint8 *)hmu < heap->base_addr + heap->current_size) {
-#if BH_ENABLE_GC_VERIFY != 0
-        hmu_verify(hmu);
-#endif
+
         ut = hmu_get_ut(hmu);
         if (ut == HMU_VO) {
             if (hmu_is_vo_freed(hmu)) {
@@ -548,9 +527,7 @@ gc_free_vo_internal(void *vheap, gc_object_t obj,
             g_total_free += size;
 
             heap->total_free_size += size;
-#if BH_ENABLE_MEMORY_PROFILING != 0
-            os_printf("HEAP.FREE, heap: %p, size: %u\n", heap, size);
-#endif
+
 
             if (!hmu_get_pinuse(hmu)) {
                 prev = (hmu_t*) ((char*) hmu - *((int*) hmu - 1));

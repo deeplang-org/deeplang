@@ -69,10 +69,6 @@ gc_init_with_pool(char *buf, gc_size_t buf_size)
     bh_assert(root->size <= HMU_FC_NORMAL_MAX_SIZE
               && HMU_FC_NORMAL_MAX_SIZE < q->size);
 
-#if BH_ENABLE_MEMORY_PROFILING != 0
-    os_printf("heap is successfully initialized with max_size=%u.\n",
-              heap_max_size);
-#endif
     return heap;
 }
 
@@ -147,23 +143,6 @@ gc_destroy_lock(gc_handle_t handle)
     os_mutex_destroy(&heap->lock);
 }
 
-#if BH_ENABLE_GC_VERIFY != 0
-void
-gci_verify_heap(gc_heap_t *heap)
-{
-    hmu_t *cur = NULL, *end = NULL;
-
-    bh_assert(heap && gci_is_heap_valid(heap));
-    cur = (hmu_t *)heap->base_addr;
-    end = (hmu_t *)(heap->base_addr + heap->current_size);
-    while(cur < end)
-    {
-        hmu_verify(cur);
-        cur = (hmu_t *)((gc_uint8*)cur + hmu_get_size(cur));
-    }
-    bh_assert(cur == end);
-}
-#endif
 
 void *
 gc_heap_stats(void *heap_arg, uint32* stats, int size)

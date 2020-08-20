@@ -12,15 +12,6 @@
 #if WASM_ENABLE_INTERP != 0
 #include "wasm_runtime.h"
 #endif
-#if WASM_ENABLE_AOT != 0
-#include "aot_runtime.h"
-#endif
-#if WASM_ENABLE_THREAD_MGR != 0
-#include "thread_manager.h"
-#endif
-#if WASM_ENABLE_SHARED_MEMORY != 0
-#include "wasm_shared_memory.h"
-#endif
 
 #if WASM_ENABLE_MULTI_MODULE != 0
 /*

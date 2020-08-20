@@ -86,17 +86,4 @@ void* bh_list_elem_next(void *node)
     return (node ? ((bh_list_link *) node)->next : NULL);
 }
 
-#if BH_DEBUG != 0
-static bool bh_list_is_elem_exist(bh_list *list, void *elem)
-{
-    bh_list_link *p = NULL;
-
-    if (!list || !elem) return false;
-
-    p = (list->head).next;
-    while (p && p != elem) p = p->next;
-
-    return (p != NULL);
-}
-#endif
 

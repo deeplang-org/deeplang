@@ -59,20 +59,6 @@ runtime_malloc(uint64 size, char *error_buf, uint32 error_buf_size)
     return mem;
 }
 
-#if WASM_ENABLE_MULTI_MODULE != 0
-static WASMModuleInstance *
-get_sub_module_inst(const WASMModuleInstance *parent_module_inst,
-                    const WASMModule *sub_module)
-{
-    bh_list *sub_module_inst_list = parent_module_inst->sub_module_inst_list;
-    WASMSubModInstNode *node = bh_list_first_elem(sub_module_inst_list);
-
-    while (node && sub_module != node->module_inst->module) {
-        node = bh_list_elem_next(node);
-    }
-    return node ? node->module_inst : NULL;
-}
-#endif
 
 /**
  * Destroy memory instances.
@@ -127,32 +113,6 @@ memory_instantiate(WASMModuleInstance *module_inst,
     uint64 total_size = heap_and_inst_size +
                         num_bytes_per_page * (uint64)init_page_count;
 
-#if WASM_ENABLE_SHARED_MEMORY != 0
-    bool is_shared_memory = flags & 0x02 ? true : false;
-
-    /* shared memory */
-    if (is_shared_memory) {
-        WASMSharedMemNode *node =
-            wasm_module_get_shared_memory(
-                (WASMModuleCommon *)module_inst->module);
-        /* If the memory of this module has been instantiated,
-            return the memory instance directly */
-        if (node) {
-            uint32 ref_count;
-            ref_count = shared_memory_inc_reference(
-                            (WASMModuleCommon *)module_inst->module);
-            bh_assert(ref_count > 0);
-            memory = (WASMMemoryInstance *)shared_memory_get_memory_inst(node);
-            bh_assert(memory);
-
-            (void)ref_count;
-            return memory;
-        }
-        /* Allocate max page for shared memory */
-        total_size = heap_and_inst_size +
-                     num_bytes_per_page * (uint64)max_page_count;
-    }
-#endif
 
     /* Allocate memory space, addr data and global data */
     if (!(memory = runtime_malloc(total_size,
@@ -167,13 +127,6 @@ memory_instantiate(WASMModuleInstance *module_inst,
 
     memory->heap_data = memory->base_addr;
     memory->memory_data = memory->heap_data + heap_size;
-#if WASM_ENABLE_SHARED_MEMORY != 0
-    if (is_shared_memory) {
-        memory->end_addr = memory->memory_data +
-                           num_bytes_per_page * memory->max_page_count;
-    }
-    else
-#endif
     {
         memory->end_addr = memory->memory_data +
                            num_bytes_per_page * memory->cur_page_count;
@@ -191,20 +144,6 @@ memory_instantiate(WASMModuleInstance *module_inst,
 
     memory->heap_base_offset = -(int32)heap_size;
 
-#if WASM_ENABLE_SHARED_MEMORY != 0
-    if (is_shared_memory) {
-        memory->is_shared = true;
-        if (!shared_memory_set_memory_inst(
-                (WASMModuleCommon *)module_inst->module,
-                (WASMMemoryInstanceCommon *)memory)) {
-            set_error_buf(error_buf, error_buf_size,
-                          "Instantiate memory failed:"
-                          "allocate memory failed.");
-            wasm_runtime_free(memory);
-            return NULL;
-        }
-    }
-#endif
     return memory;
 }
 
@@ -238,30 +177,6 @@ memories_instantiate(const WASMModule *module,
         uint32 flags = import->u.memory.flags;
         uint32 actual_heap_size = heap_size;
 
-#if WASM_ENABLE_MULTI_MODULE != 0
-        WASMMemoryInstance *memory_inst_linked = NULL;
-        if (import->u.memory.import_module != NULL) {
-            LOG_DEBUG("(%s, %s) is a memory of a sub-module",
-                      import->u.memory.module_name,
-                      import->u.memory.field_name);
-
-            // TODO: how about native memory ?
-            WASMModuleInstance *module_inst_linked =
-              get_sub_module_inst(
-                  module_inst,
-                  import->u.memory.import_module);
-            bh_assert(module_inst_linked);
-
-            memory_inst_linked =
-              wasm_lookup_memory(module_inst_linked,
-                                 import->u.memory.field_name);
-            bh_assert(memory_inst_linked);
-
-            memories[mem_index++] = memory_inst_linked;
-            memory = memory_inst_linked;
-        }
-        else
-#endif
         {
             if (!(memory = memories[mem_index++] = memory_instantiate(
                     module_inst, num_bytes_per_page, init_page_count,
@@ -295,9 +210,6 @@ memories_instantiate(const WASMModule *module,
               memories, memory_count);
             return NULL;
         }
-#if WASM_ENABLE_MULTI_MODULE != 0
-        memory->owner = module_inst;
-#endif
     }
 
     if (mem_index == 0) {
@@ -541,9 +453,6 @@ functions_instantiate(const WASMModule *module,
 
         function->local_offsets = function->u.func->local_offsets;
 
-#if WASM_ENABLE_FAST_INTERP != 0
-        function->const_cell_num = function->u.func->const_cell_num;
-#endif
 
         function++;
     }
@@ -628,41 +537,7 @@ globals_instantiate(const WASMModule *module,
         WASMGlobalImport *global_import = &import->u.global;
         global->type = global_import->type;
         global->is_mutable = global_import->is_mutable;
-#if WASM_ENABLE_MULTI_MODULE != 0
-        if (global_import->import_module) {
-            WASMModuleInstance *sub_module_inst = get_sub_module_inst(
-              module_inst, global_import->import_module);
-            bh_assert(sub_module_inst);
 
-            WASMGlobalInstance *global_inst_linked =
-              wasm_lookup_global(sub_module_inst, global_import->field_name);
-            bh_assert(global_inst_linked);
-
-            global->import_global_inst = global_inst_linked;
-            global->import_module_inst = sub_module_inst;
-
-            /**
-             * although, actually don't need initial_value for an imported
-             * global, we keep it here like a place holder because of
-             * global-data and
-             * (global $g2 i32 (global.get $g1))
-             */
-            WASMGlobal *linked_global = global_import->import_global_linked;
-            InitializerExpression *linked_init_expr =
-              &(linked_global->init_expr);
-
-            bool ret = parse_init_expr(
-              linked_init_expr,
-              sub_module_inst->globals,
-              sub_module_inst->global_count, &(global->initial_value));
-            if (!ret) {
-                set_error_buf(error_buf, error_buf_size,
-                              "Instantiate global failed: unknown global.");
-                return NULL;
-            }
-        }
-        else
-#endif
         {
             /* native globals share their initial_values in one module */
             global->initial_value = global_import->global_data_linked;
@@ -799,41 +674,6 @@ export_functions_instantiate(const WASMModule *module,
     return export_funcs;
 }
 
-#if WASM_ENABLE_MULTI_MODULE != 0
-static void
-export_globals_deinstantiate(WASMExportGlobInstance *globals)
-{
-    if (globals)
-        wasm_runtime_free(globals);
-}
-
-static WASMExportGlobInstance *
-export_globals_instantiate(const WASMModule *module,
-                          WASMModuleInstance *module_inst,
-                          uint32 export_glob_count, char *error_buf,
-                          uint32 error_buf_size)
-{
-    WASMExportGlobInstance *export_globals, *export_global;
-    WASMExport *export = module->exports;
-    uint32 i;
-    uint64 total_size = sizeof(WASMExportGlobInstance) * (uint64)export_glob_count;
-
-    if (!(export_global = export_globals = runtime_malloc
-                (total_size, error_buf, error_buf_size))) {
-        return NULL;
-    }
-
-    for (i = 0; i < module->export_count; i++, export++)
-        if (export->kind == EXPORT_KIND_GLOBAL) {
-            export_global->name = export->name;
-            export_global->global = &module_inst->globals[export->index];
-            export_global++;
-        }
-
-    bh_assert((uint32)(export_global - export_globals) == export_glob_count);
-    return export_globals;
-}
-#endif
 
 static bool
 execute_post_inst_function(WASMModuleInstance *module_inst)
@@ -862,35 +702,6 @@ execute_post_inst_function(WASMModuleInstance *module_inst)
                                                   0, NULL);
 }
 
-#if WASM_ENABLE_BULK_MEMORY != 0
-static bool
-execute_memory_init_function(WASMModuleInstance *module_inst)
-{
-    WASMFunctionInstance *memory_init_func = NULL;
-    WASMType *memory_init_func_type;
-    uint32 i;
-
-    for (i = 0; i < module_inst->export_func_count; i++)
-        if (!strcmp(module_inst->export_functions[i].name, "__wasm_call_ctors")) {
-            memory_init_func = module_inst->export_functions[i].function;
-            break;
-        }
-
-    if (!memory_init_func)
-        /* Not found */
-        return true;
-
-    memory_init_func_type = memory_init_func->u.func->func_type;
-    if (memory_init_func_type->param_count != 0
-        || memory_init_func_type->result_count != 0)
-        /* Not a valid function type, ignore it */
-        return true;
-
-    return wasm_create_exec_env_and_call_function(module_inst,
-                                                  memory_init_func,
-                                                  0, NULL);
-}
-#endif
 
 static bool
 execute_start_function(WASMModuleInstance *module_inst)
@@ -905,65 +716,6 @@ execute_start_function(WASMModuleInstance *module_inst)
 
     return wasm_create_exec_env_and_call_function(module_inst, func, 0, NULL);
 }
-
-#if WASM_ENABLE_MULTI_MODULE != 0
-static bool
-sub_module_instantiate(WASMModule *module, WASMModuleInstance *module_inst,
-                          uint32 stack_size, uint32 heap_size, char *error_buf,
-                          uint32 error_buf_size)
-{
-    bh_list *sub_module_inst_list = module_inst->sub_module_inst_list;
-    WASMRegisteredModule *sub_module_list_node =
-      bh_list_first_elem(module->import_module_list);
-
-    while (sub_module_list_node) {
-        WASMModule *sub_module = (WASMModule*)sub_module_list_node->module;
-        WASMModuleInstance *sub_module_inst = wasm_instantiate(
-          sub_module, false, stack_size, heap_size, error_buf, error_buf_size);
-        if (!sub_module_inst) {
-            LOG_DEBUG("instantiate %s failed",
-                      sub_module_list_node->module_name);
-            set_error_buf_v(error_buf, error_buf_size, "instantiate %s failed",
-                            sub_module_list_node->module_name);
-            return false;
-        }
-
-        WASMSubModInstNode *sub_module_inst_list_node = runtime_malloc
-            (sizeof(WASMSubModInstNode), error_buf, error_buf_size);
-        if (!sub_module_inst_list_node) {
-            LOG_DEBUG("Malloc WASMSubModInstNode failed, SZ:%d",
-                      sizeof(WASMSubModInstNode));
-            wasm_deinstantiate(sub_module_inst, false);
-            return false;
-        }
-
-        sub_module_inst_list_node->module_inst = sub_module_inst;
-        sub_module_inst_list_node->module_name =
-          sub_module_list_node->module_name;
-        bh_list_status ret =
-          bh_list_insert(sub_module_inst_list, sub_module_inst_list_node);
-        bh_assert(BH_LIST_SUCCESS == ret);
-        (void)ret;
-
-        sub_module_list_node = bh_list_elem_next(sub_module_list_node);
-    }
-
-    return true;
-}
-
-static void
-sub_module_deinstantiate(WASMModuleInstance *module_inst)
-{
-    bh_list *list = module_inst->sub_module_inst_list;
-    WASMSubModInstNode *node = bh_list_first_elem(list);
-    while (node) {
-        WASMSubModInstNode *next_node = bh_list_elem_next(node);
-        bh_list_remove(list, node);
-        wasm_deinstantiate(node->module_inst, false);
-        node = next_node;
-    }
-}
-#endif
 
 /**
  * Instantiate module
@@ -1293,40 +1045,6 @@ wasm_lookup_function(const WASMModuleInstance *module_inst,
     (void)signature;
     return NULL;
 }
-
-#if WASM_ENABLE_MULTI_MODULE != 0
-WASMGlobalInstance *
-wasm_lookup_global(const WASMModuleInstance *module_inst, const char *name)
-{
-    uint32 i;
-    for (i = 0; i < module_inst->export_glob_count; i++)
-        if (!strcmp(module_inst->export_globals[i].name, name))
-            return module_inst->export_globals[i].global;
-    return NULL;
-}
-
-WASMMemoryInstance *
-wasm_lookup_memory(const WASMModuleInstance *module_inst, const char *name)
-{
-    /**
-     * using a strong assumption that one module instance only has
-     * one memory instance
-    */
-    (void)module_inst->export_memories;
-    return module_inst->memories[0];
-}
-
-WASMTableInstance *
-wasm_lookup_table(const WASMModuleInstance *module_inst, const char *name)
-{
-    /**
-     * using a strong assumption that one module instance only has
-     * one table instance
-     */
-    (void)module_inst->export_tables;
-    return module_inst->tables[0];
-}
-#endif
 
 bool
 wasm_call_function(WASMExecEnv *exec_env,
@@ -1669,66 +1387,3 @@ wasm_call_indirect(WASMExecEnv *exec_env,
 got_exception:
     return false;
 }
-
-#if WASM_ENABLE_THREAD_MGR != 0
-bool
-wasm_set_aux_stack(WASMExecEnv *exec_env,
-                   uint32 start_offset, uint32 size)
-{
-    WASMModuleInstance *module_inst =
-        (WASMModuleInstance*)exec_env->module_inst;
-
-    uint32 stack_top_idx =
-        module_inst->module->llvm_aux_stack_global_index;
-    uint32 data_end =
-        module_inst->module->llvm_aux_data_end;
-    uint32 stack_bottom =
-        module_inst->module->llvm_aux_stack_bottom;
-    bool is_stack_before_data =
-        stack_bottom < data_end ? true : false;
-
-    /* Check the aux stack space, currently we don't allocate space in heap */
-    if ((is_stack_before_data && (size > start_offset))
-        || ((!is_stack_before_data) && (start_offset - data_end < size)))
-        return false;
-
-    if ((stack_bottom != (uint32)-1) && (stack_top_idx != (uint32)-1)) {
-        /* The aux stack top is a wasm global,
-            set the initial value for the global */
-        uint8 *global_addr =
-            module_inst->global_data +
-            module_inst->globals[stack_top_idx].data_offset;
-        *(int32*)global_addr = start_offset;
-        /* The aux stack boundary is a constant value,
-            set the value to exec_env */
-        exec_env->aux_stack_boundary = start_offset - size;
-        return true;
-    }
-
-    return false;
-}
-
-bool
-wasm_get_aux_stack(WASMExecEnv *exec_env,
-                   uint32 *start_offset, uint32 *size)
-{
-    WASMModuleInstance *module_inst =
-        (WASMModuleInstance*)exec_env->module_inst;
-
-    /* The aux stack information is resolved in loader
-        and store in module */
-    uint32 stack_bottom =
-        module_inst->module->llvm_aux_stack_bottom;
-    uint32 total_aux_stack_size =
-        module_inst->module->llvm_aux_stack_size;
-
-    if (stack_bottom != 0 && total_aux_stack_size != 0) {
-        if (start_offset)
-            *start_offset = stack_bottom;
-        if (size)
-            *size = total_aux_stack_size;
-        return true;
-    }
-    return false;
-}
-#endif

@@ -14,10 +14,6 @@ static NativeSymbolsList g_native_symbols_list_end = NULL;
 uint32
 get_libc_builtin_export_apis(NativeSymbol **p_libc_builtin_apis);
 
-#if WASM_ENABLE_SPEC_TEST != 0
-uint32
-get_spectest_export_apis(NativeSymbol **p_libc_builtin_apis);
-#endif
 
 uint32
 get_libc_wasi_export_apis(NativeSymbol **p_libc_wasi_apis);
@@ -27,17 +23,6 @@ get_base_lib_export_apis(NativeSymbol **p_base_lib_apis);
 
 uint32
 get_ext_lib_export_apis(NativeSymbol **p_ext_lib_apis);
-
-#if WASM_ENABLE_LIB_PTHREAD != 0
-bool
-lib_pthread_init();
-
-void
-lib_pthread_destroy();
-
-uint32
-get_lib_pthread_export_apis(NativeSymbol **p_lib_pthread_apis);
-#endif
 
 static bool
 check_symbol_signature(const WASMType *type, const char *signature)
@@ -245,59 +230,6 @@ wasm_native_register_natives_raw(const char *module_name,
 bool
 wasm_native_init()
 {
-    NativeSymbol *native_symbols;
-    uint32 n_native_symbols;
-
-#if WASM_ENABLE_LIBC_BUILTIN != 0
-    n_native_symbols = get_libc_builtin_export_apis(&native_symbols);
-    if (!wasm_native_register_natives("env",
-                                       native_symbols, n_native_symbols))
-        return false;
-#endif /* WASM_ENABLE_LIBC_BUILTIN */
-
-#if WASM_ENABLE_SPEC_TEST
-    n_native_symbols = get_spectest_export_apis(&native_symbols);
-    if (!wasm_native_register_natives("spectest",
-                                       native_symbols, n_native_symbols))
-        return false;
-#endif /* WASM_ENABLE_SPEC_TEST */
-
-#if WASM_ENABLE_LIBC_WASI != 0
-    n_native_symbols = get_libc_wasi_export_apis(&native_symbols);
-    if (!wasm_native_register_natives("wasi_unstable",
-                                      native_symbols, n_native_symbols))
-        return false;
-    if (!wasm_native_register_natives("wasi_snapshot_preview1",
-                                      native_symbols, n_native_symbols))
-        return false;
-#endif
-
-#if WASM_ENABLE_BASE_LIB != 0
-    n_native_symbols = get_base_lib_export_apis(&native_symbols);
-    if (n_native_symbols > 0
-        && !wasm_native_register_natives("env",
-                                         native_symbols, n_native_symbols))
-        return false;
-#endif
-
-#if WASM_ENABLE_APP_FRAMEWORK != 0
-    n_native_symbols = get_ext_lib_export_apis(&native_symbols);
-    if (n_native_symbols > 0
-        && !wasm_native_register_natives("env",
-                                         native_symbols, n_native_symbols))
-        return false;
-#endif
-
-#if WASM_ENABLE_LIB_PTHREAD != 0
-    if (!lib_pthread_init())
-        return false;
-
-    n_native_symbols = get_lib_pthread_export_apis(&native_symbols);
-    if (n_native_symbols > 0
-        && !wasm_native_register_natives("env",
-                                         native_symbols, n_native_symbols))
-        return false;
-#endif
 
     return true;
 }
@@ -307,9 +239,6 @@ wasm_native_destroy()
 {
     NativeSymbolsNode *node, *node_next;
 
-#if WASM_ENABLE_LIB_PTHREAD != 0
-    lib_pthread_destroy();
-#endif
 
     node = g_native_symbols_list;
     while (node) {

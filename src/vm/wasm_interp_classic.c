@@ -2601,78 +2601,6 @@ label_pop_csp_n:
           DEF_OP_TRUNC_SAT_F64(-1.0f, 18446744073709551616.0,
                                false, false);
           break;
-#if WASM_ENABLE_BULK_MEMORY != 0
-        case WASM_OP_MEMORY_INIT:
-        {
-          uint32 addr, segment;
-          uint64 bytes, offset, seg_len;
-          uint8* data;
-
-          read_leb_uint32(frame_ip, frame_ip_end, segment);
-          /* skip memory index */
-          frame_ip++;
-
-          bytes = (uint64)(uint32)POP_I32();
-          offset = (uint64)(uint32)POP_I32();
-          addr = (uint32)POP_I32();
-
-          CHECK_BULK_MEMORY_OVERFLOW(addr, bytes, maddr);
-
-          seg_len = (uint64)module->module->data_segments[segment]->data_length;
-          data = module->module->data_segments[segment]->data;
-          if (offset + bytes > seg_len)
-            goto out_of_bounds;
-
-          bh_memcpy_s(maddr, linear_mem_size - addr,
-                      data + offset, bytes);
-          break;
-        }
-        case WASM_OP_DATA_DROP:
-        {
-          uint32 segment;
-
-          read_leb_uint32(frame_ip, frame_ip_end, segment);
-          module->module->data_segments[segment]->data_length = 0;
-
-          break;
-        }
-        case WASM_OP_MEMORY_COPY:
-        {
-          uint32 dst, src, len;
-          uint8 *mdst, *msrc;
-
-          frame_ip += 2;
-
-          len = POP_I32();
-          src = POP_I32();
-          dst = POP_I32();
-
-          CHECK_BULK_MEMORY_OVERFLOW(src, len, msrc);
-          CHECK_BULK_MEMORY_OVERFLOW(dst, len, mdst);
-
-          /* allowing the destination and source to overlap */
-          bh_memmove_s(mdst, linear_mem_size - dst,
-                       msrc, len);
-
-          break;
-        }
-        case WASM_OP_MEMORY_FILL:
-        {
-          uint32 dst, len;
-          uint8 val, *mdst;
-          frame_ip++;
-
-          len = POP_I32();
-          val = POP_I32();
-          dst = POP_I32();
-
-          CHECK_BULK_MEMORY_OVERFLOW(dst, len, mdst);
-
-          memset(mdst, val, len);
-
-          break;
-        }
-#endif /* WASM_ENABLE_BULK_MEMORY */
         default:
           wasm_set_exception(module, "WASM interp failed: unsupported opcode.");
             goto got_exception;
@@ -2695,40 +2623,9 @@ label_pop_csp_n:
     }
 #endif
 
-#if WASM_ENABLE_LABELS_AS_VALUES != 0
-    HANDLE_OP (WASM_OP_UNUSED_0x06):
-    HANDLE_OP (WASM_OP_UNUSED_0x07):
-    HANDLE_OP (WASM_OP_UNUSED_0x08):
-    HANDLE_OP (WASM_OP_UNUSED_0x09):
-    HANDLE_OP (WASM_OP_UNUSED_0x0a):
-    HANDLE_OP (WASM_OP_UNUSED_0x12):
-    HANDLE_OP (WASM_OP_UNUSED_0x13):
-    HANDLE_OP (WASM_OP_UNUSED_0x14):
-    HANDLE_OP (WASM_OP_UNUSED_0x15):
-    HANDLE_OP (WASM_OP_UNUSED_0x16):
-    HANDLE_OP (WASM_OP_UNUSED_0x17):
-    HANDLE_OP (WASM_OP_UNUSED_0x18):
-    HANDLE_OP (WASM_OP_UNUSED_0x19):
-    HANDLE_OP (WASM_OP_UNUSED_0x1c):
-    HANDLE_OP (WASM_OP_UNUSED_0x1d):
-    HANDLE_OP (WASM_OP_UNUSED_0x1e):
-    HANDLE_OP (WASM_OP_UNUSED_0x1f):
-    /* Used by fast interpreter */
-    HANDLE_OP (EXT_OP_SET_LOCAL_FAST_I64):
-    HANDLE_OP (EXT_OP_TEE_LOCAL_FAST_I64):
-    HANDLE_OP (EXT_OP_COPY_STACK_TOP):
-    HANDLE_OP (EXT_OP_COPY_STACK_TOP_I64):
-    HANDLE_OP (EXT_OP_COPY_STACK_VALUES):
-    {
-      wasm_set_exception(module, "WASM interp failed: unsupported opcode.");
-      goto got_exception;
-    }
-#endif
 
 #if WASM_ENABLE_LABELS_AS_VALUES == 0
     continue;
-#else
-    FETCH_OPCODE_AND_DISPATCH ();
 #endif
 
   call_func_from_interp:
