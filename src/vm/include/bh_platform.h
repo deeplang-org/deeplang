@@ -17,6 +17,7 @@
 #include "bh_queue.h"
 #include "bh_vector.h"
 #include "runtime_timer.h"
+#include "wasm_export.h"
 
 
 
