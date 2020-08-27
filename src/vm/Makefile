@@ -20,10 +20,8 @@ SRCS = wasm_c_api.c\
 	   platform_init.c\
 	   mem_alloc.c\
 	   main.c \
-	   math.c\
 	   invokeNative_general.c\
 	   ems_kfc.c\
-	   ems_hmu.c\
 	   ems_alloc.c\
 	   bh_vector.c\
 	   bh_read_file.c\

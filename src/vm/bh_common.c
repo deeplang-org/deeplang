@@ -100,7 +100,8 @@ wa_strdup(const char *s)
 
     if (s) {
         size = (uint32)(strlen(s) + 1);
-        if ((s1 = WA_MALLOC(size)))
+		s1 = WA_MALLOC(size);
+        if (s1 != NULL)
             bh_memcpy_s(s1, size, s, size);
     }
     return s1;

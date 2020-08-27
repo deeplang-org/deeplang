@@ -237,11 +237,11 @@ void os_thread_exit(void *retval)
 
 uint8 *os_thread_get_stack_boundary()
 {
-    pthread_t self = pthread_self();
-    pthread_attr_t attr;
+    //pthread_t self = pthread_self();
+    //pthread_attr_t attr;
     uint8 *addr = NULL;
-    size_t stack_size, guard_size;
-    int page_size = getpagesize();
+    //size_t stack_size, guard_size;
+    //int page_size = getpagesize();
 
 #ifdef __linux__
     if (pthread_getattr_np(self, &attr) == 0) {
