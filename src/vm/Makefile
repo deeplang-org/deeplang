@@ -33,7 +33,7 @@ INC = -I./include
 OBJS = $(SRCS:.c=.o)
 
 $(TARGET):$(OBJS)
-	$(CC) -o $@ $^ -lpthread
+	$(CC) -o $@ $^ -lpthread -lm
  
 clean:
 	rm -rf $(TARGET) $(OBJS)

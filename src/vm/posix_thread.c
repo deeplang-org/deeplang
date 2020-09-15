@@ -237,13 +237,13 @@ void os_thread_exit(void *retval)
 
 uint8 *os_thread_get_stack_boundary()
 {
-    //pthread_t self = pthread_self();
-    //pthread_attr_t attr;
     uint8 *addr = NULL;
-    //size_t stack_size, guard_size;
-    //int page_size = getpagesize();
 
 #ifdef __linux__
+    pthread_t self = pthread_self();
+    pthread_attr_t attr;
+    size_t stack_size, guard_size;
+    int page_size = getpagesize();
     if (pthread_getattr_np(self, &attr) == 0) {
         pthread_attr_getstack(&attr, (void**)&addr, &stack_size);
         pthread_attr_getguardsize(&attr, &guard_size);
