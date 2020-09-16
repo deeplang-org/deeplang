@@ -19,7 +19,7 @@ private:
 
 	antlrcpp::Any visitUnblockExpression(DLParser::UnblockExpressionContext *context);
 
-	antlrcpp::Any visitUnblockExpressionPost(DLParser::UnblockExpressionPostContext *context);
+	antlrcpp::Any visitUnblockExpressionPost(DLParser::UnblockExpressionContext *context);
 
 	antlrcpp::Any visitTupleType(DLParser::TupleTypeContext *context);
 

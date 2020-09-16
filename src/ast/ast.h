@@ -2,6 +2,7 @@
 #include "common.h"
 
 #include "ast/type.h"
+#include "utils/error.h"
 
 namespace dp {
 namespace internal {
@@ -20,6 +21,7 @@ public:
 	}
 	~ASTNode() {
 	}
+	std::string toString() const;
 	Location loc;
 };
 
@@ -31,6 +33,9 @@ public:
 			: name(name) {
 	}
 	~Identifier() {
+	}
+	std::string toString() const {
+		return "Identifier";
 	}
 };
 
@@ -46,6 +51,10 @@ public:
 			: ASTNode(loc), id(name) {
 	}
 	~Module() {
+	}
+
+	std::string toString() const {
+		return "Module";
 	}
 
 	Identifier      id;
@@ -71,6 +80,10 @@ public:
 		return kind_;
 	}
 
+	std::string toString() const {
+		return "Statement";
+	}
+
 protected:
 	explicit Statement(StatementKind kind, const Location& loc = Location())
 			: ASTNode(loc), kind_(kind) {
@@ -84,6 +97,10 @@ class StatementMixin : public Statement {
 public:
 	static bool classof(const Statement* expr) {
 		return expr->kind() == Kind;
+	}
+
+	std::string toString() const {
+		return "StatementMixin";
 	}
 
 	explicit StatementMixin(const Location& loc = Location())
@@ -101,6 +118,10 @@ public:
 			: StatementMixin<StatementKind::Expression>(loc) {
 	}
 
+	std::string toString() const {
+		return "ExpressionStatement";
+	}
+
 	ExpressionPtr expr;
 };
 
@@ -111,6 +132,11 @@ public:
 	}
 	~VariableDeclaration() {
 	}
+
+	std::string toString() const {
+		return "VariableDeclaration";
+	}
+
 
 	Identifier                  id;
 	std::unique_ptr<Type>       vartype;
@@ -127,9 +153,13 @@ public:
 	~FunctionDeclaration() {
 	}
 
+	std::string toString() const {
+		return "FunctionDeclaration";
+	}
+
 	Identifier                      id;
 	std::unique_ptr<FunctionType>   signature;
-	std::unique_ptr<BlockExpession> body;
+	std::unique_ptr<ExpressionStatement> body;
 	bool                            isPublic;
 };
 
@@ -156,6 +186,10 @@ public:
 		return kind_;
 	}
 
+	std::string toString() const {
+		return "Expression";
+	}
+
 protected:
 	explicit Expression(ExpressionKind kind, const Location& loc = Location())
 			: ASTNode(loc), kind_(kind) {
@@ -174,6 +208,11 @@ public:
 	explicit ExpressionMixin(const Location& loc = Location())
 			: Expression(Kind, loc) {
 	}
+
+	std::string toString() const {
+		return "ExpressionMixin";
+	}
+
 };
 
 enum class BinaryOperator {
@@ -191,6 +230,10 @@ public:
 			: ExpressionMixin<ExpressionKind::Binary>(loc), op(op) {
 	}
 
+	std::string toString() const {
+		return "BinaryExpression";
+	}
+
 	BinaryOperator op;
 	ExpressionPtr  left;
 	ExpressionPtr  right;
@@ -202,6 +245,10 @@ public:
 			: ExpressionMixin<ExpressionKind::Literal>(loc), i32val(value) {
 	}
 	~LiteralExpression() {
+	}
+
+	std::string toString() const {
+		return "LiteralExpression";
 	}
 
 	union {
@@ -219,6 +266,10 @@ public:
 			: ExpressionMixin<ExpressionKind::Path>(loc), id(name) {
 	}
 
+	std::string toString() const {
+		return "PathExpression";
+	}
+
 	Identifier id;
 };
 
@@ -226,6 +277,10 @@ class BlockExpession : public ExpressionMixin<ExpressionKind::Block> {
 public:
 	BlockExpession(const Location& loc = Location())
 			: ExpressionMixin<ExpressionKind::Block>(loc) {
+	}
+
+	std::string toString() const {
+		return "BlockExpession";
 	}
 
 	StatementVector stmts;

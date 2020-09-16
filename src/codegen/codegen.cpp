@@ -118,7 +118,7 @@ public:
 			visitBinaryExpression(static_cast<BinaryExpression*>(expr));
 			break;
 		case ExpressionKind::Block:
-			visitBlockExpression(static_cast<BlockExpession*>(expr));
+			// visitBlockExpression(static_cast<BlockExpession*>(expr));
 		default:
 			return Result::Error;
 		}
@@ -133,11 +133,11 @@ public:
 		return Result::Ok;
 	}
 
-	Result visitBlockExpression(BlockExpession* block) {
-		for (auto& stmt : block->stmts) {
-			visitStatement(stmt.get());
-		}
-		return Result::Ok;
+	Result visitBlockExpression(ExpressionStatement* block) {
+		// for (auto& stmt : block->stmts) {
+		// 	visitStatement(stmt.get());
+		// }
+		// return Result::Ok;
 	}
 
 	Result visitPathExpression(PathExpression* path) {

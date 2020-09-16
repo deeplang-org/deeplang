@@ -27,10 +27,10 @@ TEST(testCase, codegen) {
 	var1Decl->init = std::move(addExp);
 
 	mainFuncBody->stmts.push_back(std::move(var1Decl));
-	mainFunc->body = std::move(mainFuncBody);
-	mod->stmts.push_back(std::move(mainFunc));
+	// mainFunc->body = std::move(mainFuncBody);
+	// mod->stmts.push_back(std::move(mainFunc));
 
-	CodeGen::generateWasm(mod.get());
+	// CodeGen::generateWasm(mod.get());
 
 	//ASSERT_STREQ(gen.genarate(addexp), source);
 }
