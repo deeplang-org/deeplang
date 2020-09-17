@@ -87,14 +87,14 @@ blockExpression :
 ;
 
 unblockExpression :
-    CONST unblockExpressionPost
-    | IDENTIFIER unblockExpressionPost
+    unblockExpression op=(MULT_OPERATOR | DIV_OPERATOR) unblockExpression
+    | unblockExpression op=(PLUS_OPERATOR | MINUS_OPERATOR) unblockExpression
+    | CONST
+    | IDENTIFIER
 ;
 
-unblockExpressionPost :
-    aryOp unblockExpression unblockExpressionPost
-    |  /* epsilon */ 
-;
+
+
 
 tupleType :
     OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL

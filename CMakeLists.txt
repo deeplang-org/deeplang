@@ -8,6 +8,7 @@ option(DEEPLANG_ANTLR4_GEN "Use Antlr4 generating parser codes" ON)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE "Debug")
 
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -56,6 +57,7 @@ function (deeplang_executable)
         src/codegen/codegen.cpp
         src/parsing/parsing.cc
         src/parsing/parsing.h
+        src/utils/error.h
 
         ${EXE_SOURCES}
     )
