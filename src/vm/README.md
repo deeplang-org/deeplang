@@ -6,13 +6,13 @@
 
 **CPU**：X86_64ENV
 
-**运行环境**：msys2 
+**运行环境**：msys2
 
 **编译器**：gcc  9.3.0
 
 **Make**：GNU Make 4.3
 
-**step1.install tools** 
+**step1.install tools**
 
 ```txt
 $ pacman -Syu
@@ -62,6 +62,8 @@ gcc -Wall -std=gnu99 -I./include -o wasm_interp_classic.o -c -g wasm_interp_clas
 gcc -Wall -std=gnu99 -I./include -o bh_assert.o -c -g bh_assert.c
 gcc -o wasmvm wasm_c_api.o wasm_exec_env.o wasm_interp_classic.o wasm_loader.o wasm_memory.o wasm_native.o wasm_runtime.o wasm_runtime_common.o runtime_timer.o posix_time.o posix_thread.o posix_memmap.o posix_malloc.o platform_init.o mem_alloc.o main.o invokeNative_general.o ems_kfc.o ems_hmu.o ems_alloc.o bh_vector.o bh_read_file.o bh_list.o bh_log.o bh_common.o bh_assert.o
 ```
+
+- If you need to assign a specific compiler version, use `make -e CC=<compiler path>`
 
 **step3. run**
 
