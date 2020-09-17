@@ -3,3 +3,6 @@ build/
 gen/
 out/
 dist/
+
+*.o
+src/vm/wasmvm
