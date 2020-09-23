@@ -108,7 +108,7 @@ void *
 wasm_runtime_malloc(unsigned int size)
 {
     if (memory_mode == MEMORY_MODE_UNKNOWN) {
-        LOG_WARNING("wasm_runtime_malloc failed: memory hasn't been initialize.\n");
+        LOG_WARNING("wasm_runtime_malloc failed: memory hasn't been initialized.\n");
         return NULL;
     } else if (memory_mode == MEMORY_MODE_POOL) {
         // TODO? associated malloc func in mem_alloc.c?
@@ -123,7 +123,7 @@ void *
 wasm_runtime_realloc(void *ptr, unsigned int size)
 {
     if (memory_mode == MEMORY_MODE_UNKNOWN) {
-        LOG_WARNING("wasm_runtime_realloc failed: memory hasn't been initialize.\n");
+        LOG_WARNING("wasm_runtime_realloc failed: memory hasn't been initialized.\n");
         return NULL;
     } else if (memory_mode == MEMORY_MODE_POOL) {
         return mem_allocator_realloc(pool_allocator, ptr, size);
@@ -140,7 +140,7 @@ void
 wasm_runtime_free(void *ptr)
 {
     if (memory_mode == MEMORY_MODE_UNKNOWN) {
-        LOG_WARNING("wasm_runtime_free failed: memory hasn't been initialize.\n");
+        LOG_WARNING("wasm_runtime_free failed: memory hasn't been initialized.\n");
     } else if (memory_mode == MEMORY_MODE_POOL) {
         mem_allocator_free(pool_allocator, ptr);
     } else {
