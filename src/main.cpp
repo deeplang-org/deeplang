@@ -1,9 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include "antlr4-runtime.h"
-#include "wabt/src/option-parser.h"
-// #include "DLLexer.h"
-// #include "DLParser.h"
+#include "codegen/codegen.h"
 #include "parsing/parsing.h"
 
 #include "antlr_runtime/antlr4-runtime.h"
@@ -61,21 +56,26 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-  dp::internal::Parser* parser = new dp::internal::Parser();
-  antlr4::ANTLRInputStream input(infile);
-  parser->parseModule(input);
-  // DLLexer lexer(&input);
-  // CommonTokenStream tokens(&lexer);
+	dp::internal::Parser*    parser = new dp::internal::Parser();
+	antlr4::ANTLRInputStream input(infile);
+	auto                     module = parser->parseModule(input);
 
-  // tokens.fill();
-  // for (auto token : tokens.getTokens()) {
-  //   std::cout << token->toString() << std::endl;
-  // }
+	if (!s_outfile.size())
+		s_outfile = "a.wasm";
 
-  // DLParser parser(&tokens);
-  // tree::ParseTree *tree = parser.program();
+	dp::internal::CodeGen::generateWasm(module, s_outfile);
+	// DLLexer lexer(&input);
+	// CommonTokenStream tokens(&lexer);
 
-  // std::cout << tree->toStringTree(&parser) << std::endl;
+	// tokens.fill();
+	// for (auto token : tokens.getTokens()) {
+	//   std::cout << token->toString() << std::endl;
+	// }
+
+	// DLParser parser(&tokens);
+	// tree::ParseTree *tree = parser.program();
+
+	// std::cout << tree->toStringTree(&parser) << std::endl;
 
 	return 0;
 }

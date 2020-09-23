@@ -39,7 +39,7 @@ antlrcpp::Any Parser::visitBlockExpression(DLParser::BlockExpressionContext *con
 
     std::vector<Statement*>* stmts = visit(context->statements());
     for (auto stm : *stmts) {
-        e->stmts.push_back(std::make_unique<Statement>(*stm));
+        e->stmts.emplace_back(stm);
     }
     delete stmts;
     be->expr = std::unique_ptr<Expression>(static_cast<Expression*>(e));
@@ -145,7 +145,7 @@ antlrcpp::Any Parser::visitModule(DLParser::ModuleContext *context) {
     m->id = Identifier("anonymous");
     std::vector<Statement*>* stmts = visit(context->statements()).as<std::vector<Statement*>*>();
     for (auto stm : *stmts) {
-        m->stmts.push_back(std::make_unique<Statement>(*stm));
+        m->stmts.emplace_back(stm);
     }
     delete stmts;
     return m;
