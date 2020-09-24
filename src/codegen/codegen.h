@@ -10,7 +10,7 @@ namespace internal {
 class CodeGen {
 public:
 	//static std::string generateWat(Module& bexp);
-	static std::string generateWasm(Module* bexp);
+	static std::string generateWasm(Module* bexp, const std::string& fileName);
 };
 
 } // namespace internal

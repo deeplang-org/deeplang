@@ -13,13 +13,15 @@ private:
     std::string prettyPrint(std::string);
 	antlrcpp::Any visitAryOp(DLParser::AryOpContext *context);
 
+	antlrcpp::Any visitExpressionList(DLParser::ExpressionListContext *context);
+
 	antlrcpp::Any visitExpressionStatement(DLParser::ExpressionStatementContext *context);
 
 	antlrcpp::Any visitBlockExpression(DLParser::BlockExpressionContext *context);
 
 	antlrcpp::Any visitUnblockExpression(DLParser::UnblockExpressionContext *context);
 
-	antlrcpp::Any visitUnblockExpressionPost(DLParser::UnblockExpressionPostContext *context);
+	antlrcpp::Any visitUnblockExpressionPost(DLParser::UnblockExpressionContext *context);
 
 	antlrcpp::Any visitTupleType(DLParser::TupleTypeContext *context);
 

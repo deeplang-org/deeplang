@@ -49,7 +49,7 @@ public:
 		func            = &func_field->func;
 
 		visitFunctionType(funNode->signature.get());
-		visitBlockExpression(funNode->body.get());
+		visitExpressionStatement(funNode->body.get());
 		func->exprs.swap(exprs);
 
 		module->AppendField(std::move(func_field));
@@ -119,6 +119,7 @@ public:
 			break;
 		case ExpressionKind::Block:
 			visitBlockExpression(static_cast<BlockExpession*>(expr));
+			break;
 		default:
 			return Result::Error;
 		}
@@ -141,10 +142,16 @@ public:
 	}
 
 	Result visitPathExpression(PathExpression* path) {
-		wabt::Location              loc;
-		int                         ind = func->bindings.FindIndex(path->id.name);
-		std::unique_ptr<wabt::Expr> expr;
-		//= std::make_unique<ConstExpr>(Const::I32(lit->i32val, loc), loc);
+		wabt::Location loc;
+		int            ind = func->bindings.FindIndex(path->id.name);
+		wabt::Var      var(ind, loc);
+
+		if (ind < 0) {
+			std::cout << "var '" << path->id.name << "' is not found!" << std::endl;
+		}
+
+		std::unique_ptr<wabt::Expr> expr =
+				std::make_unique<wabt::LocalGetExpr>(var);
 		exprs.push_back(std::move(expr));
 		return Result::Ok;
 	}
@@ -210,7 +217,7 @@ static void WriteBufferToFile(wabt::string_view         filename,
 	buffer.WriteToFile(filename);
 }
 
-std::string CodeGen::generateWasm(Module* mod) {
+std::string CodeGen::generateWasm(Module* mod, const std::string& fileName) {
 	auto visitor = std::make_unique<WasmVisitor>();
 	visitor->visitModule(mod);
 
@@ -223,7 +230,13 @@ std::string CodeGen::generateWasm(Module* mod) {
 		result = wabt::WriteBinaryModule(&stream, visitor->module.get(), options);
 
 		if (wabt::Succeeded(result)) {
-			WriteBufferToFile("a.wasm", stream.output_buffer());
+			WriteBufferToFile(fileName, stream.output_buffer());
+		}
+	}
+	else {
+		std::cout << "Codegen Error: " << std::endl;
+		for (auto err : errors) {
+			std::cout << err.message << std::endl;
 		}
 	}
 
