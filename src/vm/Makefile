@@ -19,7 +19,7 @@ SRCS = wasm_c_api.c\
 	   posix_malloc.c\
 	   platform_init.c\
 	   mem_alloc.c\
-	   main.c \
+	   deep_wasm_main.c \
 	   invokeNative_general.c\
 	   ems_kfc.c\
 	   ems_alloc.c\
