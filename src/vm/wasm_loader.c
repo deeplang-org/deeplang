@@ -663,6 +663,7 @@ load_table_import(WASMModule *sub_module, const char *sub_module_name,
     return true;
 }
 
+// defined in /wasm_memory.c
 unsigned
 wasm_runtime_memory_pool_size();
 
@@ -1686,7 +1687,7 @@ check_mem_index:
                 return false;
             }
 #endif /* WASM_ENABLE_BULK_MEMORY */
-			
+
 #if WASM_ENABLE_BULK_MEMORY != 0
             if (!is_passive)
 #endif
@@ -1947,7 +1948,7 @@ load_from_sections(WASMModule *module, WASMSection *sections,
         }
 
         section = section->next;
-    }	
+    }
 #if WASM_ENABLE_FAST_INTERP != 0
     handle_table = wasm_interp_get_handle_table();
 #endif

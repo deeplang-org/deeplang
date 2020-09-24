@@ -10,6 +10,7 @@
 
 #ifndef MALLOC_MEMORY_FROM_SYSTEM
 
+// seems that Intel WASM allows memory to be used in 2 modes.
 typedef enum Memory_Mode {
     MEMORY_MODE_UNKNOWN = 0,
     MEMORY_MODE_POOL,
@@ -18,17 +19,21 @@ typedef enum Memory_Mode {
 
 static Memory_Mode memory_mode = MEMORY_MODE_UNKNOWN;
 
+// for pool mode
 static mem_allocator_t pool_allocator = NULL;
 
+// for allocator mode
 static void *(*malloc_func)(unsigned int size) = NULL;
 static void *(*realloc_func)(void *ptr, unsigned int size) = NULL;
 static void (*free_func)(void *ptr) = NULL;
 
+// for pool mode
 static unsigned int global_pool_size;
 
 static bool
 wasm_memory_init_with_pool(void *mem, unsigned int bytes)
 {
+    // TODO? using a default allocator?
     mem_allocator_t _allocator = mem_allocator_create(mem, bytes);
 
     if (_allocator) {
@@ -59,6 +64,7 @@ wasm_memory_init_with_allocator(void *_malloc_func,
     return false;
 }
 
+// alloc_option is a `union`, combining options for two modes
 bool
 wasm_runtime_memory_init(mem_alloc_type_t mem_alloc_type,
                          const MemAllocOption *alloc_option)
@@ -71,6 +77,7 @@ wasm_runtime_memory_init(mem_alloc_type_t mem_alloc_type,
                                                alloc_option->allocator.realloc_func,
                                                alloc_option->allocator.free_func);
     else if (mem_alloc_type == Alloc_With_System_Allocator)
+        // this option does not use any other functions in this file.
         return wasm_memory_init_with_allocator(os_malloc, os_realloc, os_free);
     else
         return false;
@@ -87,6 +94,7 @@ wasm_runtime_memory_destroy()
     memory_mode = MEMORY_MODE_UNKNOWN;
 }
 
+// default size: 1 GB (unit: Byte) when not in pool mode
 unsigned
 wasm_runtime_memory_pool_size()
 {
@@ -100,11 +108,13 @@ void *
 wasm_runtime_malloc(unsigned int size)
 {
     if (memory_mode == MEMORY_MODE_UNKNOWN) {
-        LOG_WARNING("wasm_runtime_malloc failed: memory hasn't been initialize.\n");
+        LOG_WARNING("wasm_runtime_malloc failed: memory hasn't been initialized.\n");
         return NULL;
     } else if (memory_mode == MEMORY_MODE_POOL) {
+        // TODO? associated malloc func in mem_alloc.c?
         return mem_allocator_malloc(pool_allocator, size);
     } else {
+        // provided during initialisation
         return malloc_func(size);
     }
 }
@@ -113,11 +123,12 @@ void *
 wasm_runtime_realloc(void *ptr, unsigned int size)
 {
     if (memory_mode == MEMORY_MODE_UNKNOWN) {
-        LOG_WARNING("wasm_runtime_realloc failed: memory hasn't been initialize.\n");
+        LOG_WARNING("wasm_runtime_realloc failed: memory hasn't been initialized.\n");
         return NULL;
     } else if (memory_mode == MEMORY_MODE_POOL) {
         return mem_allocator_realloc(pool_allocator, ptr, size);
     } else {
+        // TODO? Does this mean `realloc_func` is optional?
         if (realloc_func)
             return realloc_func(ptr, size);
         else
@@ -129,7 +140,7 @@ void
 wasm_runtime_free(void *ptr)
 {
     if (memory_mode == MEMORY_MODE_UNKNOWN) {
-        LOG_WARNING("wasm_runtime_free failed: memory hasn't been initialize.\n");
+        LOG_WARNING("wasm_runtime_free failed: memory hasn't been initialized.\n");
     } else if (memory_mode == MEMORY_MODE_POOL) {
         mem_allocator_free(pool_allocator, ptr);
     } else {
@@ -145,4 +156,3 @@ wasm_runtime_free(void *ptr)
 #else /* else of MALLOC_MEMORY_FROM_SYSTEM */
 
 #endif /* end of MALLOC_MEMORY_FROM_SYSTEM*/
-

@@ -22,7 +22,7 @@ static void *app_instance_main(); /* main函数作为wasm module的入口，运�
 | wasm_exec_env.c        |                                                              |
 | wasm_interp_classic.c  |                                                              |
 | wasm_loader.c          | 包含负责将wasm模块载入内存的接口。                           |
-| wasm_memory.c          |                                                              |
+| wasm_memory.c          | wasm 虚机调用的内存初始化、分配、释放相关的接口。 |
 | wasm_native.c          |                                                              |
 | wasm_runtime.c         | 模块运行时所需接口，如：实例化模块、验证模块、载入环境等。   |
 | wasm_runtime_common.c  |                                                              |
@@ -443,7 +443,7 @@ bh_platform_destroy()
 
 void bh_assert_internal(int v, const char *file_name, int line_number,
                         const char *expr_string);
-/* assert (v != 0), 为0则输出错误信息并停止运行 */ 
+/* assert (v != 0), 为0则输出错误信息并停止运行 */
 ```
 
 #### 2.15 bh_log.h
@@ -556,4 +556,31 @@ uint8 *os_thread_get_stack_boundary();
 ```c
 uint64 os_time_get_boot_microsecond();
 /* 获取当前时间戳(ms) */
+```
+
+#### 2.19 wasm_memory.c
+
+##### 功能介绍
+
+提供内存管理相关接口供 `wasm_loader` 和 `wasm_runtime_common` 使用
+
+##### 开放接口
+
+```c
+/* 初始化内存空间，需指定内存使用方式（池/分配器/系统分配器）
+   mem_alloc_type 对应 (include/wasm_export.h):
+     Alloc_With_Pool: 池模式，在用户定义的堆缓冲区中分配内存
+     Alloc_With_Allocator: 用户自定义分配器模式，使用用户自定义分配器函数分配内存
+     Alloc_With_System_Allocator: 系统分配器模式，使用系统分配器或平台的 `os_malloc` 函数
+   alloc_option 为一个 union 结构
+     池模式下指定缓冲区地址与大小 `heap_buf`, `heap_size`
+     分配器模式下指定分配、重分配和释放函数 `malloc_func`, `realloc_func`, `free_func`
+： */
+bool
+wasm_runtime_memory_init(mem_alloc_type_t mem_alloc_type,
+                         const MemAllocOption *alloc_option);
+
+/* 析构初始化过的内存空间，若不为池模式则只修改「已初始化」的标识位 */
+void
+wasm_runtime_memory_destroy();
 ```
