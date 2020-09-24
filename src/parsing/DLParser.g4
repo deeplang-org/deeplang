@@ -76,6 +76,10 @@ aryOp :
     | LOGICAL_OR_OPERATOR
 ;
 
+expressionList :
+    (expressionStatement (',' expressionStatement)*)?
+;
+
 expressionStatement :
     blockExpression
     | unblockExpression
@@ -89,6 +93,8 @@ blockExpression :
 unblockExpression :
     unblockExpression op=(MULT_OPERATOR | DIV_OPERATOR) unblockExpression
     | unblockExpression op=(PLUS_OPERATOR | MINUS_OPERATOR) unblockExpression
+    | QUOTED_STRING
+    | unblockExpression OPEN_PAR_SYMBOL expressionList CLOSE_PAR_SYMBOL
     | CONST
     | IDENTIFIER
 ;
