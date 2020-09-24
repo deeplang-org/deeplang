@@ -238,31 +238,6 @@ void os_thread_exit(void *retval)
 uint8 *os_thread_get_stack_boundary()
 {
     uint8 *addr = NULL;
-
-    pthread_t self = pthread_self();
-    pthread_attr_t attr;
-    size_t stack_size, guard_size;
-    int page_size = getpagesize();
-#ifdef __linux__
-    if (pthread_getattr_np(self, &attr) == 0) {
-        pthread_attr_getstack(&attr, (void**)&addr, &stack_size);
-        pthread_attr_getguardsize(&attr, &guard_size);
-        pthread_attr_destroy(&attr);
-        if (guard_size < (size_t)page_size)
-            /* Reserved 1 guard page at least for safety */
-            guard_size = (size_t)page_size;
-        addr += guard_size;
-    }
-    (void)stack_size;
-#elif defined(__APPLE__)
-    if ((addr = (uint8*)pthread_get_stackaddr_np(self))) {
-        stack_size = pthread_get_stacksize_np(self);
-        addr -= stack_size;
-        /* Reserved 1 guard page at least for safety */
-        addr += page_size;
-    }
-#endif
-
     return addr;
 }
 

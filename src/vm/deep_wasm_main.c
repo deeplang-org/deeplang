@@ -42,14 +42,97 @@ native_putchar(wasm_exec_env_t exec_env, int c)
     return 1;
 }
 
-
 #define USE_GLOBAL_HEAP_BUF 1
 
 static char global_heap_buf[10 * 1024 * 1024] = { 0 };
 
+int
+deep_wasm_vm_init (void)
+{
+    RuntimeInitArgs init_args;
+	static NativeSymbol native_symbols[] = 
+	{
+	    {"puts",native_puts, "($)i"},
+
+	    {"putchar",native_putchar, "(i)i"},
+
+	};
+	int n_native_symbols = sizeof(native_symbols) / sizeof(NativeSymbol);
+
+    memset(&init_args, 0, sizeof(RuntimeInitArgs));
+
+    init_args.mem_alloc_type = Alloc_With_Pool;
+    init_args.mem_alloc_option.pool.heap_buf = global_heap_buf;
+    init_args.mem_alloc_option.pool.heap_size = sizeof(global_heap_buf);
+	init_args.native_module_name = "env";
+	init_args.native_symbols = native_symbols;
+	init_args.n_native_symbols = n_native_symbols;
+	
+    /* initialize runtime environment */
+    if (!wasm_runtime_full_init(&init_args)) {
+        printf("Init runtime environment failed.\n");
+        return -1;
+    }
+	return 0;
+}
+
 
 int
-main(int argc, char *argv[])
+deep_wasm_eval (uint8 * wasm_buf, uint32 wasm_size)
+{
+	if (wasm_buf == NULL) {
+		return -1;
+	}
+	char error_buf[128] = { 0 };
+	uint32 stack_size = 16 * 1024, heap_size = 16 * 1024;
+	wasm_module_t wasm_module = NULL;
+    wasm_module_inst_t wasm_module_inst = NULL;
+	dump ("wasm_buf", wasm_buf, wasm_size);
+    /* load WASM module */
+    if (!(wasm_module = wasm_runtime_load(wasm_buf, wasm_size,
+                                          error_buf, sizeof(error_buf)))) {
+        printf("%s\n", error_buf);
+        goto fail1;
+    }
+    /* instantiate the module */
+    if (!(wasm_module_inst =
+            wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
+                                     error_buf, sizeof(error_buf)))) {
+        printf("%s\n", error_buf);
+        goto fail3;
+    }
+    app_instance_main(wasm_module_inst);
+
+    /* destroy the module instance */
+    wasm_runtime_deinstantiate(wasm_module_inst);
+
+fail3:
+    /* unload the module */
+    wasm_runtime_unload(wasm_module);
+
+fail1:
+    /* destroy runtime environment */
+    wasm_runtime_destroy();
+	return 0;
+}
+int
+main2 (int argc, char *argv[])
+{
+	deep_wasm_vm_init();
+	
+	uint8 *wasm_file_buf = NULL;
+    uint32 wasm_file_size;
+	if (!(wasm_file_buf =
+            (uint8 *)bh_read_file_to_buffer(argv[1], &wasm_file_size)))
+	{
+		return -1;
+    }
+     deep_wasm_eval(wasm_file_buf, wasm_file_size);
+	return 0;
+}
+
+int
+main (int argc, char *argv[])
 {
     uint8 *wasm_file_buf = NULL;
     uint32 wasm_file_size;
@@ -70,7 +153,9 @@ main(int argc, char *argv[])
 	static NativeSymbol native_symbols[] = 
 	{
 	    {"puts",native_puts, "($)i"},
+
 	    {"putchar",native_putchar, "(i)i"},
+
 	};
 	int n_native_symbols = sizeof(native_symbols) / sizeof(NativeSymbol);
 
