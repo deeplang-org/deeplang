@@ -55,9 +55,12 @@ function (deeplang_executable)
         src/ast/ast.cpp
         src/codegen/codegen.h
         src/codegen/codegen.cpp
-        src/parsing/parsing.cc
+        src/parsing/parsing.cpp
         src/parsing/parsing.h
         src/utils/error.h
+        src/utils/error-formatter.h
+        src/utils/error-formatter.cpp
+        src/utils/result.h
 
         ${EXE_SOURCES}
     )

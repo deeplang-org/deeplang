@@ -1,12 +1,15 @@
+#include "antlr_runtime/antlr4-runtime.h"
+#include "wabt/src/option-parser.h"
+
 #include "codegen/codegen.h"
 #include "parsing/parsing.h"
 
-#include "antlr_runtime/antlr4-runtime.h"
-#include "wabt/src/option-parser.h"
 #include <fstream>
 #include <iostream>
 
-// using namespace antlr4;
+//using namespace antlr4;
+using namespace dp;
+using namespace dp::internal;
 using namespace wabt;
 
 static std::string s_infile;
@@ -56,26 +59,16 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	dp::internal::Parser*    parser = new dp::internal::Parser();
+	Parser*                  parser = new Parser();
 	antlr4::ANTLRInputStream input(infile);
 	auto                     module = parser->parseModule(input);
 
 	if (!s_outfile.size())
 		s_outfile = "a.wasm";
 
-	dp::internal::CodeGen::generateWasm(module, s_outfile);
-	// DLLexer lexer(&input);
-	// CommonTokenStream tokens(&lexer);
-
-	// tokens.fill();
-	// for (auto token : tokens.getTokens()) {
-	//   std::cout << token->toString() << std::endl;
-	// }
-
-	// DLParser parser(&tokens);
-	// tree::ParseTree *tree = parser.program();
-
-	// std::cout << tree->toStringTree(&parser) << std::endl;
+	auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
+	if (!result)
+		return -1;
 
 	return 0;
 }

@@ -7,13 +7,6 @@
 namespace dp {
 namespace internal {
 
-struct Location {
-	std::string  fileName;
-	unsigned int line;
-	unsigned int firstColumn;
-	unsigned int lastColumn;
-};
-
 class ASTNode {
 public:
 	ASTNode(const Location& loc = Location())
