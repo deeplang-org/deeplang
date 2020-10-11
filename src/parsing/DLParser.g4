@@ -64,31 +64,6 @@ options {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-exp :
-    CONST expPost
-    | IDENTIFIER expPost
-    | QUOTED_STRING expPost
-    | OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL expPost
-    | unAryOp exp expPost
-    | newExp expPost
-;
-
-expPost :
-    OPEN_SQUARE_SYMBOL expList CLOSE_SQUARE_SYMBOL expPost
-    | OPEN_SQUARE_SYMBOL CLOSE_SQUARE_SYMBOL expPost
-	| OPEN_SQUARE_SYMBOL exp CLOSE_SQUARE_SYMBOL expPost
-	| AT_SIGN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL expPost
-    | OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL expPost
-    | OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL expPost
-    | DOT_SYMBOL IDENTIFIER expPost
-    | aryOp exp expPost
-    |  /* epsilon */ 
-;
-
-
-
-
-
 aryOp :
     PLUS_OPERATOR
     | MINUS_OPERATOR
@@ -101,171 +76,60 @@ aryOp :
     | LOGICAL_OR_OPERATOR
 ;
 
-unAryOp :
-    BITWISE_AND_OPERATOR
-    | LOGICAL_NOT_OPERATOR
-    | BITWISE_NOT_OPERATOR
+expressionStatement :
+    blockExpression
+    | unblockExpression
+;
+
+blockExpression :
+    OPEN_CURLY_SYMBOL statements CLOSE_CURLY_SYMBOL
+    | OPEN_CURLY_SYMBOL CLOSE_CURLY_SYMBOL
+;
+
+unblockExpression :
+    unblockExpression op=(MULT_OPERATOR | DIV_OPERATOR) unblockExpression
+    | unblockExpression op=(PLUS_OPERATOR | MINUS_OPERATOR) unblockExpression
+    | CONST
+    | IDENTIFIER
 ;
 
 
-// new操作符表达式
-newExp :
-    NEW_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL
-    | NEW_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL expList CLOSE_PAR_SYMBOL
+
+
+tupleType :
+    OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL
 ;
-
-expList :
-    exp
-    | exp COMMA_SYMBOL expList
-;
-
-// Statement
-
-statement :
-    IF_SYMBOL OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL compoundBlock ELSE_SYMBOL compoundBlock
-    | IF_SYMBOL OPEN_PAR_SYMBOL exp CLOSE_PAR_SYMBOL compoundBlock
-    | FOR_SYMBOL OPEN_PAR_SYMBOL compoundBlock SEMICOLON_SYMBOL exp SEMICOLON_SYMBOL exp CLOSE_PAR_SYMBOL compoundBlock
-    | jumpStatement
-;
-
-compoundBlock :
-    OPEN_CURLY_SYMBOL CLOSE_CURLY_SYMBOL
-    | OPEN_CURLY_SYMBOL blockList CLOSE_CURLY_SYMBOL
-;
-
-blockList :
-    statement SEMICOLON_SYMBOL
-    | statement SEMICOLON_SYMBOL blockList
-    | exp SEMICOLON_SYMBOL
-    | exp SEMICOLON_SYMBOL blockList
-    | decl SEMICOLON_SYMBOL
-    | decl SEMICOLON_SYMBOL blockList
-;
-
-jumpStatement :
-    BREAK_SYMBOL
-    | RETURN_SYMBOL
-    | RETURN_SYMBOL exp
-;
-
-// Type
-
-//type :
-//    IDENTIFIER
-//    | refType
-//    | functionType
-//    | type COMMA_SYMBOL type
-//;
 
 type :
-	IDENTIFIER typeTail
-	| refType typeTail
+    tupleType
+    | IDENTIFIER
 ;
 
-typeTail :
-	COMMA_SYMBOL typeTail
-	| JSON_SEPARATOR_SYMBOL typeTail
+variableDecl :
+    LET_SYMBOL IDENTIFIER COLON_SYMBOL type
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type EQUAL_OPERATOR expressionStatement
 ;
 
-functionType :
-    type JSON_SEPARATOR_SYMBOL type
+functionDecl :
+    FUN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL JSON_SEPARATOR_SYMBOL type blockExpression
 ;
-
-refType :
-    BITWISE_AND_OPERATOR type
-    | BITWISE_AND_OPERATOR MUT_SYMBOL type // mut?
-;
-
-// Declaration
 
 decl :
     functionDecl
-    | varDecl
-    | classDecl
-    | interfaceDecl
-;
-
-// FunctionDecl有两个部分组成，一是signature用于描述类型，二是FunctionDef描述行为。
-functionDecl :
-    signature
-    | signature functionDef
-;
-
-signature :
-    | SIG_SYMBOL IDENTIFIER ALIAS_SYMBOL type
-;
-
-functionDef :
-    FUN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL compoundBlock // TODO: space?
-    | FUN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL paramList CLOSE_PAR_SYMBOL compoundBlock
-;
-
-paramList :
-    IDENTIFIER
-    | IDENTIFIER COMMA_SYMBOL paramList
-;
-
-// 变量声明
-
-varDecl :
-    LET_SYMBOL IDENTIFIER COLON_SYMBOL type
-    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type EQUAL_OPERATOR exp
-    | LETMUT_SYMBOL IDENTIFIER COLON_SYMBOL type
-    | LETMUT_SYMBOL IDENTIFIER COLON_SYMBOL type EQUAL_OPERATOR exp
-;
-
-// class和interface
-
-classDecl :
-    classHead OPEN_CURLY_SYMBOL classBody CLOSE_CURLY_SYMBOL
-;
-
-classHead :
-    CLASS_SYMBOL IDENTIFIER
-    | CLASS_SYMBOL IDENTIFIER EXTENDS_SYMBOL IDENTIFIER
-    | CLASS_SYMBOL IDENTIFIER IMPL_SYMBOL interfaceList
-    | CLASS_SYMBOL IDENTIFIER EXTENDS_SYMBOL IDENTIFIER IMPL_SYMBOL interfaceList
-;
-
-classBody :
-    accessSpecifier decl SEMICOLON_SYMBOL
-    | accessSpecifier decl SEMICOLON_SYMBOL classBody
-    | constructor SEMICOLON_SYMBOL
-    | constructor SEMICOLON_SYMBOL classBody
-;
-
-constructor :
-    CONSTRUCTOR_SYMBOL OPEN_PAR_SYMBOL paramList CLOSE_PAR_SYMBOL compoundBlock
-    | CONSTRUCTOR_SYMBOL OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL compoundBlock
-;
-
-accessSpecifier :
-    PRIVATE_SYMBOL
-    | PUBLIC_SYMBOL
-;
-
-interfaceList ://TODO: ??
-    INTERFACE_SYMBOL
-    | INTERFACE_SYMBOL COMMA_SYMBOL interfaceList
-;
-
-interfaceDecl :
-    interfaceHead OPEN_CURLY_SYMBOL interfaceBody CLOSE_CURLY_SYMBOL
-;
-
-interfaceHead :
-    INTERFACE_SYMBOL IDENTIFIER
-    | INTERFACE_SYMBOL IDENTIFIER EXTENDS_SYMBOL IDENTIFIER
-;
-
-interfaceBody :
-    decl SEMICOLON_SYMBOL
-    | decl SEMICOLON_SYMBOL interfaceBody
+    | variableDecl
 ;
 
 
-// deeplang程序的入口
-program :
-    decl SEMICOLON_SYMBOL
-    | decl SEMICOLON_SYMBOL program
+statement :
+    decl
+    | expressionStatement
+;
+
+statements :
+    statement SEMICOLON_SYMBOL
+    | statement SEMICOLON_SYMBOL statements
+;
+
+module :
+    statements EOF
 ;
