@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
 
+if (UNIX)
+	set(CMAKE_CXX_FLAGS "-pthread")
+endif(UNIX)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
