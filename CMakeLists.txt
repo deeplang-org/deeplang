@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
 
+if (UNIX)
+	set(CMAKE_CXX_FLAGS "-pthread")
+endif(UNIX)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -55,9 +58,12 @@ function (deeplang_executable)
         src/ast/ast.cpp
         src/codegen/codegen.h
         src/codegen/codegen.cpp
-        src/parsing/parsing.cc
+        src/parsing/parsing.cpp
         src/parsing/parsing.h
         src/utils/error.h
+        src/utils/error-formatter.h
+        src/utils/error-formatter.cpp
+        src/utils/result.h
 
         ${EXE_SOURCES}
     )

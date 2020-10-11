@@ -13,6 +13,8 @@ private:
     std::string prettyPrint(std::string);
 	antlrcpp::Any visitAryOp(DLParser::AryOpContext *context);
 
+	antlrcpp::Any visitExpressionList(DLParser::ExpressionListContext *context);
+
 	antlrcpp::Any visitExpressionStatement(DLParser::ExpressionStatementContext *context);
 
 	antlrcpp::Any visitBlockExpression(DLParser::BlockExpressionContext *context);

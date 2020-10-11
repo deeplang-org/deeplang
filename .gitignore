@@ -3,6 +3,5 @@ build/
 gen/
 out/
 dist/
-
-*.o
-src/vm/wasmvm
+cmake-build-debug/
+.idea/

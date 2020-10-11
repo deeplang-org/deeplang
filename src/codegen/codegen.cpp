@@ -1,17 +1,14 @@
-#include "codegen.h"
-
 #include "wabt/src/binary-writer.h"
 #include "wabt/src/error.h"
 #include "wabt/src/ir.h"
 #include "wabt/src/validator.h"
 
+#include "codegen/codegen.h"
+#include "utils/error.h"
+#include "utils/result.h"
+
 namespace dp {
 namespace internal {
-
-enum class Result {
-	Ok,
-	Error
-};
 
 class WasmVisitor {
 public:
@@ -202,45 +199,61 @@ public:
 	wabt::Func*                   func;
 };
 
-static void WriteBufferToFile(wabt::string_view         filename,
-															const wabt::OutputBuffer& buffer) {
-	//if (s_dump_module) {
-	//	std::unique_ptr<FileStream> stream = FileStream::CreateStdout();
-	//	if (s_verbose) {
-	//		stream->Writef(";; dump\n");
-	//	}
-	//	if (!buffer.data.empty()) {
-	//		stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
-	//	}
-	//}
-
-	buffer.WriteToFile(filename);
-}
-
-std::string CodeGen::generateWasm(Module* mod, const std::string& fileName) {
-	auto visitor = std::make_unique<WasmVisitor>();
-	visitor->visitModule(mod);
-
+Result ValidateModule(wabt::Module* module) {
 	wabt::Errors          errors;
 	wabt::ValidateOptions options;
-	auto                  result = wabt::ValidateModule(visitor->module.get(), &errors, options);
-	if (wabt::Succeeded(result)) {
-		wabt::MemoryStream       stream;
-		wabt::WriteBinaryOptions options;
-		result = wabt::WriteBinaryModule(&stream, visitor->module.get(), options);
 
-		if (wabt::Succeeded(result)) {
-			WriteBufferToFile(fileName, stream.output_buffer());
-		}
-	}
-	else {
+	auto result = wabt::ValidateModule(module, &errors, options);
+	if (wabt::Failed(result)) {
 		std::cout << "Codegen Error: " << std::endl;
 		for (auto err : errors) {
 			std::cout << err.message << std::endl;
 		}
+		return Result::Error;
 	}
 
-	return std::string();
+	return Result::Ok;
+}
+
+Result WriteModule(wabt::Module* module, const std::string& fileName) {
+	wabt::MemoryStream       stream;
+	wabt::WriteBinaryOptions options;
+	auto                     result = wabt::WriteBinaryModule(&stream, module, options);
+
+	if (wabt::Succeeded(result)) {
+		const auto& buffer = stream.output_buffer();
+		buffer.WriteToFile(fileName);
+		return Result::Ok;
+	}
+
+	return Result::Error;
+}
+
+bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName) {
+	do {
+		Errors errors;
+		auto   visitor = std::make_unique<WasmVisitor>();
+		auto   result  = visitor->visitModule(mod);
+		if (Failed(result)) {
+			break;
+		}
+
+		result = ValidateModule(visitor->module.get());
+		if (Failed(result)) {
+			break;
+		}
+
+		result = WriteModule(visitor->module.get(), fileName);
+		if (Failed(result)) {
+			break;
+		}
+
+		return true;
+	} while (false);
+
+	// TODO: print error
+
+	return false;
 }
 
 } // namespace internal

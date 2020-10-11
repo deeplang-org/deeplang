@@ -18,7 +18,7 @@ IndentWidth: 2
 TabWidth: 2
 
 ColumnLimit: 0
-SortIncludes: true
+SortIncludes: false
 IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^"(ast|codegen|parsing|repl)/'

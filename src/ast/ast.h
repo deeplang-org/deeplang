@@ -7,13 +7,6 @@
 namespace dp {
 namespace internal {
 
-struct Location {
-	std::string  fileName;
-	unsigned int line;
-	unsigned int firstColumn;
-	unsigned int lastColumn;
-};
-
 class ASTNode {
 public:
 	ASTNode(const Location& loc = Location())
@@ -239,11 +232,41 @@ public:
 	ExpressionPtr  right;
 };
 
+class CallExpression : public ExpressionMixin<ExpressionKind::Call> {
+public:
+	CallExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Call>(loc) {
+	}
+
+	std::string toString() const {
+		return "CallExpression";
+	}
+
+	ExpressionPtr  receiver;
+	ExpressionPtr  method;
+	ExpressionVector params;
+	
+};
+
+
 class LiteralExpression : public ExpressionMixin<ExpressionKind::Literal> {
 public:
-	LiteralExpression(int value, const Location& loc = Location())
-			: ExpressionMixin<ExpressionKind::Literal>(loc), i32val(value) {
+	LiteralExpression(int32_t value, const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Literal>(loc), i32val(value), typ(LiteralExpression::Typ::DPI32) {
 	}
+
+	LiteralExpression(std::string value, const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Literal>(loc), strval(value), typ(LiteralExpression::Typ::DPString) {
+	}
+
+	LiteralExpression(int64_t value, const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Literal>(loc), i64val(value), typ(LiteralExpression::Typ::DPI64) {
+	}
+
+	LiteralExpression(double value, const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Literal>(loc), f64val(value), typ(LiteralExpression::Typ::DPF64) {
+	}
+
 	~LiteralExpression() {
 	}
 
@@ -251,9 +274,19 @@ public:
 		return "LiteralExpression";
 	}
 
+	enum class Typ {
+		DPI32,
+		DPI64,
+		DPF64,
+		DPDouble,
+		DPString
+	};
+
+	Typ typ;
+
 	union {
-		int         i32val;
-		long        i64val;
+		int32_t     i32val;
+		int64_t     i64val;
 		float       f32val;
 		double      f64val;
 		std::string strval;

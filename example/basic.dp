@@ -1,5 +1,6 @@
 fun main() -> () {    
     let a : i32 = 1;
     let b : i32 = 2;
-    let r : i32 = a + b * 5 + 10;
+    let c : i32 = a + b;
+    let r : i32 = a + b * c + a;
 };
