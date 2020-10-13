@@ -6,7 +6,7 @@ project(Deeplang)
 option(DEEPLANG_BUILD_TESTS "Build GTest-based tests" ON)
 option(DEEPLANG_ANTLR4_GEN "Use Antlr4 generating parser codes" ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
 
@@ -56,10 +56,13 @@ function (deeplang_executable)
 
         src/ast/ast.h
         src/ast/ast.cpp
+        src/ast/type.h
+        src/ast/type.cpp
         src/codegen/codegen.h
         src/codegen/codegen.cpp
         src/parsing/parsing.cpp
         src/parsing/parsing.h
+        src/utils/cast.h
         src/utils/error.h
         src/utils/error-formatter.h
         src/utils/error-formatter.cpp
