@@ -4,6 +4,7 @@
 #include "wabt/src/validator.h"
 
 #include "codegen/codegen.h"
+#include "utils/cast.h"
 #include "utils/error.h"
 #include "utils/result.h"
 
@@ -106,27 +107,46 @@ public:
 	Result visitExpression(Expression* expr) {
 		switch (expr->kind()) {
 		case ExpressionKind::Literal:
-			visitLiteral(static_cast<LiteralExpression*>(expr));
-			break;
+			return visitLiteralExpression(static_cast<LiteralExpression*>(expr));
 		case ExpressionKind::Path:
-			visitPathExpression(static_cast<PathExpression*>(expr));
-			break;
+			return visitPathExpression(static_cast<PathExpression*>(expr));
 		case ExpressionKind::Binary:
-			visitBinaryExpression(static_cast<BinaryExpression*>(expr));
-			break;
+			return visitBinaryExpression(static_cast<BinaryExpression*>(expr));
 		case ExpressionKind::Block:
-			visitBlockExpression(static_cast<BlockExpession*>(expr));
-			break;
+			return visitBlockExpression(static_cast<BlockExpession*>(expr));
+		case ExpressionKind::Call:
+			return visitCallExpression(static_cast<CallExpression*>(expr));
 		default:
+			UNREACHABLE("visitExpression");
 			return Result::Error;
 		}
-		return Result::Ok;
 	}
 
-	Result visitLiteral(LiteralExpression* lit) {
+	Result visitLiteralExpression(LiteralExpression* lit) {
 		wabt::Location              loc;
-		std::unique_ptr<wabt::Expr> expr =
-				std::make_unique<wabt::ConstExpr>(wabt::Const::I32(lit->i32val, loc), loc);
+		std::unique_ptr<wabt::Expr> expr;
+		switch (lit->typ) {
+		case LiteralExpression::I32:
+			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::I32(lit->i32val, loc), loc);
+			exprType = Type::I32();
+			break;
+		case LiteralExpression::I64:
+			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::I64(lit->i64val, loc), loc);
+			exprType = Type::I64();
+			break;
+		case LiteralExpression::F32:
+			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::F32(lit->f32val, loc), loc);
+			exprType = Type::F32();
+			break;
+		case LiteralExpression::F64:
+			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::F64(lit->f64val, loc), loc);
+			exprType = Type::F64();
+			break;
+		case LiteralExpression::String:
+			exprType = Type::String();
+		default:
+			UNREACHABLE("visitLiteral");
+		}
 		exprs.push_back(std::move(expr));
 		return Result::Ok;
 	}
@@ -145,49 +165,158 @@ public:
 
 		if (ind < 0) {
 			std::cout << "var '" << path->id.name << "' is not found!" << std::endl;
+			return Result::Error;
 		}
 
 		std::unique_ptr<wabt::Expr> expr =
 				std::make_unique<wabt::LocalGetExpr>(var);
 		exprs.push_back(std::move(expr));
+		// TODO: get var type
+		exprType = Type::I32();
+
 		return Result::Ok;
 	}
 
-	Result visitBinaryExpression(BinaryExpression* node) {
+	enum class BinaryOprandType {
+		I32,
+		I64,
+		F32,
+		F64
+	};
+
+	Result visitBinaryExpression(BinaryExpression* bin) {
 		wabt::Location              loc;
 		std::unique_ptr<wabt::Expr> expr;
 
-		visitExpression(node->right.get());
-		visitExpression(node->left.get());
+		if (Failed(visitExpression(bin->right.get()))) {
+			return Result::Error;
+		}
+		auto rightType = std::move(exprType);
+		assert(rightType);
 
-		switch (node->op) {
-		case BinaryOperator::Plus:
-			expr = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Add, loc);
-			break;
-		case BinaryOperator::Minus:
-			expr = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Sub, loc);
-			break;
-		case BinaryOperator::Mult:
-			expr = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Mul, loc);
-			break;
-		case BinaryOperator::Div:
-			expr = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32DivS, loc);
-			break;
-			//case BinaryOperator::BitwiseAnd:
-			//	expr = std::make_unique<BinaryExpr>(Opcode::I32And, loc);
-			//	break;
-			//case BinaryOperator::BitwiseOr:
-			//	expr = std::make_unique<BinaryExpr>(Opcode::I32Or, loc);
-			//	break;
+		if (Failed(visitExpression(bin->left.get()))) {
+			return Result::Error;
+		}
+		auto leftType = std::move(exprType);
+		assert(leftType);
+
+		BinaryOprandType typ = BinaryOprandType::I32;
+
+		if (leftType->isNumberic() && rightType->isNumberic()) {
+			auto leftPrim  = cast<PrimitiveType>(leftType.get()),
+					 rightPrim = cast<PrimitiveType>(rightType.get());
+			if (leftPrim->kind() != rightPrim->kind()) {
+				// TODO: convert type
+			}
+			switch (leftPrim->kind()) {
+			case PrimitiveType::I32:
+				typ = BinaryOprandType::I32;
+				break;
+			case PrimitiveType::I64:
+				typ = BinaryOprandType::I64;
+				break;
+			case PrimitiveType::F32:
+				typ = BinaryOprandType::F32;
+				break;
+			case PrimitiveType::F64:
+				typ = BinaryOprandType::F64;
+				break;
+			default:
+				UNREACHABLE("visitBinaryExpression");
+			}
+		} else {
+			//TODO: emit error message
+			return Result::Error;
 		}
 
+		switch (bin->op) {
+		case BinaryOperator::Plus:
+			switch (typ) {
+			case BinaryOprandType::I32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Add, loc);
+				exprType = Type::I32();
+				break;
+			case BinaryOprandType::I64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64Add, loc);
+				exprType = Type::I64();
+				break;
+			case BinaryOprandType::F32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Add, loc);
+				exprType = Type::F32();
+				break;
+			case BinaryOprandType::F64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Add, loc);
+				exprType = Type::F64();
+				break;
+			}
+			break;
+		case BinaryOperator::Minus:
+			switch (typ) {
+			case BinaryOprandType::I32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Sub, loc);
+				exprType = Type::I32();
+				break;
+			case BinaryOprandType::I64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64Sub, loc);
+				exprType = Type::I64();
+				break;
+			case BinaryOprandType::F32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Sub, loc);
+				exprType = Type::F32();
+				break;
+			case BinaryOprandType::F64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Sub, loc);
+				exprType = Type::F64();
+				break;
+			}
+			break;
+		case BinaryOperator::Mult:
+			switch (typ) {
+			case BinaryOprandType::I32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Mul, loc);
+				exprType = Type::I32();
+				break;
+			case BinaryOprandType::I64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64Mul, loc);
+				exprType = Type::I64();
+				break;
+			case BinaryOprandType::F32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Mul, loc);
+				exprType = Type::F32();
+				break;
+			case BinaryOprandType::F64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Mul, loc);
+				exprType = Type::F64();
+				break;
+			}
+			break;
+		case BinaryOperator::Div:
+			switch (typ) {
+			case BinaryOprandType::I32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32DivS, loc);
+				exprType = Type::I32();
+				break;
+			case BinaryOprandType::I64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64DivS, loc);
+				exprType = Type::I64();
+				break;
+			case BinaryOprandType::F32:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Div, loc);
+				exprType = Type::F32();
+				break;
+			case BinaryOprandType::F64:
+				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Div, loc);
+				exprType = Type::F64();
+				break;
+			}
+			break;
+		}
 		exprs.push_back(std::move(expr));
-
 		return Result::Ok;
 	}
 
-	std::string result() {
-		return std::string();
+	Result visitCallExpression(CallExpression* call) {
+		return Result::Ok;
 	}
 
 	WasmVisitor()
@@ -197,6 +326,7 @@ public:
 	std::unique_ptr<wabt::Module> module;
 	wabt::ExprList                exprs;
 	wabt::Func*                   func;
+	TypePtr                       exprType;
 };
 
 Result ValidateModule(wabt::Module* module) {

@@ -252,19 +252,19 @@ public:
 class LiteralExpression : public ExpressionMixin<ExpressionKind::Literal> {
 public:
 	LiteralExpression(int32_t value, const Location& loc = Location())
-			: ExpressionMixin<ExpressionKind::Literal>(loc), i32val(value), typ(LiteralExpression::Typ::DPI32) {
+			: ExpressionMixin<ExpressionKind::Literal>(loc), i32val(value), typ(LiteralExpression::Typ::I32) {
 	}
 
 	LiteralExpression(std::string value, const Location& loc = Location())
-			: ExpressionMixin<ExpressionKind::Literal>(loc), strval(value), typ(LiteralExpression::Typ::DPString) {
+			: ExpressionMixin<ExpressionKind::Literal>(loc), strval(value), typ(LiteralExpression::Typ::String) {
 	}
 
 	LiteralExpression(int64_t value, const Location& loc = Location())
-			: ExpressionMixin<ExpressionKind::Literal>(loc), i64val(value), typ(LiteralExpression::Typ::DPI64) {
+			: ExpressionMixin<ExpressionKind::Literal>(loc), i64val(value), typ(LiteralExpression::Typ::I64) {
 	}
 
 	LiteralExpression(double value, const Location& loc = Location())
-			: ExpressionMixin<ExpressionKind::Literal>(loc), f64val(value), typ(LiteralExpression::Typ::DPF64) {
+			: ExpressionMixin<ExpressionKind::Literal>(loc), f64val(value), typ(LiteralExpression::Typ::F64) {
 	}
 
 	~LiteralExpression() {
@@ -274,12 +274,12 @@ public:
 		return "LiteralExpression";
 	}
 
-	enum class Typ {
-		DPI32,
-		DPI64,
-		DPF64,
-		DPDouble,
-		DPString
+	enum Typ {
+		I32,
+		I64,
+		F32,
+		F64,
+		String
 	};
 
 	Typ typ;
