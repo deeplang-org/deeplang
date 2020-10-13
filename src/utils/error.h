@@ -22,10 +22,10 @@ static inline const char* GetErrorLevelName(ErrorLevel error_level) {
 class Error {
 public:
 	Error()
-		: level(ErrorLevel::Error) {
+			: level(ErrorLevel::Error) {
 	}
 	Error(ErrorLevel level, Location loc, const std::string& message)
-		: level(level), loc(loc), message(message) {
+			: level(level), loc(loc), message(message) {
 	}
 
 	ErrorLevel  level;

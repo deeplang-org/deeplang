@@ -22,7 +22,6 @@ struct Location {
 	unsigned int lastColumn;
 };
 
-
 inline std::string StringPrintf(const char* format, ...) {
 	va_list args;
 	va_list args_copy;

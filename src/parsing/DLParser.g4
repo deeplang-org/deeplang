@@ -116,8 +116,16 @@ variableDecl :
     | LET_SYMBOL IDENTIFIER COLON_SYMBOL type EQUAL_OPERATOR expressionStatement
 ;
 
+param :
+    IDENTIFIER COLON_SYMBOL type
+;
+
+paramList :
+    (param (',' param)*)?
+;
+
 functionDecl :
-    FUN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL JSON_SEPARATOR_SYMBOL type blockExpression
+    FUN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL paramList CLOSE_PAR_SYMBOL JSON_SEPARATOR_SYMBOL type blockExpression
 ;
 
 decl :

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wabt/src/type.h>
 #include "common.h"
 
 namespace dp {
@@ -100,6 +101,47 @@ public:
 		default:
 			return false;
 		}
+	}
+
+	bool isI32() const {
+		return kind_ == Kind::I32;
+	}
+
+	bool isI64() const {
+		return kind_ == Kind::I64;
+	}
+
+	bool isUnit() const {
+		return kind_ == Kind::Unit;
+	}
+
+	wabt::Type::Enum toWasmType() {
+		// TODO: complete wasm type
+		if (isI32()) {
+			return wabt::Type::I32;
+		} else if (isI64()) {
+			return wabt::Type::I64;
+		} else if (isUnit()) {
+			return wabt::Type::Void;
+		} else {
+			UNREACHABLE("can't find backend data type");
+		}
+	}
+
+	static PrimitiveType* getType() {
+		return new PrimitiveType(PrimitiveType::Kind::Unit);
+	}
+
+	static PrimitiveType* getType(std::string typName) {
+		PrimitiveType::Kind t;
+		if (typName == "i32") {
+			t = PrimitiveType::Kind::I32;
+		} else if (typName == "i64") {
+			t = PrimitiveType::I64;
+		} else {
+			UNREACHABLE("can't recognize type name");
+		}
+		return new PrimitiveType(t);
 	}
 
 	static bool classof(const Type* type) {

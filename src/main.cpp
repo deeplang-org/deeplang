@@ -61,7 +61,8 @@ int main(int argc, char** argv) {
 
 	Parser*                  parser = new Parser();
 	antlr4::ANTLRInputStream input(infile);
-	auto                     module = parser->parseModule(input);
+
+	auto module = parser->parseModule(input);
 
 	if (!s_outfile.size())
 		s_outfile = "a.wasm";

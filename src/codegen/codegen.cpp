@@ -47,6 +47,13 @@ public:
 		func            = &func_field->func;
 
 		visitFunctionType(funNode->signature.get());
+
+		for (auto& param : funNode->params) {
+			int index = func->local_types.size();
+			func->bindings.emplace(param.get()->id.name, wabt::Binding(index));
+			func->local_types.AppendDecl(static_cast<PrimitiveType*>(param->typ.get())->toWasmType(), 1);
+		}
+
 		visitExpressionStatement(funNode->body.get());
 		func->exprs.swap(exprs);
 
@@ -67,8 +74,12 @@ public:
 	Result visitFunctionType(FunctionType* node) {
 		wabt::Location loc;
 
-		// TODO: params type
-		//func->decl.sig.result_types.push_back(wabt::Type::I32);
+		// TODO: first order function
+		PrimitiveType* resultType = static_cast<PrimitiveType*>(node->Result.get());
+		//		func->decl.sig.result_types.push_back(resultType->toWasmType());
+		for (auto& param : node->Params) {
+			func->decl.sig.param_types.emplace_back(static_cast<PrimitiveType*>(param.get())->toWasmType());
+		}
 
 		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
 		auto type       = std::make_unique<wabt::FuncType>();
@@ -120,6 +131,21 @@ public:
 			UNREACHABLE("visitExpression");
 			return Result::Error;
 		}
+	}
+
+	Result visitCallExpression(CallExpression* methodCall) {
+		wabt::Location loc;
+		for (auto& param : methodCall->params) {
+			visitExpression(param.get());
+		}
+		auto                        pathExpr    = static_cast<PathExpression*>(methodCall->method.get());
+		wabt::Var                   methodName  = wabt::Var(wabt::string_view(pathExpr->id.name));
+		int                         index       = module->GetFuncIndex(methodName);
+		wabt::Var                   methodIndex = wabt::Var(index);
+		std::unique_ptr<wabt::Expr> expr =
+				std::make_unique<wabt::CallExpr>(methodIndex, loc);
+		exprs.push_back(std::move(expr));
+		return Result::Ok;
 	}
 
 	Result visitLiteralExpression(LiteralExpression* lit) {
@@ -312,10 +338,6 @@ public:
 			break;
 		}
 		exprs.push_back(std::move(expr));
-		return Result::Ok;
-	}
-
-	Result visitCallExpression(CallExpression* call) {
 		return Result::Ok;
 	}
 
