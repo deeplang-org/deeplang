@@ -1,5 +1,17 @@
-fun main() -> () {    
-    let a: string = "hello";
-    print(a);
-    print("hello world");
+
+fun foo() -> () {
+    let a: i32 = 1;
+    let c: i32 = a + 10;
+};
+
+fun bar(a: i32, b: i32) -> () {
+    let c: i32 = 2;
+    let d: i32 = 5;
+    let e: i32 = a + b + c + d;
+};
+
+fun main() -> () {
+    let a: i32 = 99;
+    let b: i32 = 100;
+    bar(a, b);
 };

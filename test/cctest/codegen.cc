@@ -18,7 +18,7 @@ TEST(testCase, codegen) {
 	auto mainFuncBody = std::make_unique<BlockExpession>();
 
 	auto var1Decl     = std::make_unique<VariableDeclaration>("var");
-	var1Decl->vartype = std::make_unique<VariableType>(PrimitiveVariableTypes::I32);
+	var1Decl->vartype = std::make_unique<PrimitiveType>(PrimitiveType::Kind::I32);
 
 	auto addExp   = std::make_unique<BinaryExpression>(BinaryOperator::Plus);
 	addExp->left  = std::make_unique<LiteralExpression>(1);

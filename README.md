@@ -186,7 +186,7 @@ arr@match([s] == 1, [s + 10] == 1);
 ``` dp
 object
     bool
-    tuple                // empty tuple alias Unit type
+    tuple                // empty tuple alias DPUnit type
     i8, i16, i32, i64
     u8, u16, u32, u64
     f32, f64

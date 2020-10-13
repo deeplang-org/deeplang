@@ -15,7 +15,7 @@ public:
 	~ASTNode() {
 	}
 	std::string toString() const;
-	Location loc;
+	Location    loc;
 };
 
 class Identifier {
@@ -130,13 +130,24 @@ public:
 		return "VariableDeclaration";
 	}
 
-
 	Identifier                  id;
 	std::unique_ptr<Type>       vartype;
 	std::unique_ptr<Expression> init;
 };
 
 class BlockExpession;
+
+class Param {
+public:
+	Param(Identifier id)
+			: id(id) {
+	}
+	Identifier            id;
+	std::unique_ptr<Type> typ;
+};
+
+typedef std::unique_ptr<Param> ParamPtr;
+typedef std::vector<ParamPtr>  ParamVector;
 
 class FunctionDeclaration : public StatementMixin<StatementKind::FunctionDeclaration> {
 public:
@@ -150,10 +161,11 @@ public:
 		return "FunctionDeclaration";
 	}
 
-	Identifier                      id;
-	std::unique_ptr<FunctionType>   signature;
+	Identifier                           id;
+	std::unique_ptr<FunctionType>        signature;
 	std::unique_ptr<ExpressionStatement> body;
-	bool                            isPublic;
+	ParamVector                          params;
+	bool                                 isPublic;
 };
 
 // Expression
@@ -205,7 +217,6 @@ public:
 	std::string toString() const {
 		return "ExpressionMixin";
 	}
-
 };
 
 enum class BinaryOperator {
@@ -242,12 +253,10 @@ public:
 		return "CallExpression";
 	}
 
-	ExpressionPtr  receiver;
-	ExpressionPtr  method;
+	ExpressionPtr    receiver;
+	ExpressionPtr    method;
 	ExpressionVector params;
-	
 };
-
 
 class LiteralExpression : public ExpressionMixin<ExpressionKind::Literal> {
 public:
