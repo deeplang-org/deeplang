@@ -584,3 +584,143 @@ wasm_runtime_memory_init(mem_alloc_type_t mem_alloc_type,
 void
 wasm_runtime_memory_destroy();
 ```
+
+#### 2.20 wasm_exec_env.{c / h}
+
+##### 功能介绍
+
+##### 数据结构定义
+
+```c
+/* 运行环境 Execution Environment
+ * 存储当前线程的 WASM 模块实例地址
+ * 有可开启的线程管理相关字段
+ */
+typedef struct WASMExecEnv {
+    /* 前序、后继线程的运行环境指针 */
+    struct WASMExecEnv *next;
+    struct WASMExecEnv *prev;
+
+    /* 存储原生栈边界地址以检查栈溢出 */
+    uint8 *native_stack_boundary;
+
+    /* The WASM module instance of current thread */
+    struct WASMModuleInstanceCommon *module_inst;
+
+    /* Aux stack boundary */
+    uint32 aux_stack_boundary;
+
+    /* attachment for native function 原生 API 函数的指针？ */
+    void *attachment;
+
+    /* 用户态数据？ */
+    void *user_data;
+
+    /* Current interpreter frame of current thread */
+    struct WASMInterpFrame *cur_frame;
+
+    /* The native thread handle of current thread
+     * `typedef pthread_t korp_tid;` in platform_internal.h */
+    korp_tid handle;
+
+#if WASM_ENABLE_INTERP != 0
+    BlockAddr block_addr_cache[BLOCK_ADDR_CACHE_SIZE][BLOCK_ADDR_CONFLICT_SIZE];
+#endif
+
+    /* 疑似硬件边界检查相关代码 */
+#ifdef OS_ENABLE_HW_BOUND_CHECK
+    WASMJmpBuf *jmpbuf_stack_top;
+#endif
+
+    /* The WASM stack size */
+    uint32 wasm_stack_size;
+
+    /* The WASM stack of current thread */
+    union {
+        /* 使整个 union 八字节对齐 */
+        uint64 __make_it_8_byte_aligned_;
+
+        struct {
+            /* The top boundary of the stack
+             * top - bottom 可得到栈空间大小 */
+            uint8 *top_boundary;
+
+            /* Top cell index which is free. */
+            uint8 *top;
+
+            /* The WASM stack. 必须为 struct WASMExecEnv 最后一个域 */
+            uint8 bottom[1];
+        } s;
+    } wasm_stack;
+} WASMExecEnv;
+```
+
+##### 开放接口
+
+```c
+/* 内部辅助函数
+ * 创建运行环境实例
+ * 分配栈空间并清零
+ * 元信息 + 栈空间总大小不可超过 4 GB (UINT32_MAX Bytes)
+ */
+WASMExecEnv *
+wasm_exec_env_create_internal(struct WASMModuleInstanceCommon *module_inst,
+                              uint32 stack_size);
+
+/* 内部辅助函数
+ * 销毁已分配运行环境实例
+ * 有硬件边界检查时会进行额外操作：（具体？）
+ */
+void
+wasm_exec_env_destroy_internal(WASMExecEnv *exec_env);
+
+/*
+ *
+ */
+WASMExecEnv *
+wasm_exec_env_create(struct WASMModuleInstanceCommon *module_inst,
+                     uint32 stack_size);
+
+void
+wasm_exec_env_destroy(WASMExecEnv *exec_env);
+
+/* 在 WASM 栈上分配一帧，大小必须是 4 字节的倍数
+ * 直接修改当前运行环境的栈的顶部空内存位地址
+ * 检测分配是否会导致栈溢出，若有可能则返回 NULL，不进行分配。
+ * outs area 是什么…？The outs area size cannot be larger than the frame size?
+ */
+static inline void *
+wasm_exec_env_alloc_wasm_frame(WASMExecEnv *exec_env, unsigned size);
+
+/* 回收栈帧空间，需给定当前运行环境和上一帧顶部的下一个紧邻的地址（指向空内存） */
+static inline void
+wasm_exec_env_free_wasm_frame(WASMExecEnv *exec_env, void *prev_top);
+
+/* 获取当前 WASM 栈的顶部指针，即下一个可用的空内存地址 */
+static inline void*
+wasm_exec_env_wasm_stack_top(WASMExecEnv *exec_env);
+
+static inline void
+wasm_exec_env_set_cur_frame(WASMExecEnv *exec_env,
+                            struct WASMInterpFrame *frame);
+
+/* 获取当前帧指针 */
+static inline struct WASMInterpFrame*
+wasm_exec_env_get_cur_frame(WASMExecEnv *exec_env);
+
+/* Get the WASM module instance of current thread */
+struct WASMModuleInstanceCommon *
+wasm_exec_env_get_module_inst(WASMExecEnv *exec_env);
+
+/* set thread handle and stack boundary with current thread */
+void
+wasm_exec_env_set_thread_info(WASMExecEnv *exec_env);
+
+#ifdef OS_ENABLE_HW_BOUND_CHECK
+void
+wasm_exec_env_push_jmpbuf(WASMExecEnv *exec_env, WASMJmpBuf *jmpbuf);
+
+WASMJmpBuf *
+wasm_exec_env_pop_jmpbuf(WASMExecEnv *exec_env);
+#endif
+```
