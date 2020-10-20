@@ -38,7 +38,7 @@ static void *app_instance_main(); /* main函数作为wasm module的入口，运�
 | bh_read_file.c         |                                                              |
 | bh_vector.c            | 提供vector的实现与操作接口。                                 |
 | ems_alloc.c            |                                                              |
-| ems_kfc.c              |                                                              |
+| ems_kfc.c              | 内存池定义、构造、析构、移动、状态查询相关接口。 |
 | libc_builtin_wrapper.c |                                                              |
 | mem_alloc.c            |                                                              |
 | posix_malloc.c         |                                                              |
@@ -723,4 +723,163 @@ wasm_exec_env_push_jmpbuf(WASMExecEnv *exec_env, WASMJmpBuf *jmpbuf);
 WASMJmpBuf *
 wasm_exec_env_pop_jmpbuf(WASMExecEnv *exec_env);
 #endif
+```
+
+#### 2.21 ems_kfc.c / ems_gc.h
+
+- HMU: Heap Memory Unit
+- KFC: K Free Chunk?
+
+##### 数据结构
+
+```c
+typedef uint32 gc_uint32;
+
+/**
+ * bit offset 30 - 31: indicating HMU status.
+ *   01 being HMU_FC (free), 10 being HMU_VO (allocated)
+ * bit offset 29: P in use bit means the previous chunk is in use.
+ *   1 being in use, 0 being free.
+ * bit offset 28: VO_FB (VO_free block).
+ *   1 being freed.
+ * bit offset 0 - 27: HMU size.
+ *   The hmu size is divisible by 8, its lowest 3 bits are 0, so we only
+ *   store its higher bits of bit [29..3], and bit [2..0] are not stored.
+ *   After that, the maximal heap size can be enlarged from (1<<27) B = 128MB
+ *   to (1<<27) * 8 B = 1GB.
+ **/
+typedef struct hmu_struct {
+    gc_uint32 header;
+} hmu_t;
+
+typedef struct hmu_normal_node {
+    hmu_t hmu_header;
+    gc_int32 next_offset;
+} hmu_normal_node_t;
+
+typedef struct gc_heap_struct {
+    /* for double checking*/
+    gc_handle_t heap_id;
+
+    gc_uint8 *base_addr;
+    gc_size_t current_size;
+
+    korp_mutex lock;
+
+    hmu_normal_node_t kfc_normal_list[HMU_NORMAL_NODE_CNT];
+
+    /* order in kfc_tree is: size[left] <= size[cur] < size[right] */
+    hmu_tree_node_t kfc_tree_root;
+
+    gc_size_t init_size;
+    /* 历史最大堆占用 in bytes */
+    gc_size_t highmark_size;
+    gc_size_t total_free_size;
+} gc_heap_t;
+```
+
+##### 开放接口
+
+```c
+/**
+ * GC initialization from a buffer
+ *
+ * @param buf the buffer to be initialized to a heap
+ * @param buf_size the size of buffer, >= 1024 bytes
+ *
+ * @return gc handle if success, NULL otherwise
+ *
+ * 返回的地址保证是 8 的倍数（即内存为8字节对齐，参考 buf_aligned
+ *
+ */
+gc_handle_t
+gc_init_with_pool(char *buf, gc_size_t buf_size);
+
+/**
+ * Destroy heap which is initilized from a buffer
+ *
+ * @param handle handle to heap needed destroy
+ *
+ * @return GC_SUCCESS if success
+ *         GC_ERROR for bad parameters or failed system resource freeing.
+ */
+int
+gc_destroy_with_pool(gc_handle_t handle);
+
+/**
+ * Migrate heap from one place to another place
+ * Used to enlarge memeory.
+ * Traverse through the kfc_tree, adjust all pointers with calculated offset.
+ *
+ * @param handle handle of the new heap
+ * @param handle_old handle of the old heap
+ *
+ * @return GC_SUCCESS if success, GC_ERROR otherwise
+ */
+int
+gc_migrate(gc_handle_t handle, gc_handle_t handle_old);
+
+/**
+ * Re-initialize lock of heap
+ *
+ * @param handle the heap handle
+ *
+ * @return GC_SUCCESS if success, GC_ERROR otherwise
+ */
+int
+gc_reinit_lock(gc_handle_t handle);
+
+/**
+ * Destroy lock of heap
+ *
+ * @param handle the heap handle
+ */
+void
+gc_destroy_lock(gc_handle_t handle);
+
+/**
+ * Get Heap Stats
+ *
+ * @param stats [out] integer array to save heap stats
+ * @param size [in] the size of stats
+ * @param mmt [in] type of heap, MMT_SHARED or MMT_INSTANCE
+ */
+void *
+gc_heap_stats(void *heap, uint32* stats, int size);
+
+#if BH_ENABLE_GC_VERIFY == 0
+
+gc_object_t
+gc_alloc_vo(void *heap, gc_size_t size);
+
+gc_object_t
+gc_realloc_vo(void *heap, void *ptr, gc_size_t size);
+
+int
+gc_free_vo(void *heap, gc_object_t obj);
+
+#else /* else of BH_ENABLE_GC_VERIFY */
+
+gc_object_t
+gc_alloc_vo_internal(void *heap, gc_size_t size,
+                     const char *file, int line);
+
+gc_object_t
+gc_realloc_vo_internal(void *heap, void *ptr, gc_size_t size,
+                       const char *file, int line);
+
+int
+gc_free_vo_internal(void *heap, gc_object_t obj,
+                    const char *file, int line);
+
+#define gc_alloc_vo(heap, size) \
+    gc_alloc_vo_internal(heap, size, __FILE__, __LINE__)
+
+#define gc_realloc_vo(heap, ptr, size) \
+    gc_realloc_vo_internal(heap, ptr, size, __FILE__, __LINE__)
+
+#define gc_free_vo(heap, obj) \
+    gc_free_vo_internal(heap, obj, __FILE__, __LINE__)
+
+#endif /* end of BH_ENABLE_GC_VERIFY */
 ```
