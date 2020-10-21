@@ -37,8 +37,8 @@ static void *app_instance_main(); /* main函数作为wasm module的入口，运�
 | bh_queue.c             |                                                              |
 | bh_read_file.c         |                                                              |
 | bh_vector.c            | 提供vector的实现与操作接口。                                 |
-| ems_alloc.c            |                                                              |
-| ems_kfc.c              |                                                              |
+| ems_alloc.c            | 内存分配、重分配、释放等实现。 |
+| ems_kfc.c              | 内存池定义、构造、析构、移动、状态查询相关接口。 |
 | libc_builtin_wrapper.c |                                                              |
 | mem_alloc.c            |                                                              |
 | posix_malloc.c         |                                                              |
@@ -583,4 +583,384 @@ wasm_runtime_memory_init(mem_alloc_type_t mem_alloc_type,
 /* 析构初始化过的内存空间，若不为池模式则只修改「已初始化」的标识位 */
 void
 wasm_runtime_memory_destroy();
+```
+
+#### 2.20 wasm_exec_env.{c / h}
+
+##### 功能介绍
+
+##### 数据结构定义
+
+```c
+/* 运行环境 Execution Environment
+ * 存储当前线程的 WASM 模块实例地址
+ * 有可开启的线程管理相关字段
+ */
+typedef struct WASMExecEnv {
+    /* 前序、后继线程的运行环境指针 */
+    struct WASMExecEnv *next;
+    struct WASMExecEnv *prev;
+
+    /* 存储原生栈边界地址以检查栈溢出 */
+    uint8 *native_stack_boundary;
+
+    /* The WASM module instance of current thread */
+    struct WASMModuleInstanceCommon *module_inst;
+
+    /* Aux stack boundary */
+    uint32 aux_stack_boundary;
+
+    /* attachment for native function 原生 API 函数的指针？ */
+    void *attachment;
+
+    /* 用户态数据？ */
+    void *user_data;
+
+    /* Current interpreter frame of current thread */
+    struct WASMInterpFrame *cur_frame;
+
+    /* The native thread handle of current thread
+     * `typedef pthread_t korp_tid;` in platform_internal.h */
+    korp_tid handle;
+
+#if WASM_ENABLE_INTERP != 0
+    BlockAddr block_addr_cache[BLOCK_ADDR_CACHE_SIZE][BLOCK_ADDR_CONFLICT_SIZE];
+#endif
+
+    /* 疑似硬件边界检查相关代码 */
+#ifdef OS_ENABLE_HW_BOUND_CHECK
+    WASMJmpBuf *jmpbuf_stack_top;
+#endif
+
+    /* The WASM stack size */
+    uint32 wasm_stack_size;
+
+    /* The WASM stack of current thread */
+    union {
+        /* 使整个 union 八字节对齐 */
+        uint64 __make_it_8_byte_aligned_;
+
+        struct {
+            /* The top boundary of the stack
+             * top - bottom 可得到栈空间大小 */
+            uint8 *top_boundary;
+
+            /* Top cell index which is free. */
+            uint8 *top;
+
+            /* The WASM stack. 必须为 struct WASMExecEnv 最后一个域 */
+            uint8 bottom[1];
+        } s;
+    } wasm_stack;
+} WASMExecEnv;
+```
+
+##### 开放接口
+
+```c
+/* 内部辅助函数
+ * 创建运行环境实例
+ * 分配栈空间并清零
+ * 元信息 + 栈空间总大小不可超过 4 GB (UINT32_MAX Bytes)
+ */
+WASMExecEnv *
+wasm_exec_env_create_internal(struct WASMModuleInstanceCommon *module_inst,
+                              uint32 stack_size);
+
+/* 内部辅助函数
+ * 销毁已分配运行环境实例
+ * 有硬件边界检查时会进行额外操作：（具体？）
+ */
+void
+wasm_exec_env_destroy_internal(WASMExecEnv *exec_env);
+
+/*
+ *
+ */
+WASMExecEnv *
+wasm_exec_env_create(struct WASMModuleInstanceCommon *module_inst,
+                     uint32 stack_size);
+
+void
+wasm_exec_env_destroy(WASMExecEnv *exec_env);
+
+/* 在 WASM 栈上分配一帧，大小必须是 4 字节的倍数
+ * 直接修改当前运行环境的栈的顶部空内存位地址
+ * 检测分配是否会导致栈溢出，若有可能则返回 NULL，不进行分配。
+ * outs area 是什么…？The outs area size cannot be larger than the frame size?
+ */
+static inline void *
+wasm_exec_env_alloc_wasm_frame(WASMExecEnv *exec_env, unsigned size);
+
+/* 回收栈帧空间，需给定当前运行环境和上一帧顶部的下一个紧邻的地址（指向空内存） */
+static inline void
+wasm_exec_env_free_wasm_frame(WASMExecEnv *exec_env, void *prev_top);
+
+/* 获取当前 WASM 栈的顶部指针，即下一个可用的空内存地址 */
+static inline void*
+wasm_exec_env_wasm_stack_top(WASMExecEnv *exec_env);
+
+static inline void
+wasm_exec_env_set_cur_frame(WASMExecEnv *exec_env,
+                            struct WASMInterpFrame *frame);
+
+/* 获取当前帧指针 */
+static inline struct WASMInterpFrame*
+wasm_exec_env_get_cur_frame(WASMExecEnv *exec_env);
+
+/* Get the WASM module instance of current thread */
+struct WASMModuleInstanceCommon *
+wasm_exec_env_get_module_inst(WASMExecEnv *exec_env);
+
+/* set thread handle and stack boundary with current thread */
+void
+wasm_exec_env_set_thread_info(WASMExecEnv *exec_env);
+
+#ifdef OS_ENABLE_HW_BOUND_CHECK
+void
+wasm_exec_env_push_jmpbuf(WASMExecEnv *exec_env, WASMJmpBuf *jmpbuf);
+
+WASMJmpBuf *
+wasm_exec_env_pop_jmpbuf(WASMExecEnv *exec_env);
+#endif
+```
+
+#### 2.21 ems_kfc.c / ems_alloc.c / ems_gc.h
+
+- HMU: Heap Memory Unit
+- KFC: K Free Chunk?
+
+##### 数据结构
+
+```c
+typedef uint32 gc_uint32;
+
+/**
+ * bit offset 30 - 31: indicating HMU status.
+ *   01 being HMU_FC (free), 10 being HMU_VO (allocated)
+ * bit offset 29: P in use bit means the previous chunk is in use.
+ *   1 being in use, 0 being free.
+ * bit offset 28: VO_FB (VO_free block).
+ *   1 being freed.
+ * bit offset 0 - 27: HMU size.
+ *   The hmu size is divisible by 8, its lowest 3 bits are 0, so we only
+ *   store its higher bits of bit [29..3], and bit [2..0] are not stored.
+ *   After that, the maximal heap size can be enlarged from (1<<27) B = 128MB
+ *   to (1<<27) * 8 B = 1GB.
+ **/
+typedef struct hmu_struct {
+    gc_uint32 header;
+} hmu_t;
+
+typedef struct hmu_normal_node {
+    hmu_t hmu_header;
+    gc_int32 next_offset;
+} hmu_normal_node_t;
+
+typedef struct gc_heap_struct {
+    /* for double checking*/
+    gc_handle_t heap_id;
+
+    gc_uint8 *base_addr;
+    gc_size_t current_size;
+
+    korp_mutex lock;
+
+    hmu_normal_node_t kfc_normal_list[HMU_NORMAL_NODE_CNT];
+
+    /* order in kfc_tree is: size[left] <= size[cur] < size[right] */
+    hmu_tree_node_t kfc_tree_root;
+
+    gc_size_t init_size;
+    /* 历史最大堆占用 in bytes */
+    gc_size_t highmark_size;
+    gc_size_t total_free_size;
+} gc_heap_t;
+
+#define HMU_NORMAL_NODE_CNT 32
+#define HMU_FC_NORMAL_MAX_SIZE ((HMU_NORMAL_NODE_CNT - 1) << 3)
+#define HMU_IS_FC_NORMAL(size) ((size) < HMU_FC_NORMAL_MAX_SIZE)
+#if HMU_FC_NORMAL_MAX_SIZE >= GC_MAX_HEAP_SIZE
+#error "Too small GC_MAX_HEAP_SIZE"
+#endif
+```
+
+##### 开放接口
+
+```c
+/**
+ * GC initialization from a buffer
+ *
+ * @param buf the buffer to be initialized to a heap
+ * @param buf_size the size of buffer, >= 1024 bytes
+ *
+ * @return gc handle if success, NULL otherwise
+ *
+ * 返回的地址保证是 8 的倍数（即内存为8字节对齐，参考 buf_aligned
+ *
+ */
+gc_handle_t
+gc_init_with_pool(char *buf, gc_size_t buf_size);
+
+/**
+ * Destroy heap which is initilized from a buffer
+ *
+ * @param handle handle to heap needed destroy
+ *
+ * @return GC_SUCCESS if success
+ *         GC_ERROR for bad parameters or failed system resource freeing.
+ */
+int
+gc_destroy_with_pool(gc_handle_t handle);
+
+/**
+ * Migrate heap from one place to another place
+ * Used to enlarge memeory.
+ * Traverse through the kfc_tree, adjust all pointers with calculated offset.
+ *
+ * @param handle handle of the new heap
+ * @param handle_old handle of the old heap
+ *
+ * @return GC_SUCCESS if success, GC_ERROR otherwise
+ */
+int
+gc_migrate(gc_handle_t handle, gc_handle_t handle_old);
+
+/**
+ * Re-initialize lock of heap
+ *
+ * @param handle the heap handle
+ *
+ * @return GC_SUCCESS if success, GC_ERROR otherwise
+ */
+int
+gc_reinit_lock(gc_handle_t handle);
+
+/**
+ * Destroy lock of heap
+ *
+ * @param handle the heap handle
+ */
+void
+gc_destroy_lock(gc_handle_t handle);
+
+/**
+ * Get Heap Stats
+ *
+ * @param stats [out] integer array to save heap stats
+ * @param size [in] the size of stats
+ * @param mmt [in] type of heap, MMT_SHARED or MMT_INSTANCE
+ */
+void *
+gc_heap_stats(void *heap, uint32* stats, int size);
+
+#if BH_ENABLE_GC_VERIFY == 0
+
+/**
+ * Allocate some memory, convert it to `gc_object_t` and return
+ * The returned address will omit `hmu_t.header` (i.e., base address + 1)
+ * The allocated trunk is 8 bytes aligned,
+ * the buffer appended due to alignment will be cleared.
+ * HMU's head will be set to HMU_VO status, and unfree_vo will be set
+ *   ( in header, bit offset 31, 30, 29, 28 will be `10_0`,
+ *     where 29 remain untouched )
+ *
+ * For Finding a proper HMU with given size ( `alloc_hmu_ex` -> `alloc_hmu` )
+ *
+ * @param size should cover the header and should be 8 bytes aligned
+ *
+ * Note: This function will try several ways to satisfy the allocation request:
+ *   1. Find a proper on available HMUs.
+ *   2. GC will be triggered if 1 failed.
+ *   3. Find a proper on available HMUS.
+ *   4. Return NULL if 3 failed
+ *
+ * In current implementation, only 1 will be performed. ( `alloc_hmu` )
+ *   - GC will not be performed here.
+ *   - Heap extension will not be performed here.
+ *
+ * 1. Allocate from normal ...
+ * 2. Allocate from reused tree node
+ *   - Find the smallest node with size ≥ then required size
+ *     by find the rightmost node with size ≥ required, then try left child
+ *   - If the remaining space cut from the free node found is big enough to
+ *     be a stand-alone free chunk, split it out and initialise into a free
+ *     trunk, add back to heap. Otherwise, return the whole trunk without
+ *     splitting.
+ *   - Mark the `P in use` flag for the next trunk (in terms of address)
+ *   - update total free size
+ *   - update highmark size
+ */
+ **/
+gc_object_t
+gc_alloc_vo(void *heap, gc_size_t size);
+
+gc_object_t
+gc_realloc_vo(void *heap, void *ptr, gc_size_t size);
+
+int
+gc_free_vo(void *heap, gc_object_t obj);
+
+#else /* else of BH_ENABLE_GC_VERIFY */
+
+gc_object_t
+gc_alloc_vo_internal(void *heap, gc_size_t size,
+                     const char *file, int line);
+
+gc_object_t
+gc_realloc_vo_internal(void *heap, void *ptr, gc_size_t size,
+                       const char *file, int line);
+
+/**
+ * Return GC_ERROR when trying to free a freed block
+ * Return GC_SUCCESS otherwise, including NULL pointer
+ * Check for one block above and one block below,
+ *   Merge if any of consecutive block is free as well.
+ **/
+int
+gc_free_vo_internal(void *heap, gc_object_t obj,
+                    const char *file, int line);
+
+#define gc_alloc_vo(heap, size) \
+    gc_alloc_vo_internal(heap, size, __FILE__, __LINE__)
+
+#define gc_realloc_vo(heap, ptr, size) \
+    gc_realloc_vo_internal(heap, ptr, size, __FILE__, __LINE__)
+
+#define gc_free_vo(heap, obj) \
+    gc_free_vo_internal(heap, obj, __FILE__, __LINE__)
+
+#endif /* end of BH_ENABLE_GC_VERIFY */
+```
+
+##### 内部二叉查找树实现
+
+- 左 < 中 < 右，按 HMU Size 顺序
+- 无自平衡机制
+- 支持任意位置删除节点
+- 查询最小的 ≥ 某阈值节点：
+  - 向右子树遍历直到找到 ≥ 阈值的节点
+  - 然后向左子树遍历，找到最后一个满足条件的节点
+
+#### 2.22 runtime_timer.c
+
+##### 开放接口
+
+无被使用的开放接口。
+
+```c
+timer_ctx_t create_timer_ctx(timer_callback_f timer_handler,
+                             check_timer_expiry_f, int prealloc_num,
+                             unsigned int owner);
+void destroy_timer_ctx(timer_ctx_t);
+unsigned int timer_ctx_get_owner(timer_ctx_t ctx);
+
+uint32 sys_create_timer(timer_ctx_t ctx, int interval, bool is_period,
+                        bool auto_start);
+bool sys_timer_destroy(timer_ctx_t ctx, uint32 timer_id);
+bool sys_timer_cancel(timer_ctx_t ctx, uint32 timer_id);
+bool sys_timer_restart(timer_ctx_t ctx, uint32 timer_id, int interval);
+void cleanup_app_timers(timer_ctx_t ctx);
+int check_app_timers(timer_ctx_t ctx);
+int get_expiry_ms(timer_ctx_t ctx);
 ```
