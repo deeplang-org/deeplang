@@ -4,6 +4,7 @@
 
 #ifndef DEEPLANG_VM_INTERFACE_H
 #define DEEPLANG_VM_INTERFACE_H
+#include "vm/include/platform_common.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -11,7 +12,7 @@ extern "C"
 #endif
 
 int
-deep_wasm_vm_init (void);
+deep_wasm_eval (uint8 * wasm_buf, uint32 wasm_size);
 
 #ifdef __cplusplus
 };

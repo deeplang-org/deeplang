@@ -3,6 +3,7 @@
 
 #include "codegen/codegen.h"
 #include "parsing/parsing.h"
+#include "vm/vm_interface.h"
 
 #include <fstream>
 #include <iostream>
@@ -67,9 +68,11 @@ int main(int argc, char** argv) {
 	if (!s_outfile.size())
 		s_outfile = "a.wasm";
 
-	auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
+//	auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
+	std::vector<uint8_t> buffer;
+	auto result = CodeGen::GenerateWasm(module, buffer);
 	if (!result)
 		return -1;
 
-	return 0;
+  return deep_wasm_eval((uint8*) buffer.data(), (uint32) buffer.size());
 }
