@@ -21,6 +21,8 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 else ()
 endif()
 
+
+
 # generate parser lexer parser from g4
 if (DEEPLANG_ANTLR4_GEN)
     execute_process(
@@ -76,7 +78,7 @@ function (deeplang_executable)
     set(EXE_LIBS
         antlr4_static
         wabt
-
+        dp_vm
         ${EXE_LIBS}
     )
 
@@ -94,6 +96,9 @@ option(BUILD_TESTS "Don't need wabt test" OFF)
 option(BUILD_TOOLS "Don't need wabt binary tools" OFF)
 option(BUILD_LIBWASM "Don't need wabt shared library" OFF)
 add_subdirectory(third_party/wabt)
+
+# Import DeeplangVM
+add_subdirectory(src/vm)
 
 # deeplang compiler
 deeplang_executable(
@@ -119,7 +124,7 @@ if (DEEPLANG_BUILD_TESTS)
 
     add_library(gtest STATIC
         third_party/googletest/googletest/src/gtest-all.cc
-    )
+            )
 
     add_library(gtest_main STATIC
         third_party/googletest/googletest/src/gtest_main.cc
