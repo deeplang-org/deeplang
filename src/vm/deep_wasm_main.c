@@ -115,80 +115,80 @@ fail1:
     return 0;
 }
 
-int
-main (int argc, char *argv[])
-{
-    uint8 *wasm_file_buf = NULL;
-    uint32 wasm_file_size;
-    uint32 stack_size = DEEPVM_STACK_SIZE, heap_size = DEEPVM_HEAP_SIZE;
-    wasm_module_t wasm_module = NULL;
-    wasm_module_inst_t wasm_module_inst = NULL;
-    RuntimeInitArgs init_args;
-    char error_buf[128] = { 0 };
-#ifdef BUILD_TARGET_X86_64
-    debug ("BUILD_TARGET_X86_64");
-#endif
-
-#ifdef BUILD_TARGET_X86_32
-    debug ("BUILD_TARGET_X86_32");
-#endif
-    app_argc = argc;
-    app_argv = argv;
-    static NativeSymbol native_symbols[] = 
-    {
-        {"puts",native_puts, "($)i"},
-        {"putchar",native_putchar, "(i)i"},
-    };
-    int n_native_symbols = sizeof(native_symbols) / sizeof(NativeSymbol);
-
-    memset(&init_args, 0, sizeof(RuntimeInitArgs));
-
-    init_args.mem_alloc_type = Alloc_With_Pool;
-    init_args.mem_alloc_option.pool.heap_buf = global_heap_buf;
-    init_args.mem_alloc_option.pool.heap_size = sizeof(global_heap_buf);
-    init_args.native_module_name = "env";
-    init_args.native_symbols = native_symbols;
-    init_args.n_native_symbols = n_native_symbols;
-    
-    /* initialize runtime environment */
-    if (!wasm_runtime_full_init(&init_args)) {
-        printf("Init runtime environment failed.\n");
-        return -1;
-    }
-
-    /* load WASM byte buffer from WASM bin file */
-    if (!(wasm_file_buf =
-            (uint8 *)bh_read_file_to_buffer(argv[1], &wasm_file_size)))
-        goto fail1;
-
-    /* load WASM module */
-    if (!(wasm_module = wasm_runtime_load(wasm_file_buf, wasm_file_size,
-                                          error_buf, sizeof(error_buf)))) {
-        printf("%s\n", error_buf);
-        goto fail2;
-    }
-    /* instantiate the module */
-    if (!(wasm_module_inst =
-            wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
-                                     error_buf, sizeof(error_buf)))) {
-        printf("%s\n", error_buf);
-        goto fail3;
-    }
-    app_instance_main(wasm_module_inst);
-
-    /* destroy the module instance */
-    wasm_runtime_deinstantiate(wasm_module_inst);
-
-fail3:
-    /* unload the module */
-    wasm_runtime_unload(wasm_module);
-
-fail2:
-    /* free the file buffer */
-    wasm_runtime_free(wasm_file_buf);
-
-fail1:
-    /* destroy runtime environment */
-    wasm_runtime_destroy();
-    return 0;
-}
+//int
+//main (int argc, char *argv[])
+//{
+//    uint8 *wasm_file_buf = NULL;
+//    uint32 wasm_file_size;
+//    uint32 stack_size = DEEPVM_STACK_SIZE, heap_size = DEEPVM_HEAP_SIZE;
+//    wasm_module_t wasm_module = NULL;
+//    wasm_module_inst_t wasm_module_inst = NULL;
+//    RuntimeInitArgs init_args;
+//    char error_buf[128] = { 0 };
+//#ifdef BUILD_TARGET_X86_64
+//    debug ("BUILD_TARGET_X86_64");
+//#endif
+//
+//#ifdef BUILD_TARGET_X86_32
+//    debug ("BUILD_TARGET_X86_32");
+//#endif
+//    app_argc = argc;
+//    app_argv = argv;
+//    static NativeSymbol native_symbols[] =
+//    {
+//        {"puts",native_puts, "($)i"},
+//        {"putchar",native_putchar, "(i)i"},
+//    };
+//    int n_native_symbols = sizeof(native_symbols) / sizeof(NativeSymbol);
+//
+//    memset(&init_args, 0, sizeof(RuntimeInitArgs));
+//
+//    init_args.mem_alloc_type = Alloc_With_Pool;
+//    init_args.mem_alloc_option.pool.heap_buf = global_heap_buf;
+//    init_args.mem_alloc_option.pool.heap_size = sizeof(global_heap_buf);
+//    init_args.native_module_name = "env";
+//    init_args.native_symbols = native_symbols;
+//    init_args.n_native_symbols = n_native_symbols;
+//
+//    /* initialize runtime environment */
+//    if (!wasm_runtime_full_init(&init_args)) {
+//        printf("Init runtime environment failed.\n");
+//        return -1;
+//    }
+//
+//    /* load WASM byte buffer from WASM bin file */
+//    if (!(wasm_file_buf =
+//            (uint8 *)bh_read_file_to_buffer(argv[1], &wasm_file_size)))
+//        goto fail1;
+//
+//    /* load WASM module */
+//    if (!(wasm_module = wasm_runtime_load(wasm_file_buf, wasm_file_size,
+//                                          error_buf, sizeof(error_buf)))) {
+//        printf("%s\n", error_buf);
+//        goto fail2;
+//    }
+//    /* instantiate the module */
+//    if (!(wasm_module_inst =
+//            wasm_runtime_instantiate(wasm_module, stack_size, heap_size,
+//                                     error_buf, sizeof(error_buf)))) {
+//        printf("%s\n", error_buf);
+//        goto fail3;
+//    }
+//    app_instance_main(wasm_module_inst);
+//
+//    /* destroy the module instance */
+//    wasm_runtime_deinstantiate(wasm_module_inst);
+//
+//fail3:
+//    /* unload the module */
+//    wasm_runtime_unload(wasm_module);
+//
+//fail2:
+//    /* free the file buffer */
+//    wasm_runtime_free(wasm_file_buf);
+//
+//fail1:
+//    /* destroy runtime environment */
+//    wasm_runtime_destroy();
+//    return 0;
+//}

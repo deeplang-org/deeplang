@@ -408,5 +408,37 @@ bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName) {
 	return false;
 }
 
+
+bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t> &bcBuffer) {
+  do {
+    Errors errors;
+    auto   visitor = std::make_unique<WasmVisitor>();
+    auto   result  = visitor->visitModule(mod);
+    if (Failed(result)) {
+      break;
+    }
+
+    result = ValidateModule(visitor->module.get());
+    if (Failed(result)) {
+      break;
+    }
+
+    wabt::MemoryStream       stream;
+    wabt::WriteBinaryOptions options;
+    auto getBuffResult = wabt::WriteBinaryModule(&stream, visitor->module.get(), options);
+
+    if (wabt::Succeeded(getBuffResult)) {
+      const auto& buffer = stream.output_buffer();
+			bcBuffer = buffer.data;
+			return true;
+    }
+    return false;
+  } while (false);
+
+  // TODO: print error
+
+  return false;
+}
+
 } // namespace internal
 } // namespace dp
