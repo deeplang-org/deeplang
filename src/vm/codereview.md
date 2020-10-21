@@ -37,7 +37,7 @@ static void *app_instance_main(); /* main函数作为wasm module的入口，运�
 | bh_queue.c             |                                                              |
 | bh_read_file.c         |                                                              |
 | bh_vector.c            | 提供vector的实现与操作接口。                                 |
-| ems_alloc.c            |                                                              |
+| ems_alloc.c            | 内存分配、重分配、释放等实现。 |
 | ems_kfc.c              | 内存池定义、构造、析构、移动、状态查询相关接口。 |
 | libc_builtin_wrapper.c |                                                              |
 | mem_alloc.c            |                                                              |
@@ -725,7 +725,7 @@ wasm_exec_env_pop_jmpbuf(WASMExecEnv *exec_env);
 #endif
 ```
 
-#### 2.21 ems_kfc.c / ems_gc.h
+#### 2.21 ems_kfc.c / ems_alloc.c / ems_gc.h
 
 - HMU: Heap Memory Unit
 - KFC: K Free Chunk?
@@ -776,6 +776,13 @@ typedef struct gc_heap_struct {
     gc_size_t highmark_size;
     gc_size_t total_free_size;
 } gc_heap_t;
+
+#define HMU_NORMAL_NODE_CNT 32
+#define HMU_FC_NORMAL_MAX_SIZE ((HMU_NORMAL_NODE_CNT - 1) << 3)
+#define HMU_IS_FC_NORMAL(size) ((size) < HMU_FC_NORMAL_MAX_SIZE)
+#if HMU_FC_NORMAL_MAX_SIZE >= GC_MAX_HEAP_SIZE
+#error "Too small GC_MAX_HEAP_SIZE"
+#endif
 ```
 
 ##### 开放接口
@@ -849,6 +856,42 @@ gc_heap_stats(void *heap, uint32* stats, int size);
 
 #if BH_ENABLE_GC_VERIFY == 0
 
+/**
+ * Allocate some memory, convert it to `gc_object_t` and return
+ * The returned address will omit `hmu_t.header` (i.e., base address + 1)
+ * The allocated trunk is 8 bytes aligned,
+ * the buffer appended due to alignment will be cleared.
+ * HMU's head will be set to HMU_VO status, and unfree_vo will be set
+ *   ( in header, bit offset 31, 30, 29, 28 will be `10_0`,
+ *     where 29 remain untouched )
+ *
+ * For Finding a proper HMU with given size ( `alloc_hmu_ex` -> `alloc_hmu` )
+ *
+ * @param size should cover the header and should be 8 bytes aligned
+ *
+ * Note: This function will try several ways to satisfy the allocation request:
+ *   1. Find a proper on available HMUs.
+ *   2. GC will be triggered if 1 failed.
+ *   3. Find a proper on available HMUS.
+ *   4. Return NULL if 3 failed
+ *
+ * In current implementation, only 1 will be performed. ( `alloc_hmu` )
+ *   - GC will not be performed here.
+ *   - Heap extension will not be performed here.
+ *
+ * 1. Allocate from normal ...
+ * 2. Allocate from reused tree node
+ *   - Find the smallest node with size ≥ then required size
+ *     by find the rightmost node with size ≥ required, then try left child
+ *   - If the remaining space cut from the free node found is big enough to
+ *     be a stand-alone free chunk, split it out and initialise into a free
+ *     trunk, add back to heap. Otherwise, return the whole trunk without
+ *     splitting.
+ *   - Mark the `P in use` flag for the next trunk (in terms of address)
+ *   - update total free size
+ *   - update highmark size
+ */
+ **/
 gc_object_t
 gc_alloc_vo(void *heap, gc_size_t size);
 
@@ -868,6 +911,12 @@ gc_object_t
 gc_realloc_vo_internal(void *heap, void *ptr, gc_size_t size,
                        const char *file, int line);
 
+/**
+ * Return GC_ERROR when trying to free a freed block
+ * Return GC_SUCCESS otherwise, including NULL pointer
+ * Check for one block above and one block below,
+ *   Merge if any of consecutive block is free as well.
+ **/
 int
 gc_free_vo_internal(void *heap, gc_object_t obj,
                     const char *file, int line);
@@ -882,4 +931,36 @@ gc_free_vo_internal(void *heap, gc_object_t obj,
     gc_free_vo_internal(heap, obj, __FILE__, __LINE__)
 
 #endif /* end of BH_ENABLE_GC_VERIFY */
+```
+
+##### 内部二叉查找树实现
+
+- 左 < 中 < 右，按 HMU Size 顺序
+- 无自平衡机制
+- 支持任意位置删除节点
+- 查询最小的 ≥ 某阈值节点：
+  - 向右子树遍历直到找到 ≥ 阈值的节点
+  - 然后向左子树遍历，找到最后一个满足条件的节点
+
+#### 2.22 runtime_timer.c
+
+##### 开放接口
+
+无被使用的开放接口。
+
+```c
+timer_ctx_t create_timer_ctx(timer_callback_f timer_handler,
+                             check_timer_expiry_f, int prealloc_num,
+                             unsigned int owner);
+void destroy_timer_ctx(timer_ctx_t);
+unsigned int timer_ctx_get_owner(timer_ctx_t ctx);
+
+uint32 sys_create_timer(timer_ctx_t ctx, int interval, bool is_period,
+                        bool auto_start);
+bool sys_timer_destroy(timer_ctx_t ctx, uint32 timer_id);
+bool sys_timer_cancel(timer_ctx_t ctx, uint32 timer_id);
+bool sys_timer_restart(timer_ctx_t ctx, uint32 timer_id, int interval);
+void cleanup_app_timers(timer_ctx_t ctx);
+int check_app_timers(timer_ctx_t ctx);
+int get_expiry_ms(timer_ctx_t ctx);
 ```
