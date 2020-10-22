@@ -26,12 +26,13 @@ endif()
 # generate parser lexer parser from g4
 if (DEEPLANG_ANTLR4_GEN)
     execute_process(
-        COMMAND antlr4
-                -Werror -Dlanguage=Cpp -listener -visitor
-                -lib src/parsing
-                src/parsing/DLLexer.g4
-                src/parsing/DLParser.g4
-                -o gen
+        #COMMAND antlr4
+        #        -Werror -Dlanguage=Cpp -listener -visitor
+        #        -lib src/parsing
+        #        src/parsing/DLLexer.g4
+        #        src/parsing/DLParser.g4
+        #        -o gen
+        COMMAND sh build.sh
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
@@ -41,7 +42,7 @@ function (deeplang_executable)
 
     set(EXE_INCLUDES
         PRIVATE
-        gen/
+        gen/src/parsing
         src/
         third_party/
         ${WABT_SOURCE_DIR}
@@ -51,10 +52,10 @@ function (deeplang_executable)
     )
 
     set(EXE_SOURCES
-        gen/DLLexer.cpp
-        gen/DLParser.cpp
-        gen/DLParserVisitor.cpp
-        gen/DLParserBaseVisitor.cpp
+        gen/src/parsing/DLLexer.cpp
+        gen/src/parsing/DLParser.cpp
+        gen/src/parsing/DLParserVisitor.cpp
+        gen/src/parsing/DLParserBaseVisitor.cpp
 
         src/ast/ast.h
         src/ast/ast.cpp
