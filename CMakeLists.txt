@@ -66,8 +66,6 @@ function (deeplang_executable)
         src/parsing/parsing.cpp
         src/parsing/parsing.h
         src/utils/cast.h
-        src/parsing/symtab.h
-        src/parsing/symtab.cc
         src/utils/error.h
         src/utils/error-formatter.h
         src/utils/error-formatter.cpp
