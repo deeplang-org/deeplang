@@ -109,11 +109,84 @@ Available options are:
 
 ### Deeplang help
 
+usage: dp [options] filename
+
+用法：dp 文件名 或 
+
+支持的文件类型：
+
+- .dp文件，需要前端编译生成wasm文件，后端运行
+
+- .ast文件
+
+- .wasm文件
+
+#### 1. -d
+
+**优雅地**dump各种文件
+
 ```shell
-eric@Eric-PC:~$ dp -h
--h 		help info
--r 		REPL mode
--v		deepvm version
--f name	run .wasm or .dp file
+./dp -d ./xx.dp
+./dp -d ./xx.ast
+./dp -d ./xx.wasm
+```
+
+#### 2. -h
+
+打印help信息
+
+```help
+./dp -h
+./dp --help
+```
+
+#### 3. -v
+
+打印版本信息，deepvm的版本信息
+```help
+./dp -v
+./dp --version
+```
+
+#### 4. -o
+
+输出文件
+
+- 输出编译生成的.wasm文件
+
+- 输出解析出的.ast文件
+
+```shell
+./dp -o ./xx.ast
+./dp -o ./xx.wasm
+```
+
+  
+
+#### 5. -i
+
+进入REPL模式
+
+**在REPL模式之下：**
+
+- 支持打印内存状态，memstat;
+
+- 支持退出REPL模式，exit;
+
+
+
+```shell
+eric@Eric-PC:~/GitHub/deeplang/build$ ./dp --help
+usage: dp [options] filename
+
+  Deeplang compiler
+
+options:
+      --help                   Print this help message
+      --version                Print version information
+  -v, --version                current version: 
+  -o, --output=FILENAME        Output file for the compiled wasm file
+  -i, --interactive            REPL
+
 ```
 
