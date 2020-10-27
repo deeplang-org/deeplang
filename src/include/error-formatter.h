@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/error.h"
+#include "error.h"
 
 #include <cstdio>
 #include <memory>

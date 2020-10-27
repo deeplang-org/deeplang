@@ -3,7 +3,7 @@ cmake_policy(SET CMP0091 NEW)
 project(Deeplang)
 
 
-option(DEEPLANG_BUILD_TESTS "Build GTest-based tests" ON)
+option(DEEPLANG_BUILD_TESTS "Build GTest-based tests" OFF)
 option(DEEPLANG_ANTLR4_GEN "Use Antlr4 generating parser codes" ON)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -42,9 +42,17 @@ function (deeplang_executable)
 
     set(EXE_INCLUDES
         PRIVATE
-        gen/src/parsing
-        src/
+
+        #SOURCES
+        src/include
+        src/ast/lib
+        src/codegen/lib
+
+        #LIBS
+        lib
+        lib/include
         third_party/
+        gen/lib/antlr
         ${WABT_SOURCE_DIR}
         ${WABT_BINARY_DIR}
 
@@ -52,24 +60,27 @@ function (deeplang_executable)
     )
 
     set(EXE_SOURCES
-        gen/src/parsing/DLLexer.cpp
-        gen/src/parsing/DLParser.cpp
-        gen/src/parsing/DLParserVisitor.cpp
-        gen/src/parsing/DLParserBaseVisitor.cpp
+        gen/lib/antlr/DLLexer.cpp
+        gen/lib/antlr/DLParser.cpp
+        gen/lib/antlr/DLParserVisitor.cpp
+        gen/lib/antlr/DLParserBaseVisitor.cpp
 
-        src/ast/ast.h
+        src/ast/include/ast.h
+        src/ast/include/type.h
+        src/ast/include/parsing.h
+        src/ast/include/symtab.h
+        src/ast/parsing.cpp
+        src/ast/symtab.cpp
         src/ast/ast.cpp
-        src/ast/type.h
         src/ast/type.cpp
-        src/codegen/codegen.h
+        
+        src/codegen/include/codegen.h
         src/codegen/codegen.cpp
-        src/parsing/parsing.cpp
-        src/parsing/parsing.h
-        src/utils/cast.h
-        src/utils/error.h
-        src/utils/error-formatter.h
-        src/utils/error-formatter.cpp
-        src/utils/result.h
+        src/include/cast.h
+        src/include/error.h
+        src/include/error-formatter.h
+        src/include/error-formatter.cpp
+        src/include/result.h
 
         ${EXE_SOURCES}
     )
@@ -97,7 +108,7 @@ option(BUILD_LIBWASM "Don't need wabt shared library" OFF)
 add_subdirectory(third_party/wabt)
 
 # Import DeeplangVM
-add_subdirectory(src/vm)
+add_subdirectory(lib/vm)
 
 # deeplang compiler
 deeplang_executable(
