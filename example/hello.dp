@@ -1,4 +1,3 @@
-sig main :: void -> void
 fun main () {
     print ("hello world");
 };
