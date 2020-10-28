@@ -3,7 +3,7 @@ cmake_policy(SET CMP0091 NEW)
 project(Deeplang)
 
 
-option(DEEPLANG_BUILD_TESTS "Build GTest-based tests" OFF)
+option(DEEPLANG_BUILD_TESTS "Build GTest-based tests" ON)
 option(DEEPLANG_ANTLR4_GEN "Use Antlr4 generating parser codes" ON)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -47,6 +47,7 @@ function (deeplang_executable)
         src/include
         src/ast/lib
         src/codegen/lib
+        src/vm
 
         #LIBS
         lib
@@ -108,7 +109,7 @@ option(BUILD_LIBWASM "Don't need wabt shared library" OFF)
 add_subdirectory(third_party/wabt)
 
 # Import DeeplangVM
-add_subdirectory(lib/vm)
+add_subdirectory(src/vm)
 
 # deeplang compiler
 deeplang_executable(
@@ -143,13 +144,13 @@ if (DEEPLANG_BUILD_TESTS)
     # tests
     deeplang_executable(
         NAME dp_cctest
-        SOURCES test/cctest/cctest.cc
+        SOURCES lib/test/cctest/cctest.cc
         LIBS gtest gtest_main
     )
 
     deeplang_executable(
         NAME dp_codegen
-        SOURCES test/cctest/codegen.cc
+        SOURCES lib/test/cctest/codegen.cc
         LIBS gtest gtest_main
     )
 endif()
