@@ -4,7 +4,7 @@
 
 #ifndef DEEPLANG_VM_INTERFACE_H
 #define DEEPLANG_VM_INTERFACE_H
-#include "vm/include/platform_common.h"
+#include "include/platform_common.h"
 
 #ifdef __cplusplus
 extern "C"
