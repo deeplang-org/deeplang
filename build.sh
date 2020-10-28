@@ -7,7 +7,7 @@ ANTLR_JAR="$ANTLR_HOME/$ANTLR"
 alias antlr4="java -jar $ANTLR_JAR"
 
 # antlr4 gen
-antlr4 -Werror -Dlanguage=Cpp -listener -visitor src/parsing/DLLexer.g4 src/parsing/DLParser.g4 -o gen
+antlr4 -Werror -Dlanguage=Cpp -listener -visitor lib/antlr/DLLexer.g4 lib/antlr/DLParser.g4 -o gen
 
 if [ $? != 0 ]
 then

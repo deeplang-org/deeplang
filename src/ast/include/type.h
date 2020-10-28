@@ -1,7 +1,9 @@
 #pragma once
 
-#include <wabt/src/type.h>
 #include "common.h"
+
+#define  LIB_WABT_TYPE_H
+#include "astIncludeFrom.h"
 
 namespace dp {
 namespace internal {

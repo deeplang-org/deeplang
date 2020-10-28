@@ -1,12 +1,15 @@
-#include "wabt/src/binary-writer.h"
-#include "wabt/src/error.h"
-#include "wabt/src/ir.h"
-#include "wabt/src/validator.h"
+#include "include/codegen.h"
+#include "cast.h"
+#include "error.h"
+#include "result.h"
 
-#include "codegen/codegen.h"
-#include "utils/cast.h"
-#include "utils/error.h"
-#include "utils/result.h"
+
+#define LIB_ERROR_H
+#define LIB_BINARY_H
+#define LIB_IR_H
+#define LIB_VALIDATOR_H
+#include "genIncludeFrom.h"
+
 
 namespace dp {
 namespace internal {
