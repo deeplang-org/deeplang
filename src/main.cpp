@@ -71,8 +71,11 @@ int main(int argc, char** argv) {
 //	auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
 	std::vector<uint8_t> buffer;
 	auto result = CodeGen::GenerateWasm(module, buffer);
-	if (!result)
+	if (!result) {
 		return -1;
-
-  return deep_wasm_eval((uint8*) buffer.data(), (uint32) buffer.size());
+	}
+	if (deep_wasm_vm_init() != 0) {
+		return -1;
+	}
+	return deep_wasm_eval((uint8*) buffer.data(), (uint32) buffer.size());
 }

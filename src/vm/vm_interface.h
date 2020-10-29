@@ -11,8 +11,8 @@ extern "C"
 {
 #endif
 
-int
-deep_wasm_eval (uint8 * wasm_buf, uint32 wasm_size);
+int deep_wasm_vm_init(void);
+int deep_wasm_eval(uint8* wasm_buf, uint32 wasm_size);
 
 #ifdef __cplusplus
 };
