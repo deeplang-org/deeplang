@@ -1,7 +1,7 @@
 #pragma once
 #include "ast/ast.h"
 #include "antlr4-runtime.h"
-#include "DLParserVisitor.h"
+#include "parsing/gen/DLParserVisitor.h"
 
 namespace dp {
 namespace internal {
