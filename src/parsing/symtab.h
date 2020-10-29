@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <map>
 #include <string>
 
 namespace dp {
@@ -8,23 +8,23 @@ namespace internal {
 template <class T>
 class SymTab {
 public:
-	typedef std::shared_ptr<SymTab<T>> SymTabSharedPtr;
-
-	SymTabSharedPtr pre;
-
-	std::unordered_map<std::string, T> table;
+	std::map<std::string, T> table;
+	int                      offset;
 
 	SymTab() {
 	}
 
-	SymTab(SymTabSharedPtr symTab)
-			: pre(symTab) {
+	SymTab(int offset)
+			: offset(offset) {
 	}
 
 	~SymTab() {
 	}
 
-	void push(std::string k, T v);
+	void push(std::string k, T v) {
+		table.insert(std::make_pair(k, v));
+		offset += k.size() + 1;
+	}
 
 	void remove(T v);
 

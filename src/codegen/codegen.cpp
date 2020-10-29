@@ -7,6 +7,7 @@
 #include "utils/cast.h"
 #include "utils/error.h"
 #include "utils/result.h"
+#include "parsing/symtab.h"
 
 namespace dp {
 namespace internal {
@@ -14,12 +15,61 @@ namespace internal {
 class WasmVisitor {
 public:
 	Result visitModule(Module* node) {
+		initEnv();
 		for (auto& stmt : node->stmts) {
 			visitStatement(stmt.get());
 		}
+		generateDataSegment();
 		return Result::Ok;
 	}
 
+	// init some builtin function to import
+	Result initEnv() {
+		wabt::Location loc;
+		auto           import = wabt::MakeUnique<wabt::FuncImport>();
+		import->module_name   = "builtin";
+		import->field_name    = "builtinPrint";
+
+		auto func  = &import->func;
+		func->name = "print";
+		func->decl.sig.param_types.emplace_back(wabt::Type::I32);
+		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
+		auto type       = std::make_unique<wabt::FuncType>();
+		type->sig       = func->decl.sig;
+		type_field->type.reset(type.release());
+		module->AppendField(std::move(type_field));
+
+		auto importField = wabt::MakeUnique<wabt::ImportModuleField>(std::move(import), loc);
+		module->AppendField(std::move(importField));
+	}
+
+	Result generateDataSegment() {
+		wabt::Location loc;
+		auto           dataField           = wabt::MakeUnique<wabt::DataSegmentModuleField>(loc, "StrPool");
+		dataField->data_segment.kind       = wabt::SegmentKind::Passive;
+		dataField->data_segment.memory_var = wabt::Var(module->memories.size());
+		dataField->data_segment.offset.push_back(
+				wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(0)));
+
+		auto map = constStringSymTab.table;
+		for (auto it = map.begin(); it != map.end(); it++) {
+			std::string data = it->first;
+			for (auto dataIter = data.begin(); dataIter != data.end(); dataIter++) {
+				dataField->data_segment.data.push_back(*dataIter);
+			}
+			dataField->data_segment.data.push_back('\0');
+		}
+
+		auto     memory_field                    = wabt::MakeUnique<wabt::MemoryModuleField>(loc, "memory");
+		uint32_t byte_size                       = WABT_ALIGN_UP_TO_PAGE(dataField->data_segment.data.size());
+		uint32_t page_size                       = WABT_BYTES_TO_PAGES(byte_size);
+		memory_field->memory.page_limits.initial = page_size;
+		memory_field->memory.page_limits.max     = page_size;
+		memory_field->memory.page_limits.has_max = true;
+
+		module->AppendField(std::move(memory_field));
+		module->AppendField(std::move(dataField));
+	}
 	// Statements
 
 	Result visitStatement(Statement* stmt) {
@@ -168,8 +218,13 @@ public:
 			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::F64(lit->f64val, loc), loc);
 			exprType = Type::F64();
 			break;
-		case LiteralExpression::String:
+		case LiteralExpression::String: {
+			int offset = constStringSymTab.offset;
+			constStringSymTab.push(lit->strval, offset);
+			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::I32(offset, loc), loc);
 			exprType = Type::String();
+			break;
+		}
 		default:
 			UNREACHABLE("visitLiteral");
 		}
@@ -349,6 +404,7 @@ public:
 	wabt::ExprList                exprs;
 	wabt::Func*                   func;
 	TypePtr                       exprType;
+	SymTab<int>                   constStringSymTab = 0;
 };
 
 Result ValidateModule(wabt::Module* module) {
@@ -408,36 +464,35 @@ bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName) {
 	return false;
 }
 
+bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t>& bcBuffer) {
+	do {
+		Errors errors;
+		auto   visitor = std::make_unique<WasmVisitor>();
+		auto   result  = visitor->visitModule(mod);
+		if (Failed(result)) {
+			break;
+		}
 
-bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t> &bcBuffer) {
-  do {
-    Errors errors;
-    auto   visitor = std::make_unique<WasmVisitor>();
-    auto   result  = visitor->visitModule(mod);
-    if (Failed(result)) {
-      break;
-    }
+		result = ValidateModule(visitor->module.get());
+		if (Failed(result)) {
+			break;
+		}
 
-    result = ValidateModule(visitor->module.get());
-    if (Failed(result)) {
-      break;
-    }
+		wabt::MemoryStream       stream;
+		wabt::WriteBinaryOptions options;
+		auto                     getBuffResult = wabt::WriteBinaryModule(&stream, visitor->module.get(), options);
 
-    wabt::MemoryStream       stream;
-    wabt::WriteBinaryOptions options;
-    auto getBuffResult = wabt::WriteBinaryModule(&stream, visitor->module.get(), options);
-
-    if (wabt::Succeeded(getBuffResult)) {
-      const auto& buffer = stream.output_buffer();
-			bcBuffer = buffer.data;
+		if (wabt::Succeeded(getBuffResult)) {
+			const auto& buffer = stream.output_buffer();
+			bcBuffer           = buffer.data;
 			return true;
-    }
-    return false;
-  } while (false);
+		}
+		return false;
+	} while (false);
 
-  // TODO: print error
+	// TODO: print error
 
-  return false;
+	return false;
 }
 
 } // namespace internal
