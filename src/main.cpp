@@ -68,9 +68,9 @@ int main(int argc, char** argv) {
 	if (!s_outfile.size())
 		s_outfile = "a.wasm";
 
-//	auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
+  auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
 	std::vector<uint8_t> buffer;
-	auto result = CodeGen::GenerateWasm(module, buffer);
+	result = CodeGen::GenerateWasm(module, buffer);
 	if (!result) {
 		return -1;
 	}

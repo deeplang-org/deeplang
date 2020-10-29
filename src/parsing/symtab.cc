@@ -3,10 +3,11 @@
 namespace dp {
 namespace internal {
 
-template <class T>
-void SymTab<T>::push(std::string k, T v) {
-	table.insert(std::make_pair(k, v));
-}
+//template <class T>
+//void SymTab<T>::push(std::string k, T v) {
+//	table.insert(std::make_pair(k, v));
+//	offset += k.size();
+//}
 
 template <class T>
 void SymTab<T>::remove(T v) {
