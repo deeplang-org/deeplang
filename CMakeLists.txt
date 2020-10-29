@@ -42,7 +42,6 @@ function (deeplang_executable)
 
     set(EXE_INCLUDES
         PRIVATE
-        gen/src/parsing
         src/
         third_party/
         ${WABT_SOURCE_DIR}
@@ -52,10 +51,10 @@ function (deeplang_executable)
     )
 
     set(EXE_SOURCES
-        gen/src/parsing/DLLexer.cpp
-        gen/src/parsing/DLParser.cpp
-        gen/src/parsing/DLParserVisitor.cpp
-        gen/src/parsing/DLParserBaseVisitor.cpp
+        src/parsing/gen/src/parsing/DLLexer.cpp
+        src/parsing/gen/src/parsing/DLParser.cpp
+        src/parsing/gen/src/parsing/DLParserVisitor.cpp
+        src/parsing/gen/src/parsing/DLParserBaseVisitor.cpp
 
         src/ast/ast.h
         src/ast/ast.cpp
