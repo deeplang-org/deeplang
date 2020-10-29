@@ -27,12 +27,13 @@ public:
 	Result initEnv() {
 		wabt::Location loc;
 		auto           import = wabt::MakeUnique<wabt::FuncImport>();
-		import->module_name   = "builtin";
-		import->field_name    = "builtinPrint";
+		import->module_name   = "env";
+		import->field_name    = "puts";
 
 		auto func  = &import->func;
-		func->name = "print";
+		func->name = "puts";
 		func->decl.sig.param_types.emplace_back(wabt::Type::I32);
+		func->decl.sig.result_types.emplace_back(wabt::Type::I32);
 		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
 		auto type       = std::make_unique<wabt::FuncType>();
 		type->sig       = func->decl.sig;
@@ -46,7 +47,7 @@ public:
 	Result generateDataSegment() {
 		wabt::Location loc;
 		auto           dataField           = wabt::MakeUnique<wabt::DataSegmentModuleField>(loc, "StrPool");
-		dataField->data_segment.kind       = wabt::SegmentKind::Passive;
+		dataField->data_segment.kind       = wabt::SegmentKind::Active;
 		dataField->data_segment.memory_var = wabt::Var(module->memories.size());
 		dataField->data_segment.offset.push_back(
 				wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(0)));
