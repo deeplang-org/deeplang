@@ -1,7 +1,8 @@
 #pragma once
-#include "type.h"
 #include "common.h"
-#include "error.h"
+
+#include "ast/type.h"
+#include "utils/error.h"
 
 namespace dp {
 namespace internal {

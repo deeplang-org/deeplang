@@ -1,15 +1,12 @@
+#include "parsing.h"
+#include "ast/ast.h"
+#include "antlr4-runtime.h"
+#include "DLLexer.h"
+#include "DLParser.h"
+#include "DLParserVisitor.h"
+#include "utils/error.h"
 #include <cmath>
 #include <typeinfo>
-#include "include/parsing.h"
-#include "include/ast.h"
-#include "error.h"
-
-#define LIB_ANTLR_RUNTIME
-#define LIB_DLLEXER_H
-#define LIB_DLPARSER_H
-#define LIB_DPPARSER_VISITOR_H
-#include "astIncludeFrom.h"
-
 
 namespace dp {
 namespace internal {

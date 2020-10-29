@@ -1,4 +1,4 @@
-#include "include/symtab.h"
+#include "symtab.h"
 
 namespace dp {
 namespace internal {

@@ -1,9 +1,7 @@
 #pragma once
 
 #include "common.h"
-
-#define AST_AST_H
-#include "astIncludeBy.h"
+#include "ast/ast.h"
 
 namespace dp {
 namespace internal {

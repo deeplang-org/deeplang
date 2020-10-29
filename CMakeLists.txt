@@ -42,18 +42,9 @@ function (deeplang_executable)
 
     set(EXE_INCLUDES
         PRIVATE
-
-        #SOURCES
-        src/include
-        src/ast/lib
-        src/codegen/lib
-        src/vm
-
-        #LIBS
-        lib
-        lib/include
+        gen/src/parsing
+        src/
         third_party/
-        gen/lib/antlr
         ${WABT_SOURCE_DIR}
         ${WABT_BINARY_DIR}
 
@@ -61,27 +52,24 @@ function (deeplang_executable)
     )
 
     set(EXE_SOURCES
-        gen/lib/antlr/DLLexer.cpp
-        gen/lib/antlr/DLParser.cpp
-        gen/lib/antlr/DLParserVisitor.cpp
-        gen/lib/antlr/DLParserBaseVisitor.cpp
+        gen/src/parsing/DLLexer.cpp
+        gen/src/parsing/DLParser.cpp
+        gen/src/parsing/DLParserVisitor.cpp
+        gen/src/parsing/DLParserBaseVisitor.cpp
 
-        src/ast/include/ast.h
-        src/ast/include/type.h
-        src/ast/include/parsing.h
-        src/ast/include/symtab.h
-        src/ast/parsing.cpp
-        src/ast/symtab.cpp
+        src/ast/ast.h
         src/ast/ast.cpp
+        src/ast/type.h
         src/ast/type.cpp
-        
-        src/codegen/include/codegen.h
+        src/codegen/codegen.h
         src/codegen/codegen.cpp
-        src/include/cast.h
-        src/include/error.h
-        src/include/error-formatter.h
-        src/include/error-formatter.cpp
-        src/include/result.h
+        src/parsing/parsing.cpp
+        src/parsing/parsing.h
+        src/utils/cast.h
+        src/utils/error.h
+        src/utils/error-formatter.h
+        src/utils/error-formatter.cpp
+        src/utils/result.h
 
         ${EXE_SOURCES}
     )
@@ -144,13 +132,13 @@ if (DEEPLANG_BUILD_TESTS)
     # tests
     deeplang_executable(
         NAME dp_cctest
-        SOURCES lib/test/cctest/cctest.cc
+        SOURCES test/cctest/cctest.cc
         LIBS gtest gtest_main
     )
 
     deeplang_executable(
         NAME dp_codegen
-        SOURCES lib/test/cctest/codegen.cc
+        SOURCES test/cctest/codegen.cc
         LIBS gtest gtest_main
     )
 endif()

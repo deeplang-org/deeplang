@@ -1,10 +1,7 @@
 #pragma once
-#include "ast.h"
-
-#define LIB_ANTLR_RUNTIME 
-#define LIB_DLPARSER_VISITOR_H
-#include "astIncludeFrom.h"
-
+#include "ast/ast.h"
+#include "antlr4-runtime.h"
+#include "DLParserVisitor.h"
 
 namespace dp {
 namespace internal {

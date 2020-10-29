@@ -2,14 +2,12 @@
  * Antlr parse tree visitor, constructing AST
  *
  */
+
 #pragma once
+
+#include "antlr4-runtime.h"
+#include "DLParserBaseVisitor.h"
 #include "ast.h"
-
-
-#define LIB_ANTLR_RUNTIME  /*antlr4-runtime*/
-#define LIB_DLPARSER_BASE_VISITOR_H /*DLParserBaseVisitor*/
-#include "astIncludeFrom.h"
-
 
 class ParseTreeException : public exception {
 	const char* what() const throw() {

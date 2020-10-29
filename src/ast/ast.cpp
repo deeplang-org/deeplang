@@ -1,4 +1,4 @@
-#include "include/ast.h"
+#include "ast.h"
 
 namespace dp {
 namespace internal {

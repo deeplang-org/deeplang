@@ -1,5 +1,5 @@
-#include "include/type.h"
-#include "cast.h"
+#include "ast/type.h"
+#include "utils/cast.h"
 
 namespace dp {
 namespace internal {
