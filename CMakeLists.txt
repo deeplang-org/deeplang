@@ -51,10 +51,10 @@ function (deeplang_executable)
     )
 
     set(EXE_SOURCES
-        src/parsing/gen/src/parsing/DLLexer.cpp
-        src/parsing/gen/src/parsing/DLParser.cpp
-        src/parsing/gen/src/parsing/DLParserVisitor.cpp
-        src/parsing/gen/src/parsing/DLParserBaseVisitor.cpp
+        src/parsing/gen/DLLexer.cpp
+        src/parsing/gen/DLParser.cpp
+        src/parsing/gen/DLParserVisitor.cpp
+        src/parsing/gen/DLParserBaseVisitor.cpp
 
         src/ast/ast.h
         src/ast/ast.cpp

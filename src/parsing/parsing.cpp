@@ -1,9 +1,9 @@
 #include "parsing.h"
 #include "ast/ast.h"
 #include "antlr4-runtime.h"
-#include "parsing/gen/src/parsing/DLLexer.h"
-#include "parsing/gen/src/parsing/DLParser.h"
-#include "parsing/gen/src/parsing/DLParserVisitor.h"
+#include "parsing/gen/DLLexer.h"
+#include "parsing/gen/DLParser.h"
+#include "parsing/gen/DLParserVisitor.h"
 #include "utils/error.h"
 #include <cmath>
 #include <typeinfo>
