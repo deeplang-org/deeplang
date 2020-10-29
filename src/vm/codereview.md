@@ -31,7 +31,7 @@ static void *app_instance_main(); /* main函数作为wasm module的入口，运�
 | platform_init.c        | 初始化平台环境，目前为空。                                   |
 | bh_assert.c            | assert接口。                                                 |
 | bh_common.c            |                                                              |
-| bh_hashmap.c           |                                                              |
+| bh_hashmap.c           | 闭地址法实现的哈希表，使用 os_malloc，找不到使用的地方。 |
 | bh_list.c              |                                                              |
 | bh_log.c               | 日志系统，包括debug、dump等，已经自研了。                    |
 | bh_queue.c             |                                                              |
@@ -946,7 +946,7 @@ gc_free_vo_internal(void *heap, gc_object_t obj,
 
 ##### 开放接口
 
-无被使用的开放接口。
+未使用的开放接口。
 
 ```c
 timer_ctx_t create_timer_ctx(timer_callback_f timer_handler,
@@ -963,4 +963,97 @@ bool sys_timer_restart(timer_ctx_t ctx, uint32 timer_id, int interval);
 void cleanup_app_timers(timer_ctx_t ctx);
 int check_app_timers(timer_ctx_t ctx);
 int get_expiry_ms(timer_ctx_t ctx);
+```
+
+#### 2.23 bh_hashmap.c
+
+闭地址法实现的线性哈希表。
+
+##### 数据结构
+
+```C
+typedef struct HashMapElem {
+    void *key;
+    void *value;
+    struct HashMapElem *next; /* 相同 hash key 的下一个元素 */
+} HashMapElem;
+
+struct HashMap {
+    /* size of element array */
+    uint32 size;
+    /* lock for elements */
+    korp_mutex *lock;
+    /* hash function of key */
+    HashFunc hash_func;
+    /* key equal function */
+    KeyEqualFunc key_equal_func;
+    KeyDestroyFunc key_destroy_func;
+    ValueDestroyFunc value_destroy_func;
+    HashMapElem *elements[1]; /* 应当是语法糖，具体大小会在创建时动态分配 */
+};
+
+/* Maximum initial size of hash map */
+#define HASH_MAP_MAX_SIZE 65536
+
+/* Hash function: to get the hash value of key. */
+typedef uint32 (*HashFunc)(const void *key);
+
+/* Key equal function: to check whether two keys are equal. */
+typedef bool (*KeyEqualFunc)(void *key1, void *key2);
+
+/* Key destroy function: to destroy the key, auto called
+   when an hash element is removed. */
+typedef void (*KeyDestroyFunc)(void *key);
+
+/* Value destroy function: to destroy the value, auto called
+   when an hash element is removed. */
+typedef void (*ValueDestroyFunc)(void *key);
+```
+
+##### 开放接口
+
+```C
+/* Return NULL on failure */
+HashMap*
+bh_hash_map_create(uint32 size, bool use_lock,
+                   HashFunc hash_func,
+                   KeyEqualFunc key_equal_func,
+                   KeyDestroyFunc key_destroy_func,
+                   ValueDestroyFunc value_destroy_func);
+
+/**
+ * Note: fail if key is NULL or duplicated key exists in the hash map,
+ */
+bool
+bh_hash_map_insert(HashMap *map, void *key, void *value);
+
+/* Return NULL on failure */
+void*
+bh_hash_map_find(HashMap *map, void *key);
+
+/**
+ * Note: the old key and old value won't be destroyed by key destroy
+ *       function and value destroy function, they will be copied to
+ *       p_old_key and p_old_value for user to process.
+ */
+bool
+bh_hash_map_update(HashMap *map, void *key, void *value,
+                   void **p_old_value);
+
+/**
+ * Note: the old key and old value won't be destroyed by key destroy
+ *       function and value destroy function, they will be copied to
+ *       p_old_key and p_old_value for user to process.
+ */
+bool
+bh_hash_map_remove(HashMap *map, void *key,
+                   void **p_old_key, void **p_old_value);
+
+/**
+ * Note: the key destroy function and value destroy function will be
+ *       called to destroy each element's key and value if they are
+ *       not NULL.
+ */
+bool
+bh_hash_map_destroy(HashMap *map);
 ```
