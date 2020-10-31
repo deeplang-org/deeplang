@@ -11,5 +11,5 @@ antlr4 -Werror -Dlanguage=Cpp -listener -visitor -lib src/parsing/ src/parsing/D
 
 if [ $? != 0 ]
 then
-    echo "ANTLR4 Error! Firstly Please Make Sure It's In ./third-party/ANTLR/"
+    echo "ANTLR4 Error!"
 fi

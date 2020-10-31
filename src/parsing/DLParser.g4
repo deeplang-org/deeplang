@@ -133,10 +133,31 @@ decl :
     | variableDecl
 ;
 
+condition : 
+    unblockExpression op=(GREATER_THAN_OPERATOR | GREATER_OR_EQUAL_OPERATOR | LESS_THAN_OPERATOR | LESS_OR_EQUAL_OPERATOR) unblockExpression
+    | unblockExpression op=(EQUAL_OPERATOR | NOT_EQUAL_OPERATOR) unblockExpression
+    | unblockExpression
+;
+
+conditionElem : 
+    expressionStatement
+    | expressionStatement ELSE_SYMBOL conditionElem
+    | expressionStatement ELSE_SYMBOL IF_SYMBOL  OPEN_PAR_SYMBOL condition CLOSE_PAR_SYMBOL conditionElem
+;
+
+/*
+    > >= < <= 
+    == !=
+*/
+conditionStmt : 
+    IF_SYMBOL OPEN_PAR_SYMBOL condition CLOSE_PAR_SYMBOL conditionElem
+;
+
 
 statement :
     decl
     | expressionStatement
+    | conditionStmt
 ;
 
 statements :

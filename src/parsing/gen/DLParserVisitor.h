@@ -66,6 +66,12 @@ public:
 
     virtual antlrcpp::Any visitDecl(DLParser::DeclContext *context) = 0;
 
+    virtual antlrcpp::Any visitCondition(DLParser::ConditionContext *context) = 0;
+
+    virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *context) = 0;
+
+    virtual antlrcpp::Any visitConditionStmt(DLParser::ConditionStmtContext *context) = 0;
+
     virtual antlrcpp::Any visitStatement(DLParser::StatementContext *context) = 0;
 
     virtual antlrcpp::Any visitStatements(DLParser::StatementsContext *context) = 0;

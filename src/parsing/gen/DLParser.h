@@ -171,8 +171,8 @@ public:
     RuleAryOp = 0, RuleExpressionList = 1, RuleExpressionStatement = 2, 
     RuleBlockExpression = 3, RuleUnblockExpression = 4, RuleTupleType = 5, 
     RuleType = 6, RuleVariableDecl = 7, RuleParam = 8, RuleParamList = 9, 
-    RuleFunctionDecl = 10, RuleDecl = 11, RuleStatement = 12, RuleStatements = 13, 
-    RuleModule = 14
+    RuleFunctionDecl = 10, RuleDecl = 11, RuleCondition = 12, RuleConditionElem = 13, 
+    RuleConditionStmt = 14, RuleStatement = 15, RuleStatements = 16, RuleModule = 17
   };
 
   DLParser(antlr4::TokenStream *input);
@@ -197,6 +197,9 @@ public:
   class ParamListContext;
   class FunctionDeclContext;
   class DeclContext;
+  class ConditionContext;
+  class ConditionElemContext;
+  class ConditionStmtContext;
   class StatementContext;
   class StatementsContext;
   class ModuleContext; 
@@ -427,12 +430,76 @@ public:
 
   DeclContext* decl();
 
+  class  ConditionContext : public antlr4::ParserRuleContext {
+  public:
+    antlr4::Token *op = nullptr;;
+    ConditionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<UnblockExpressionContext *> unblockExpression();
+    UnblockExpressionContext* unblockExpression(size_t i);
+    antlr4::tree::TerminalNode *GREATER_THAN_OPERATOR();
+    antlr4::tree::TerminalNode *GREATER_OR_EQUAL_OPERATOR();
+    antlr4::tree::TerminalNode *LESS_THAN_OPERATOR();
+    antlr4::tree::TerminalNode *LESS_OR_EQUAL_OPERATOR();
+    antlr4::tree::TerminalNode *EQUAL_OPERATOR();
+    antlr4::tree::TerminalNode *NOT_EQUAL_OPERATOR();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ConditionContext* condition();
+
+  class  ConditionElemContext : public antlr4::ParserRuleContext {
+  public:
+    ConditionElemContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    ExpressionStatementContext *expressionStatement();
+    antlr4::tree::TerminalNode *ELSE_SYMBOL();
+    ConditionElemContext *conditionElem();
+    antlr4::tree::TerminalNode *IF_SYMBOL();
+    antlr4::tree::TerminalNode *OPEN_PAR_SYMBOL();
+    ConditionContext *condition();
+    antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ConditionElemContext* conditionElem();
+
+  class  ConditionStmtContext : public antlr4::ParserRuleContext {
+  public:
+    ConditionStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *IF_SYMBOL();
+    antlr4::tree::TerminalNode *OPEN_PAR_SYMBOL();
+    ConditionContext *condition();
+    antlr4::tree::TerminalNode *CLOSE_PAR_SYMBOL();
+    ConditionElemContext *conditionElem();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ConditionStmtContext* conditionStmt();
+
   class  StatementContext : public antlr4::ParserRuleContext {
   public:
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     DeclContext *decl();
     ExpressionStatementContext *expressionStatement();
+    ConditionStmtContext *conditionStmt();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

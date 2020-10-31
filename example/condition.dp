@@ -1,0 +1,6 @@
+fun main () -> () {
+    let res : i32 = 1;
+    if(res == 1) {
+
+    };
+};

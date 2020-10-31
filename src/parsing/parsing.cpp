@@ -180,13 +180,30 @@ antlrcpp::Any Parser::visitDecl(DLParser::DeclContext* context) {
 	}
 }
 
+
+antlrcpp::Any Parser::visitCondition(DLParser::ConditionContext* ctx) {
+    return nullptr;
+}
+antlrcpp::Any Parser::visitConditionElem(DLParser::ConditionElemContext* ctx) {
+    return nullptr;
+}
+antlrcpp::Any Parser::visitConditionStmt(DLParser::ConditionStmtContext* ctx) {
+    return nullptr;
+}
+
+
 antlrcpp::Any Parser::visitStatement(DLParser::StatementContext* context) {
 	if (context->decl()) {
+        std::cout << "decl" << std::endl;
 		return static_cast<Statement*>(visit(context->decl()));
 	} else if (context->expressionStatement()) {
 		auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
 		return static_cast<Statement*>(es);
-	} else {
+    }else if(context->conditionStmt()) {
+        std::cout << "condition" << std::endl;
+        auto es = static_cast<ConditionStmt*>(visit(context->conditionStmt())); 
+        return static_cast<Statement*>(es);
+    }else {
 		UNREACHABLE("visitStatement");
 	}
 }
@@ -219,14 +236,14 @@ Module* Parser::parseModule(antlr4::ANTLRInputStream sourceStream) {
 	antlr4::CommonTokenStream tokens(&lexer);
 
 	tokens.fill();
-	for (auto token : tokens.getTokens()) {
-		std::cout << token->toString() << std::endl;
-	}
+   /* for (auto token : tokens.getTokens()) {*/
+		//std::cout << token->toString() << std::endl;
+	//}
 
 	DLParser                 parser(&tokens);
 	antlr4::tree::ParseTree* tree = parser.module();
 
-	std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
+	//std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
 	Module* module = visit(tree);
 
 	return module;

@@ -75,6 +75,15 @@ public:
   virtual void enterDecl(DLParser::DeclContext * /*ctx*/) override { }
   virtual void exitDecl(DLParser::DeclContext * /*ctx*/) override { }
 
+  virtual void enterCondition(DLParser::ConditionContext * /*ctx*/) override { }
+  virtual void exitCondition(DLParser::ConditionContext * /*ctx*/) override { }
+
+  virtual void enterConditionElem(DLParser::ConditionElemContext * /*ctx*/) override { }
+  virtual void exitConditionElem(DLParser::ConditionElemContext * /*ctx*/) override { }
+
+  virtual void enterConditionStmt(DLParser::ConditionStmtContext * /*ctx*/) override { }
+  virtual void exitConditionStmt(DLParser::ConditionStmtContext * /*ctx*/) override { }
+
   virtual void enterStatement(DLParser::StatementContext * /*ctx*/) override { }
   virtual void exitStatement(DLParser::StatementContext * /*ctx*/) override { }
 

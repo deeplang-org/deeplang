@@ -61,7 +61,8 @@ typedef std::unique_ptr<Module> ModulePtr;
 enum class StatementKind {
 	VariableDeclaration,
 	FunctionDeclaration,
-	Expression
+	Expression,
+    ConditionStmt
 };
 
 class Statement : public ASTNode {
@@ -100,6 +101,20 @@ public:
 			: Statement(Kind, loc) {
 	}
 };
+
+class ConditionStmt : public StatementMixin<StatementKind::ConditionStmt>
+{
+public:
+    ConditionStmt (const Location& loc = Location())
+        : StatementMixin<StatementKind::ConditionStmt>(loc){
+    }
+
+    std::string toString() {
+        return "ConditionStmt"; 
+    }
+
+};
+
 
 class Expression;
 typedef std::unique_ptr<Expression> ExpressionPtr;

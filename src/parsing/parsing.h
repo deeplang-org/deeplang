@@ -36,6 +36,12 @@ private:
 	antlrcpp::Any visitFunctionDecl(DLParser::FunctionDeclContext* context);
 
 	antlrcpp::Any visitDecl(DLParser::DeclContext* context);
+    
+    antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext* ctx);
+
+    antlrcpp::Any visitConditionStmt(DLParser::ConditionStmtContext* ctx);
+
+    antlrcpp::Any visitCondition(DLParser::ConditionContext* ctx);
 
 	antlrcpp::Any visitStatement(DLParser::StatementContext* context);
 
