@@ -18,22 +18,28 @@ static std::string s_outfile;
 static bool        s_interactive_mode = false;
 
 static const char s_description[] =
-		R"(  Deeplang compiler
+               R"(Deepvm for deeplang v1.0
+Deepvm is a language VM for deeplang.
+The frontend contains parser, lexer and codegen.
+The backend is a wasm VM.
 )";
 
 static void parseOptions(int argc, char** argv) {
 	OptionParser parser("dp", s_description);
-
-	parser.AddOption('v', "version", "current version: ", []() {
-	});
+    parser.AddOption(
+            'o', "output", "FILENAME",
+            "Output .ast or .wasm file",
+            [](const char* argument) {
+                s_outfile = argument;
+                ConvertBackslashToSlash(&s_outfile);
+            });
 	parser.AddOption(
-			'o', "output", "FILENAME",
-			"Output file for the compiled wasm file",
-			[](const char* argument) {
-				s_outfile = argument;
-				ConvertBackslashToSlash(&s_outfile);
-			});
-	parser.AddOption('i', "interactive", "REPL",
+                    'd', "dump", "FILENAME",
+                    "Pretty print .dp, .ast or .wasm file",
+                     [](const char* argument) {
+                         s_infile = argument;
+	});
+	parser.AddOption('i', "interactive", "REPL，Enter interactive mode",
 									 []() { s_interactive_mode = true; });
 	parser.AddArgument("filename", OptionParser::ArgumentCount::One,
 										 [](const char* argument) {
