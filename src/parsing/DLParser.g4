@@ -82,6 +82,7 @@ expressionList :
 
 expressionStatement :
     blockExpression
+    | IF_SYMBOL OPEN_PAR_SYMBOL unblockExpression CLOSE_PAR_SYMBOL conditionElem     
     | unblockExpression
 ;
 
@@ -93,14 +94,19 @@ blockExpression :
 unblockExpression :
     unblockExpression op=(MULT_OPERATOR | DIV_OPERATOR) unblockExpression
     | unblockExpression op=(PLUS_OPERATOR | MINUS_OPERATOR) unblockExpression
+    | unblockExpression op=(GREATER_THAN_OPERATOR | GREATER_OR_EQUAL_OPERATOR | LESS_THAN_OPERATOR | LESS_OR_EQUAL_OPERATOR) unblockExpression
+    | unblockExpression op=(EQUAL_OPERATOR | NOT_EQUAL_OPERATOR) unblockExpression
     | QUOTED_STRING
     | unblockExpression OPEN_PAR_SYMBOL expressionList CLOSE_PAR_SYMBOL
     | CONST
     | IDENTIFIER
 ;
 
-
-
+conditionElem : 
+    expressionStatement
+    | expressionStatement ELSE_SYMBOL conditionElem
+    | expressionStatement ELSE_SYMBOL IF_SYMBOL  OPEN_PAR_SYMBOL unblockExpression CLOSE_PAR_SYMBOL conditionElem
+;
 
 tupleType :
     OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL
@@ -113,7 +119,7 @@ type :
 
 variableDecl :
     LET_SYMBOL IDENTIFIER COLON_SYMBOL type
-    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type EQUAL_OPERATOR expressionStatement
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR expressionStatement
 ;
 
 param :
@@ -133,36 +139,15 @@ decl :
     | variableDecl
 ;
 
-condition : 
-    unblockExpression op=(GREATER_THAN_OPERATOR | GREATER_OR_EQUAL_OPERATOR | LESS_THAN_OPERATOR | LESS_OR_EQUAL_OPERATOR) unblockExpression
-    | unblockExpression op=(EQUAL_OPERATOR | NOT_EQUAL_OPERATOR) unblockExpression
-    | unblockExpression
-;
-
-conditionElem : 
-    expressionStatement
-    | expressionStatement ELSE_SYMBOL conditionElem
-    | expressionStatement ELSE_SYMBOL IF_SYMBOL  OPEN_PAR_SYMBOL condition CLOSE_PAR_SYMBOL conditionElem
-;
-
-/*
-    > >= < <= 
-    == !=
-*/
-conditionStmt : 
-    IF_SYMBOL OPEN_PAR_SYMBOL condition CLOSE_PAR_SYMBOL conditionElem
-;
-
-
 statement :
     decl
     | expressionStatement
-    | conditionStmt
 ;
 
 statements :
     statement SEMICOLON_SYMBOL
     | statement SEMICOLON_SYMBOL statements
+    | SEMICOLON_SYMBOL      //  empty statement
 ;
 
 module :

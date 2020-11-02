@@ -52,6 +52,9 @@ public:
   virtual void enterUnblockExpression(DLParser::UnblockExpressionContext *ctx) = 0;
   virtual void exitUnblockExpression(DLParser::UnblockExpressionContext *ctx) = 0;
 
+  virtual void enterConditionElem(DLParser::ConditionElemContext *ctx) = 0;
+  virtual void exitConditionElem(DLParser::ConditionElemContext *ctx) = 0;
+
   virtual void enterTupleType(DLParser::TupleTypeContext *ctx) = 0;
   virtual void exitTupleType(DLParser::TupleTypeContext *ctx) = 0;
 
@@ -72,15 +75,6 @@ public:
 
   virtual void enterDecl(DLParser::DeclContext *ctx) = 0;
   virtual void exitDecl(DLParser::DeclContext *ctx) = 0;
-
-  virtual void enterCondition(DLParser::ConditionContext *ctx) = 0;
-  virtual void exitCondition(DLParser::ConditionContext *ctx) = 0;
-
-  virtual void enterConditionElem(DLParser::ConditionElemContext *ctx) = 0;
-  virtual void exitConditionElem(DLParser::ConditionElemContext *ctx) = 0;
-
-  virtual void enterConditionStmt(DLParser::ConditionStmtContext *ctx) = 0;
-  virtual void exitConditionStmt(DLParser::ConditionStmtContext *ctx) = 0;
 
   virtual void enterStatement(DLParser::StatementContext *ctx) = 0;
   virtual void exitStatement(DLParser::StatementContext *ctx) = 0;

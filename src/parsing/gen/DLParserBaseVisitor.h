@@ -58,6 +58,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitTupleType(DLParser::TupleTypeContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -83,18 +87,6 @@ public:
   }
 
   virtual antlrcpp::Any visitDecl(DLParser::DeclContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitCondition(DLParser::ConditionContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitConditionStmt(DLParser::ConditionStmtContext *ctx) override {
     return visitChildren(ctx);
   }
 

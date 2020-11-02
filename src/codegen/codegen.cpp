@@ -75,7 +75,7 @@ public:
 
 	Result visitStatement(Statement* stmt) {
 		switch (stmt->kind()) {
-		case StatementKind::Expression:
+		case StatementKind::ExpressionStatement:
 			visitExpressionStatement(static_cast<ExpressionStatement*>(stmt));
 			break;
 		case StatementKind::FunctionDeclaration:

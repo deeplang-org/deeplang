@@ -52,6 +52,8 @@ public:
 
     virtual antlrcpp::Any visitUnblockExpression(DLParser::UnblockExpressionContext *context) = 0;
 
+    virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *context) = 0;
+
     virtual antlrcpp::Any visitTupleType(DLParser::TupleTypeContext *context) = 0;
 
     virtual antlrcpp::Any visitType(DLParser::TypeContext *context) = 0;
@@ -65,12 +67,6 @@ public:
     virtual antlrcpp::Any visitFunctionDecl(DLParser::FunctionDeclContext *context) = 0;
 
     virtual antlrcpp::Any visitDecl(DLParser::DeclContext *context) = 0;
-
-    virtual antlrcpp::Any visitCondition(DLParser::ConditionContext *context) = 0;
-
-    virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *context) = 0;
-
-    virtual antlrcpp::Any visitConditionStmt(DLParser::ConditionStmtContext *context) = 0;
 
     virtual antlrcpp::Any visitStatement(DLParser::StatementContext *context) = 0;
 

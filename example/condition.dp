@@ -1,6 +1,16 @@
 fun main () -> () {
-    let res : i32 = 1;
-    if(res == 1) {
-
+    let a: i32 = 2;
+    if(a >= 1){
+        let b: i32 = puts ("hello b");
+        let c: i32 = puts("hello c"); 
+        if(a == b) {
+           let d: i32 = puts("hello d"); 
+        }else if(a == c) {
+           let e: i32 = puts("hello e"); 
+        };
+    }else {
+        let c: i32 = puts ("hello world");
     };
+
 };
+
