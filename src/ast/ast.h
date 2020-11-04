@@ -337,6 +337,8 @@ public:
 
 // Like Expression, but Bool type
 typedef Expression ConditionExpression;
+// BlockExpresson or IfExpression
+typedef Expression ElseExpression;
 
 class IfExpression : public ExpressionMixin<ExpressionKind::If> {
 public:
@@ -350,7 +352,7 @@ public:
 
 	std::unique_ptr<ConditionExpression> condition;
 	std::unique_ptr<BlockExpession>      then_branch;
-	ExpressionPtr                        else_branch;
+	std::unique_ptr<ElseExpression>      else_branch;
 };
 
 class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
