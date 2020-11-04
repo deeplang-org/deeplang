@@ -174,12 +174,19 @@ enum class ExpressionKind {
 	Array,
 	Binary,
 	Block,
+	Break,
 	Call,
+	Continue,
+	For,
+	If,
 	Literal,
+	Match,
 	New,
 	Path,
+	Return,
 	Unary,
 	Update,
+	While,
 };
 
 class Expression : public ASTNode {
@@ -326,6 +333,87 @@ public:
 	}
 
 	StatementVector stmts;
+};
+
+// Like Expression, but Bool type
+typedef Expression ConditionExpression;
+// BlockExpresson or IfExpression
+typedef Expression ElseExpression;
+
+class IfExpression : public ExpressionMixin<ExpressionKind::If> {
+public:
+	IfExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::If>(loc) {
+	}
+
+	std::string toString() const {
+		return "IfExpression";
+	}
+
+	std::unique_ptr<ConditionExpression> condition;
+	std::unique_ptr<BlockExpession>      then_branch;
+	std::unique_ptr<ElseExpression>      else_branch;
+};
+
+class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
+	WhileExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::While>(loc) {
+	}
+
+	std::string toString() const {
+		return "WhileExpression";
+	}
+
+	std::unique_ptr<ConditionExpression> condition;
+	std::unique_ptr<BlockExpession>      body;
+};
+
+// class ForExpression : public ExpressionMixin<ExpressionKind::For> {
+// 	ForExpression(const Location& loc = Location())
+// 			: ExpressionMixin<ExpressionKind::For>(loc) {
+// 	}
+
+// 	std::string toString() const {
+// 		return "ForExpression";
+// 	}
+
+// 	ExpressionPtr                   pattern;
+// 	ExpressionPtr                   range;
+// 	std::unique_ptr<BlockExpession> body;
+// };
+
+class BreakExpression : public ExpressionMixin<ExpressionKind::Break> {
+	BreakExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Break>(loc) {
+	}
+
+	std::string toString() const {
+		return "BreakExpression";
+	}
+
+	ExpressionPtr value;
+};
+
+class ContinueExpression : public ExpressionMixin<ExpressionKind::Continue> {
+	ContinueExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Continue>(loc) {
+	}
+
+	std::string toString() const {
+		return "ContinueExpression";
+	}
+};
+
+class ReturnExpression : public ExpressionMixin<ExpressionKind::Return> {
+	ReturnExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Return>(loc) {
+	}
+
+	std::string toString() const {
+		return "ReturnExpression";
+	}
+
+	ExpressionPtr value;
 };
 
 } // namespace internal
