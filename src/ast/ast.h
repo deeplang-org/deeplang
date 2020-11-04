@@ -382,6 +382,10 @@ class BreakExpression : public ExpressionMixin<ExpressionKind::Break> {
 			: ExpressionMixin<ExpressionKind::Break>(loc) {
 	}
 
+	std::string toString() const {
+		return "BreakExpression";
+	}
+
 	ExpressionPtr value;
 };
 
@@ -389,11 +393,19 @@ class ContinueExpression : public ExpressionMixin<ExpressionKind::Continue> {
 	ContinueExpression(const Location& loc = Location())
 			: ExpressionMixin<ExpressionKind::Continue>(loc) {
 	}
+
+	std::string toString() const {
+		return "ContinueExpression";
+	}
 };
 
 class ReturnExpression : public ExpressionMixin<ExpressionKind::Return> {
 	ReturnExpression(const Location& loc = Location())
 			: ExpressionMixin<ExpressionKind::Return>(loc) {
+	}
+
+	std::string toString() const {
+		return "ReturnExpression";
 	}
 
 	ExpressionPtr value;
