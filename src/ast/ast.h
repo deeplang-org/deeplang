@@ -174,12 +174,19 @@ enum class ExpressionKind {
 	Array,
 	Binary,
 	Block,
+	Break,
 	Call,
+	Continue,
+	For,
+	If,
 	Literal,
+	Match,
 	New,
 	Path,
+	Return,
 	Unary,
 	Update,
+	While,
 };
 
 class Expression : public ASTNode {
@@ -326,6 +333,70 @@ public:
 	}
 
 	StatementVector stmts;
+};
+
+class IfExpression : public ExpressionMixin<ExpressionKind::If> {
+public:
+	IfExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::If>(loc) {
+	}
+
+	std::string toString() const {
+		return "IfExpression";
+	}
+
+	ExpressionPtr                   condition;
+	std::unique_ptr<BlockExpession> then_branch;
+	ExpressionPtr                   else_branch;
+};
+
+class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
+	WhileExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::While>(loc) {
+	}
+
+	std::string toString() const {
+		return "WhileExpression";
+	}
+
+	ExpressionPtr                   condition;
+	std::unique_ptr<BlockExpession> body;
+};
+
+// class ForExpression : public ExpressionMixin<ExpressionKind::For> {
+// 	ForExpression(const Location& loc = Location())
+// 			: ExpressionMixin<ExpressionKind::For>(loc) {
+// 	}
+
+// 	std::string toString() const {
+// 		return "ForExpression";
+// 	}
+
+// 	ExpressionPtr                   pattern;
+// 	ExpressionPtr                   range;
+// 	std::unique_ptr<BlockExpession> body;
+// };
+
+class BreakExpression : public ExpressionMixin<ExpressionKind::Break> {
+	BreakExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Break>(loc) {
+	}
+
+	ExpressionPtr value;
+};
+
+class ContinueExpression : public ExpressionMixin<ExpressionKind::Continue> {
+	ContinueExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Continue>(loc) {
+	}
+};
+
+class ReturnExpression : public ExpressionMixin<ExpressionKind::Return> {
+	ReturnExpression(const Location& loc = Location())
+			: ExpressionMixin<ExpressionKind::Return>(loc) {
+	}
+
+	ExpressionPtr value;
 };
 
 } // namespace internal
