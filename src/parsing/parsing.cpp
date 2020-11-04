@@ -33,22 +33,29 @@ namespace dp {
         }
 
         antlrcpp::Any Parser::visitConditionElem(DLParser::ConditionElemContext* ctx) {
-            
+
             ConditionElem* ce = new ConditionElem(); 
-            ce->lexpressionstmt = std::unique_ptr<Expression>(static_cast<Expression*>(visit(ctx->expressionStatement()))); 
+            //ce->lexpressionstmt  
+            ConditionExStmt* x= static_cast<ConditionExStmt*>(visit(ctx->expressionStatement())); 
+            std::cout << "parsing done" << std::endl;
             if(ctx->ELSE_SYMBOL()) {
-                if(ctx->IF_SYMBOL()) {
-                    ce->rexpressionstmt = std::unique_ptr<Expression>(static_cast<Expression*>(visit(ctx->expressionStatement())));
-                    if(ctx->conditionElem()) {
-                        ce->condel = new ConditionElem();
-                        ce->condel = static_cast<ConditionElem*>(visit(ctx->conditionElem())); 
+                if(ctx->IF_SYMBOL()) {    // if else if
+                    if(ctx->unblockExpression()) {
+                        ce->rexpressionstmt = std::unique_ptr<Expression>(static_cast<Expression*>(visit(ctx->unblockExpression())));
+
+
+
                     }else {
                         UNREACHABLE("visitConditionElem"); 
                     }
-                }else{
-                    ce->rexpressionstmt = std::unique_ptr<Expression>(static_cast<Expression*>(visit(ctx->expressionStatement())));
+                }else{   // if else
+                    ce->condel = new ConditionElem();
+                    ce->condel = static_cast<ConditionElem*>(visit(ctx->conditionElem()));
+                    ce->rexpressionstmt = std::unique_ptr<ConditionExStmt>(static_cast<ConditionExStmt*>(visit(ctx->expressionStatement())));
+                    ce->rexpressionstmt = nullptr;
+                    ce->condel = nullptr;
                 }
-            }
+            }   //if
             return ce;
         }
 
@@ -258,7 +265,7 @@ namespace dp {
             antlr4::CommonTokenStream tokens(&lexer);
 
             tokens.fill();
-            /* for (auto token : tokens.getTokens()) {*/
+            /*             for (auto token : tokens.getTokens()) {*/
             //std::cout << token->toString() << std::endl;
             //}
 

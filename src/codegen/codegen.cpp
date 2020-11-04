@@ -160,9 +160,14 @@ public:
 		return Result::Ok;
 	}
 
-	Result visitExpressionStatement(ExpressionStatement* exprStmt) {
-		return visitExpression(exprStmt->expr.get());
-	}
+    Result visitExpressionStatement(ExpressionStatement* exprStmt) {
+        switch (exprStmt->esKind) {
+            case ExpressionStatementKind::Condition:
+                    return visitExpression(static_cast<ConditionExStmt*>(exprStmt)->lcond.get());
+            case ExpressionStatementKind::Normal:
+                    return visitExpression(exprStmt->expr.get());
+        }
+    }
 
 	// Expressions
 

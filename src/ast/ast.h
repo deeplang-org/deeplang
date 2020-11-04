@@ -91,7 +91,6 @@ namespace dp {
                 std::string toString() const {
                     return "ExpressionStatement";
                 }
-
                 ExpressionPtr expr;
                 ExpressionStatementKind esKind;
         };
@@ -164,20 +163,26 @@ namespace dp {
             };
 
         
-        struct  ConditionElem
-        {
-            ExpressionPtr lexpressionstmt;  // if part 
-            ExpressionPtr rexpressionstmt;   // else part
-            ConditionElem* condel;
 
-        };
+        struct ConditionElem;
         class ConditionExStmt : public ExpressionStmtMixin<ExpressionStatementKind::Condition>{
             public:
                  ConditionExStmt(const Location &loc = Location())  
                     : ExpressionStmtMixin<ExpressionStatementKind::Condition>(loc){}       
 
             ConditionElem* cond = nullptr;
+            ExpressionPtr lcond;
         };
+        struct  ConditionElem
+        {
+            ConditionExStmt* lexpressionstmt;  // if part 
+            ExpressionPtr rcond;
+            ConditionExStmt* rexpressionstmt;   // else part
+
+
+            ConditionElem* condElem;
+
+        };       
 
 
         /******************************************* Expression***************/
