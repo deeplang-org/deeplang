@@ -335,7 +335,7 @@ public:
 	StatementVector stmts;
 };
 
-// Like Expression, but return Bool
+// Like Expression, but Bool type
 typedef Expression ConditionExpression;
 
 class IfExpression : public ExpressionMixin<ExpressionKind::If> {
