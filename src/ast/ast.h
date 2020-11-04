@@ -335,6 +335,8 @@ public:
 	StatementVector stmts;
 };
 
+typedef Expression ConditionExpression;
+
 class IfExpression : public ExpressionMixin<ExpressionKind::If> {
 public:
 	IfExpression(const Location& loc = Location())
@@ -345,9 +347,9 @@ public:
 		return "IfExpression";
 	}
 
-	ExpressionPtr                   condition;
-	std::unique_ptr<BlockExpession> then_branch;
-	ExpressionPtr                   else_branch;
+	std::unique_ptr<ConditionExpression> condition;
+	std::unique_ptr<BlockExpession>      then_branch;
+	ExpressionPtr                        else_branch;
 };
 
 class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
@@ -359,8 +361,8 @@ class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
 		return "WhileExpression";
 	}
 
-	ExpressionPtr                   condition;
-	std::unique_ptr<BlockExpession> body;
+	std::unique_ptr<ConditionExpression> condition;
+	std::unique_ptr<BlockExpession>      body;
 };
 
 // class ForExpression : public ExpressionMixin<ExpressionKind::For> {
