@@ -68,12 +68,18 @@ int main(int argc, char** argv) {
 	if (!s_outfile.size())
 		s_outfile = "a.wasm";
 
-  auto result = CodeGen::GenerateWasmToFile(module, s_outfile);
-	std::vector<uint8_t> buffer;
-	result = CodeGen::GenerateWasm(module, buffer);
+	Errors               errors;
+	auto result = CodeGen::GenerateWasmToFile(module, s_outfile, errors);
 	if (!result) {
 		return -1;
 	}
+
+	std::vector<uint8_t> buffer;
+	result = CodeGen::GenerateWasm(module, buffer, errors);
+	if (!result) {
+		return -1;
+	}
+	
 	if (deep_wasm_vm_init() != 0) {
 		return -1;
 	}

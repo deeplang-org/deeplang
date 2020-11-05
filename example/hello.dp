@@ -1,3 +1,6 @@
 fun main () -> () {
-    let a: i32 = puts ("hello world");
+    let a : i32 = puts ("hello world");
+    {
+        puts ("asdfasfd");
+    };
 };

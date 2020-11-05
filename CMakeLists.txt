@@ -64,8 +64,10 @@ function (deeplang_executable)
         src/ast/type.cpp
         src/codegen/codegen.h
         src/codegen/codegen.cpp
-        src/parsing/parsing.cpp
         src/parsing/parsing.h
+        src/parsing/parsing.cpp
+        src/parsing/symtab.h
+        src/parsing/symtab.cpp
         src/utils/cast.h
         src/utils/error.h
         src/utils/error-formatter.h
@@ -132,14 +134,20 @@ if (DEEPLANG_BUILD_TESTS)
 
     # tests
     deeplang_executable(
-        NAME dp_cctest
-        SOURCES test/cctest/cctest.cc
+        NAME dp_ast_ast
+        SOURCES test/ast/ast.cc
+        LIBS gtest gtest_main
+    )
+
+    deeplang_executable(
+        NAME dp_ast_type
+        SOURCES test/ast/type.cc
         LIBS gtest gtest_main
     )
 
     deeplang_executable(
         NAME dp_codegen
-        SOURCES test/cctest/codegen.cc
+        SOURCES test/codegen/codegen.cc
         LIBS gtest gtest_main
     )
 endif()

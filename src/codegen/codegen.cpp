@@ -15,11 +15,17 @@ namespace internal {
 class WasmVisitor {
 public:
 	Result visitModule(Module* node) {
-		initEnv();
-		for (auto& stmt : node->stmts) {
-			visitStatement(stmt.get());
+		if (Failed(initEnv())) {
+			return Result::Error;
 		}
-		generateDataSegment();
+		for (auto& stmt : node->stmts) {
+			if (Failed(visitStatement(stmt.get(), false))) {
+				return Result::Error;
+			}
+		}
+		if (Failed(generateDataSegment())) {
+			return Result::Error;
+		}
 		return Result::Ok;
 	}
 
@@ -42,6 +48,8 @@ public:
 
 		auto importField = wabt::MakeUnique<wabt::ImportModuleField>(std::move(import), loc);
 		module->AppendField(std::move(importField));
+
+		return Result::Ok;
 	}
 
 	Result generateDataSegment() {
@@ -49,17 +57,8 @@ public:
 		auto           dataField           = wabt::MakeUnique<wabt::DataSegmentModuleField>(loc, "StrPool");
 		dataField->data_segment.kind       = wabt::SegmentKind::Active;
 		dataField->data_segment.memory_var = wabt::Var(module->memories.size());
-		dataField->data_segment.offset.push_back(
-				wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(0)));
-
-		auto map = constStringSymTab.table;
-		for (auto it = map.begin(); it != map.end(); it++) {
-			std::string data = it->first;
-			for (auto dataIter = data.begin(); dataIter != data.end(); dataIter++) {
-				dataField->data_segment.data.push_back(*dataIter);
-			}
-			dataField->data_segment.data.push_back('\0');
-		}
+		dataField->data_segment.offset.push_back(wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(0)));
+		dataField->data_segment.data = constStringSymTab.data;
 
 		auto     memory_field                    = wabt::MakeUnique<wabt::MemoryModuleField>(loc, "memory");
 		uint32_t byte_size                       = WABT_ALIGN_UP_TO_PAGE(dataField->data_segment.data.size());
@@ -70,24 +69,25 @@ public:
 
 		module->AppendField(std::move(memory_field));
 		module->AppendField(std::move(dataField));
+
+		return Result::Ok;
 	}
 	// Statements
 
-	Result visitStatement(Statement* stmt) {
+	Result visitStatement(Statement* stmt, bool isLastStmt) {
 		switch (stmt->kind()) {
 		case StatementKind::Expression:
-			visitExpressionStatement(static_cast<ExpressionStatement*>(stmt));
+			return visitExpressionStatement(static_cast<ExpressionStatement*>(stmt), isLastStmt);
 			break;
 		case StatementKind::FunctionDeclaration:
-			visitFunction(static_cast<FunctionDeclaration*>(stmt));
+			return visitFunction(static_cast<FunctionDeclaration*>(stmt));
 			break;
 		case StatementKind::VariableDeclaration:
-			visitVariableDeclaration(static_cast<VariableDeclaration*>(stmt));
+			return visitVariableDeclaration(static_cast<VariableDeclaration*>(stmt));
 			break;
 		default:
-			return Result::Error;
+			UNREACHABLE("visitStatement");
 		}
-		return Result::Ok;
 	}
 
 	Result visitFunction(FunctionDeclaration* funNode) {
@@ -97,7 +97,9 @@ public:
 		auto func_field = std::make_unique<wabt::FuncModuleField>(loc, name);
 		func            = &func_field->func;
 
-		visitFunctionType(funNode->signature.get());
+		if (Failed(visitFunctionType(funNode->signature.get()))) {
+			return Result::Error;
+		}
 
 		for (auto& param : funNode->params) {
 			int index = func->local_types.size();
@@ -105,7 +107,28 @@ public:
 			func->local_types.AppendDecl(static_cast<PrimitiveType*>(param->typ.get())->toWasmType(), 1);
 		}
 
-		visitExpressionStatement(funNode->body.get());
+		if (Failed(visitExpressionStatement(funNode->body.get(), true))) {
+			return Result::Error;
+		}
+
+		if (exprType != nullptr) {
+			if (auto retType = dyn_cast<PrimitiveType>(funNode->signature->Result.get())) {
+				if (retType->isUnit()) {
+					auto expr = std::make_unique<wabt::DropExpr>();
+					exprs.push_back(std::move(expr));
+				} else if (Type::IsSame(exprType.get(), retType)) {
+					// TODO: Return
+					Error(Location(), "");
+					return Result::Error;
+				} else {
+					Error(Location(), "return value is not same with return type");
+					return Result::Error;
+				}
+			} else {
+				UNREACHABLE("cast error");
+			}
+		}
+
 		func->exprs.swap(exprs);
 
 		module->AppendField(std::move(func_field));
@@ -122,14 +145,24 @@ public:
 		return Result::Ok;
 	}
 
-	Result visitFunctionType(FunctionType* node) {
+	Result visitFunctionType(FunctionType* funtypeNode) {
 		wabt::Location loc;
 
-		// TODO: first order function
-		PrimitiveType* resultType = static_cast<PrimitiveType*>(node->Result.get());
-		//		func->decl.sig.result_types.push_back(resultType->toWasmType());
-		for (auto& param : node->Params) {
-			func->decl.sig.param_types.emplace_back(static_cast<PrimitiveType*>(param.get())->toWasmType());
+		assert(funtypeNode->Result);
+		if (auto resultType = dyn_cast<PrimitiveType>(funtypeNode->Result.get())) {
+			if (!resultType->isUnit()) {
+				func->decl.sig.result_types.push_back(resultType->toWasmType());
+			}
+		} else {
+			UNREACHABLE("cast error");
+		}
+
+		for (auto& param : funtypeNode->Params) {
+			if (auto paramType = dyn_cast<PrimitiveType>(param.get())) {
+				func->decl.sig.param_types.emplace_back(paramType->toWasmType());
+			} else {
+				UNREACHABLE("cast error");
+			}
 		}
 
 		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
@@ -157,11 +190,21 @@ public:
 		var.set_index(index);
 		auto expr = std::make_unique<wabt::LocalSetExpr>(var);
 		exprs.push_back(std::move(expr));
+		exprType = nullptr;
 		return Result::Ok;
 	}
 
-	Result visitExpressionStatement(ExpressionStatement* exprStmt) {
-		return visitExpression(exprStmt->expr.get());
+	Result visitExpressionStatement(ExpressionStatement* exprStmt, bool isLastStmt) {
+		if (Failed(visitExpression(exprStmt->expr.get()))) {
+			return Result::Error;
+		}
+		// Drop unused oprands in stack
+		if (!isLastStmt && exprType != nullptr) {
+			auto expr = std::make_unique<wabt::DropExpr>();
+			exprs.push_back(std::move(expr));
+			exprType = nullptr;
+		}
+		return Result::Ok;
 	}
 
 	// Expressions
@@ -180,7 +223,6 @@ public:
 			return visitCallExpression(static_cast<CallExpression*>(expr));
 		default:
 			UNREACHABLE("visitExpression");
-			return Result::Error;
 		}
 	}
 
@@ -193,9 +235,10 @@ public:
 		wabt::Var                   methodName  = wabt::Var(wabt::string_view(pathExpr->id.name));
 		int                         index       = module->GetFuncIndex(methodName);
 		wabt::Var                   methodIndex = wabt::Var(index);
-		std::unique_ptr<wabt::Expr> expr =
-				std::make_unique<wabt::CallExpr>(methodIndex, loc);
+		std::unique_ptr<wabt::Expr> expr        = std::make_unique<wabt::CallExpr>(methodIndex, loc);
 		exprs.push_back(std::move(expr));
+		// TODO: get call return type
+		exprType = Type::I32();
 		return Result::Ok;
 	}
 
@@ -220,10 +263,9 @@ public:
 			exprType = Type::F64();
 			break;
 		case LiteralExpression::String: {
-			int offset = constStringSymTab.offset;
-			constStringSymTab.push(lit->strval, offset);
-			expr     = std::make_unique<wabt::ConstExpr>(wabt::Const::I32(offset, loc), loc);
-			exprType = Type::String();
+			auto offset = constStringSymTab.add(lit->strval, constStringSymTab.offset);
+			expr        = std::make_unique<wabt::ConstExpr>(wabt::Const::I32(offset, loc), loc);
+			exprType    = Type::String();
 			break;
 		}
 		default:
@@ -234,8 +276,10 @@ public:
 	}
 
 	Result visitBlockExpression(BlockExpession* block) {
-		for (auto& stmt : block->stmts) {
-			visitStatement(stmt.get());
+		for (auto iter = block->stmts.begin(); iter != block->stmts.end(); ++iter) {
+			if (Failed(visitStatement(iter->get(), std::next(iter) == block->stmts.end()))) {
+				return Result::Error;
+			}
 		}
 		return Result::Ok;
 	}
@@ -246,7 +290,7 @@ public:
 		wabt::Var      var(ind, loc);
 
 		if (ind < 0) {
-			std::cout << "var '" << path->id.name << "' is not found!" << std::endl;
+			Error(Location(), "local variable `%s' is not found!", path->id.name.c_str());
 			return Result::Error;
 		}
 
@@ -282,33 +326,28 @@ public:
 		auto leftType = std::move(exprType);
 		assert(leftType);
 
-		BinaryOprandType typ = BinaryOprandType::I32;
+		BinaryOprandType typ{};
 
-		if (leftType->isNumberic() && rightType->isNumberic()) {
-			auto leftPrim  = cast<PrimitiveType>(leftType.get()),
-					 rightPrim = cast<PrimitiveType>(rightType.get());
-			if (leftPrim->kind() != rightPrim->kind()) {
-				// TODO: convert type
-			}
-			switch (leftPrim->kind()) {
-			case PrimitiveType::I32:
-				typ = BinaryOprandType::I32;
-				break;
-			case PrimitiveType::I64:
-				typ = BinaryOprandType::I64;
-				break;
-			case PrimitiveType::F32:
-				typ = BinaryOprandType::F32;
-				break;
-			case PrimitiveType::F64:
-				typ = BinaryOprandType::F64;
-				break;
-			default:
-				UNREACHABLE("visitBinaryExpression");
-			}
-		} else {
-			//TODO: emit error message
-			return Result::Error;
+		auto leftPrim  = cast<PrimitiveType>(leftType.get()),
+				 rightPrim = cast<PrimitiveType>(rightType.get());
+		if (leftPrim->kind() != rightPrim->kind()) {
+			// TODO: convert type
+		}
+		switch (leftPrim->kind()) {
+		case PrimitiveType::I32:
+			typ = BinaryOprandType::I32;
+			break;
+		case PrimitiveType::I64:
+			typ = BinaryOprandType::I64;
+			break;
+		case PrimitiveType::F32:
+			typ = BinaryOprandType::F32;
+			break;
+		case PrimitiveType::F64:
+			typ = BinaryOprandType::F64;
+			break;
+		default:
+			UNREACHABLE("visitBinaryExpression");
 		}
 
 		switch (bin->op) {
@@ -397,8 +436,13 @@ public:
 		return Result::Ok;
 	}
 
-	WasmVisitor()
-			: module(std::make_unique<wabt::Module>()) {
+	WasmVisitor(Errors& errors)
+			: module(std::make_unique<wabt::Module>()), errors(errors) {
+	}
+
+	void Error(Location loc, const char* format, ...) {
+		WABT_SNPRINTF_ALLOCA(buffer, length, format);
+		errors.emplace_back(ErrorLevel::Error, loc, buffer);
 	}
 
 	std::unique_ptr<wabt::Module> module;
@@ -406,6 +450,7 @@ public:
 	wabt::Func*                   func;
 	TypePtr                       exprType;
 	SymTab<int>                   constStringSymTab = 0;
+	Errors&                       errors;
 };
 
 Result ValidateModule(wabt::Module* module) {
@@ -438,11 +483,10 @@ Result WriteModule(wabt::Module* module, const std::string& fileName) {
 	return Result::Error;
 }
 
-bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName) {
+bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName, Errors& errors) {
 	do {
-		Errors errors;
-		auto   visitor = std::make_unique<WasmVisitor>();
-		auto   result  = visitor->visitModule(mod);
+		auto visitor = std::make_unique<WasmVisitor>(errors);
+		auto result  = visitor->visitModule(mod);
 		if (Failed(result)) {
 			break;
 		}
@@ -465,11 +509,10 @@ bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName) {
 	return false;
 }
 
-bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t>& bcBuffer) {
+bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t>& bcBuffer, Errors& errors) {
 	do {
-		Errors errors;
-		auto   visitor = std::make_unique<WasmVisitor>();
-		auto   result  = visitor->visitModule(mod);
+		auto visitor = std::make_unique<WasmVisitor>(errors);
+		auto result  = visitor->visitModule(mod);
 		if (Failed(result)) {
 			break;
 		}

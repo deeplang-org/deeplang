@@ -32,7 +32,7 @@ public:
 		case TypeClass::Primitive:
 			return "Primitive";
 		case TypeClass::Func:
-			return "Func";
+			return "Function";
 		}
 	}
 
@@ -41,6 +41,8 @@ public:
 	static TypePtr F32();
 	static TypePtr F64();
 	static TypePtr String();
+
+	static bool IsSame(Type* t1, Type* t2);
 
 protected:
 	Type() = default; // Provided so Type can be member of a union.
