@@ -135,13 +135,13 @@ decl :
 
 
 statement :
-    decl
+    decl SEMICOLON_SYMBOL
     | expressionStatement
 ;
 
 statements :
-    statement SEMICOLON_SYMBOL
-    | statement SEMICOLON_SYMBOL statements
+    statement
+    | statement statements
 ;
 
 module :
