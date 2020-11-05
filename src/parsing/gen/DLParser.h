@@ -417,6 +417,7 @@ public:
     virtual size_t getRuleIndex() const override;
     FunctionDeclContext *functionDecl();
     VariableDeclContext *variableDecl();
+    antlr4::tree::TerminalNode *SEMICOLON_SYMBOL();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -432,7 +433,6 @@ public:
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     DeclContext *decl();
-    antlr4::tree::TerminalNode *SEMICOLON_SYMBOL();
     ExpressionStatementContext *expressionStatement();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;

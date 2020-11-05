@@ -130,12 +130,12 @@ functionDecl :
 
 decl :
     functionDecl
-    | variableDecl
+    | variableDecl SEMICOLON_SYMBOL
 ;
 
 
 statement :
-    decl SEMICOLON_SYMBOL
+    decl 
     | expressionStatement
 ;
 
