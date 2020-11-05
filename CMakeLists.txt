@@ -58,6 +58,8 @@ function (deeplang_executable)
 
         src/ast/ast.h
         src/ast/ast.cpp
+        src/ast/ast-print.h
+        src/ast/ast-print.cpp
         src/ast/type.h
         src/ast/type.cpp
         src/codegen/codegen.h
