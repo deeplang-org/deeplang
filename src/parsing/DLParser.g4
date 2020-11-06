@@ -82,6 +82,7 @@ expressionList :
 
 expressionStatement :
     blockExpression
+    | ifExpression
     | unblockExpression
 ;
 
@@ -93,6 +94,8 @@ blockExpression :
 unblockExpression :
     unblockExpression op=(MULT_OPERATOR | DIV_OPERATOR) unblockExpression
     | unblockExpression op=(PLUS_OPERATOR | MINUS_OPERATOR) unblockExpression
+    | unblockExpression op=(GREATER_THAN_OPERATOR | GREATER_OR_EQUAL_OPERATOR | LESS_THAN_OPERATOR | LESS_OR_EQUAL_OPERATOR) unblockExpression
+    | unblockExpression op=(EQUAL_OPERATOR | NOT_EQUAL_OPERATOR) unblockExpression
     | QUOTED_STRING
     | unblockExpression OPEN_PAR_SYMBOL expressionList CLOSE_PAR_SYMBOL
     | CONST
@@ -100,6 +103,15 @@ unblockExpression :
 ;
 
 
+ifExpression : 
+    IF_SYMBOL unblockExpression conditionElem
+;
+
+conditionElem : 
+    blockExpression ELSE_SYMBOL blockExpression
+    | blockExpression ELSE_SYMBOL ifExpression
+    | blockExpression 
+;
 
 
 tupleType :
@@ -113,7 +125,7 @@ type :
 
 variableDecl :
     LET_SYMBOL IDENTIFIER COLON_SYMBOL type
-    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type EQUAL_OPERATOR expressionStatement
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR expressionStatement
 ;
 
 param :

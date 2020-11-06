@@ -58,6 +58,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitIfExpression(DLParser::IfExpressionContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitTupleType(DLParser::TupleTypeContext *ctx) override {
     return visitChildren(ctx);
   }

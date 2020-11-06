@@ -54,6 +54,12 @@ public:
   virtual void enterUnblockExpression(DLParser::UnblockExpressionContext * /*ctx*/) override { }
   virtual void exitUnblockExpression(DLParser::UnblockExpressionContext * /*ctx*/) override { }
 
+  virtual void enterIfExpression(DLParser::IfExpressionContext * /*ctx*/) override { }
+  virtual void exitIfExpression(DLParser::IfExpressionContext * /*ctx*/) override { }
+
+  virtual void enterConditionElem(DLParser::ConditionElemContext * /*ctx*/) override { }
+  virtual void exitConditionElem(DLParser::ConditionElemContext * /*ctx*/) override { }
+
   virtual void enterTupleType(DLParser::TupleTypeContext * /*ctx*/) override { }
   virtual void exitTupleType(DLParser::TupleTypeContext * /*ctx*/) override { }
 

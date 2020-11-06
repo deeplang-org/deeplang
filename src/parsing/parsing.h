@@ -27,6 +27,10 @@ private:
 
 	antlrcpp::Any visitUnblockExpression(DLParser::UnblockExpressionContext* context);
 
+	antlrcpp::Any visitIfExpression(DLParser::IfExpressionContext* context);
+
+	antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext* context);
+
 	antlrcpp::Any visitTupleType(DLParser::TupleTypeContext* context);
 
 	antlrcpp::Any visitType(DLParser::TypeContext* context);

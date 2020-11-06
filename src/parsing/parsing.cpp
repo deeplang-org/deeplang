@@ -22,7 +22,13 @@ antlrcpp::Any Parser::visitExpressionStatement(DLParser::ExpressionStatementCont
 		ExpressionStatement* stmt = new ExpressionStatement();
 		stmt->expr                = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
 		return stmt;
-	} else {
+	}else if(context->ifExpression()) {
+        ExpressionStatement* ifexpr = new ExpressionStatement();
+        //IfExpression* ifexpr = new IfExpression();
+        ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
+        //std::cout << "begin" << std::endl;
+        return ifexpr;
+    } else {
 		UNREACHABLE("visitExpressionStatement");
 	}
 }
@@ -88,7 +94,19 @@ antlrcpp::Any Parser::visitUnblockExpression(DLParser::UnblockExpressionContext*
 				op = BinaryOperator::Mult;
 			} else if (context->DIV_OPERATOR()) {
 				op = BinaryOperator::Div;
-			} else {
+			}else if(context->GREATER_THAN_OPERATOR()) {
+                op = BinaryOperator::GT; 
+            }else if(context->GREATER_OR_EQUAL_OPERATOR()) {
+                op = BinaryOperator::GE; 
+            }else if(context->LESS_THAN_OPERATOR()) {
+                op = BinaryOperator::LT; 
+            }else if(context->LESS_OR_EQUAL_OPERATOR()) {
+                op = BinaryOperator::LE; 
+            }else if(context->EQUAL_OPERATOR()) {
+                op = BinaryOperator::Eq; 
+            }else if(context->NOT_EQUAL_OPERATOR()) {
+                op = BinaryOperator::Neq; 
+            }else {
 				UNREACHABLE("unsupport operator");
 			}
 			BinaryExpression* be    = new BinaryExpression(op);
@@ -102,6 +120,18 @@ antlrcpp::Any Parser::visitUnblockExpression(DLParser::UnblockExpressionContext*
 			UNREACHABLE("visitUnblockExpression");
 		}
 	}
+}
+
+antlrcpp::Any Parser::visitIfExpression(DLParser::IfExpressionContext* context){
+    IfExpression* ifexpr = new IfExpression();
+    ifexpr->condition = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
+
+
+    return ifexpr;
+}
+
+antlrcpp::Any Parser::visitConditionElem(DLParser::ConditionElemContext* context){
+    return nullptr;
 }
 
 antlrcpp::Any Parser::visitTupleType(DLParser::TupleTypeContext* context) {
@@ -184,7 +214,10 @@ antlrcpp::Any Parser::visitStatement(DLParser::StatementContext* context) {
 	if (context->decl()) {
 		return static_cast<Statement*>(visit(context->decl()));
 	} else if (context->expressionStatement()) {
-		auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
+        std::cout << "endsta" << std::endl;
+        auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
+		//auto es = visit(context->expressionStatement());
+        //std::cout << "end" << std::endl;
 		return static_cast<Statement*>(es);
 	} else {
 		UNREACHABLE("visitStatement");
@@ -219,14 +252,14 @@ Module* Parser::parseModule(antlr4::ANTLRInputStream sourceStream) {
 	antlr4::CommonTokenStream tokens(&lexer);
 
 	tokens.fill();
-	for (auto token : tokens.getTokens()) {
-		std::cout << token->toString() << std::endl;
-	}
+    for (auto token : tokens.getTokens()) {
+        std::cout << token->toString() << std::endl;
+    }
 
 	DLParser                 parser(&tokens);
 	antlr4::tree::ParseTree* tree = parser.module();
 
-	std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
+    std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
 	Module* module = visit(tree);
 
 	return module;
