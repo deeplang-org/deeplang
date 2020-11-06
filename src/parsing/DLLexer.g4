@@ -77,8 +77,8 @@ tokens {
 
 // Operators
 //
-ASSIGN_OPERATOR:           '==';
-EQUAL_OPERATOR:            '=';
+ASSIGN_OPERATOR:           '=';
+EQUAL_OPERATOR:            '==';
 GREATER_OR_EQUAL_OPERATOR: '>=';
 GREATER_THAN_OPERATOR:     '>';
 LESS_OR_EQUAL_OPERATOR:    '<=';

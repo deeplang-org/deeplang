@@ -233,6 +233,12 @@ enum class BinaryOperator {
 	Div,
 	BitwiseAnd,
 	BitwiseOr,
+    Eq,
+    Neq,
+    GT,
+    GE,
+    LT,
+    LE,
 };
 
 class BinaryExpression : public ExpressionMixin<ExpressionKind::Binary> {
