@@ -218,7 +218,7 @@ public:
 		case ExpressionKind::Binary:
 			return visitBinaryExpression(static_cast<BinaryExpression*>(expr));
 		case ExpressionKind::Block:
-			return visitBlockExpression(static_cast<BlockExpession*>(expr));
+			return visitBlockExpression(static_cast<BlockExpression*>(expr));
 		case ExpressionKind::Call:
 			return visitCallExpression(static_cast<CallExpression*>(expr));
 		default:
@@ -275,7 +275,7 @@ public:
 		return Result::Ok;
 	}
 
-	Result visitBlockExpression(BlockExpession* block) {
+	Result visitBlockExpression(BlockExpression* block) {
 		for (auto iter = block->stmts.begin(); iter != block->stmts.end(); ++iter) {
 			if (Failed(visitStatement(iter->get(), std::next(iter) == block->stmts.end()))) {
 				return Result::Error;

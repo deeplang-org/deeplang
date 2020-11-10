@@ -104,13 +104,13 @@ unblockExpression :
 
 
 ifExpression : 
-    IF_SYMBOL unblockExpression conditionElem
+    IF_SYMBOL unblockExpression blockExpression elseExpression
+    | IF_SYMBOL unblockExpression blockExpression
 ;
 
-conditionElem : 
-    blockExpression ELSE_SYMBOL blockExpression
-    | blockExpression ELSE_SYMBOL ifExpression
-    | blockExpression 
+elseExpression : 
+    ELSE_SYMBOL blockExpression
+    | ELSE_SYMBOL ifExpression
 ;
 
 

@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
 
 	auto module = parser->parseModule(input);
 
+    std::cout << "Parsing Ended Successfully!" << std::endl;
 	if (!s_outfile.size())
 		s_outfile = "a.wasm";
 

@@ -55,8 +55,8 @@ public:
   virtual void enterIfExpression(DLParser::IfExpressionContext *ctx) = 0;
   virtual void exitIfExpression(DLParser::IfExpressionContext *ctx) = 0;
 
-  virtual void enterConditionElem(DLParser::ConditionElemContext *ctx) = 0;
-  virtual void exitConditionElem(DLParser::ConditionElemContext *ctx) = 0;
+  virtual void enterElseExpression(DLParser::ElseExpressionContext *ctx) = 0;
+  virtual void exitElseExpression(DLParser::ElseExpressionContext *ctx) = 0;
 
   virtual void enterTupleType(DLParser::TupleTypeContext *ctx) = 0;
   virtual void exitTupleType(DLParser::TupleTypeContext *ctx) = 0;

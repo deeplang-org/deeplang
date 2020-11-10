@@ -29,7 +29,7 @@ private:
 
 	antlrcpp::Any visitIfExpression(DLParser::IfExpressionContext* context);
 
-	antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext* context);
+    antlrcpp::Any visitElseExpression(DLParser::ElseExpressionContext *context);
 
 	antlrcpp::Any visitTupleType(DLParser::TupleTypeContext* context);
 

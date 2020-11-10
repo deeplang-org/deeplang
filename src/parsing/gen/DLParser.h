@@ -170,7 +170,7 @@ public:
   enum {
     RuleAryOp = 0, RuleExpressionList = 1, RuleExpressionStatement = 2, 
     RuleBlockExpression = 3, RuleUnblockExpression = 4, RuleIfExpression = 5, 
-    RuleConditionElem = 6, RuleTupleType = 7, RuleType = 8, RuleVariableDecl = 9, 
+    RuleElseExpression = 6, RuleTupleType = 7, RuleType = 8, RuleVariableDecl = 9, 
     RuleParam = 10, RuleParamList = 11, RuleFunctionDecl = 12, RuleDecl = 13, 
     RuleStatement = 14, RuleStatements = 15, RuleModule = 16
   };
@@ -191,7 +191,7 @@ public:
   class BlockExpressionContext;
   class UnblockExpressionContext;
   class IfExpressionContext;
-  class ConditionElemContext;
+  class ElseExpressionContext;
   class TupleTypeContext;
   class TypeContext;
   class VariableDeclContext;
@@ -317,7 +317,8 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *IF_SYMBOL();
     UnblockExpressionContext *unblockExpression();
-    ConditionElemContext *conditionElem();
+    BlockExpressionContext *blockExpression();
+    ElseExpressionContext *elseExpression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -328,13 +329,12 @@ public:
 
   IfExpressionContext* ifExpression();
 
-  class  ConditionElemContext : public antlr4::ParserRuleContext {
+  class  ElseExpressionContext : public antlr4::ParserRuleContext {
   public:
-    ConditionElemContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    ElseExpressionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    std::vector<BlockExpressionContext *> blockExpression();
-    BlockExpressionContext* blockExpression(size_t i);
     antlr4::tree::TerminalNode *ELSE_SYMBOL();
+    BlockExpressionContext *blockExpression();
     IfExpressionContext *ifExpression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -344,7 +344,7 @@ public:
    
   };
 
-  ConditionElemContext* conditionElem();
+  ElseExpressionContext* elseExpression();
 
   class  TupleTypeContext : public antlr4::ParserRuleContext {
   public:
