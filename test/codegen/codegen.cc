@@ -15,7 +15,7 @@ TEST(testCase, codegen) {
 	auto sig            = std::make_unique<FunctionType>();
 	mainFunc->signature = std::move(sig);
 
-	auto mainFuncBody = std::make_unique<BlockExpession>();
+	auto mainFuncBody = std::make_unique<BlockExpression>();
 
 	auto var1Decl     = std::make_unique<VariableDeclaration>("var");
 	var1Decl->vartype = std::make_unique<PrimitiveType>(PrimitiveType::Kind::I32);

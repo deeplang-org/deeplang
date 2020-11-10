@@ -135,7 +135,7 @@ public:
 	std::unique_ptr<Expression> init;
 };
 
-class BlockExpession;
+class BlockExpression;
 
 class Param {
 public:
@@ -328,14 +328,14 @@ public:
 	Identifier id;
 };
 
-class BlockExpession : public ExpressionMixin<ExpressionKind::Block> {
+class BlockExpression : public ExpressionMixin<ExpressionKind::Block> {
 public:
-	BlockExpession(const Location& loc = Location())
+	BlockExpression(const Location& loc = Location())
 			: ExpressionMixin<ExpressionKind::Block>(loc) {
 	}
 
 	std::string toString() const {
-		return "BlockExpession";
+		return "BlockExpression";
 	}
 
 	StatementVector stmts;
@@ -357,7 +357,7 @@ public:
 	}
 
 	std::unique_ptr<ConditionExpression> condition;
-	std::unique_ptr<BlockExpession>      then_branch;
+	std::unique_ptr<BlockExpression>      then_branch;   
 	std::unique_ptr<ElseExpression>      else_branch;
 };
 
@@ -371,7 +371,7 @@ class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
 	}
 
 	std::unique_ptr<ConditionExpression> condition;
-	std::unique_ptr<BlockExpession>      body;
+	std::unique_ptr<BlockExpression>      body;
 };
 
 // class ForExpression : public ExpressionMixin<ExpressionKind::For> {
@@ -385,7 +385,7 @@ class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
 
 // 	ExpressionPtr                   pattern;
 // 	ExpressionPtr                   range;
-// 	std::unique_ptr<BlockExpession> body;
+// 	std::unique_ptr<BlockExpression> body;
 // };
 
 class BreakExpression : public ExpressionMixin<ExpressionKind::Break> {

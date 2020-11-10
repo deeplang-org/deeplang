@@ -62,7 +62,7 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *ctx) override {
+  virtual antlrcpp::Any visitElseExpression(DLParser::ElseExpressionContext *ctx) override {
     return visitChildren(ctx);
   }
 

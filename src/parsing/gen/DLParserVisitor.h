@@ -54,7 +54,7 @@ public:
 
     virtual antlrcpp::Any visitIfExpression(DLParser::IfExpressionContext *context) = 0;
 
-    virtual antlrcpp::Any visitConditionElem(DLParser::ConditionElemContext *context) = 0;
+    virtual antlrcpp::Any visitElseExpression(DLParser::ElseExpressionContext *context) = 0;
 
     virtual antlrcpp::Any visitTupleType(DLParser::TupleTypeContext *context) = 0;
 

@@ -24,9 +24,7 @@ antlrcpp::Any Parser::visitExpressionStatement(DLParser::ExpressionStatementCont
 		return stmt;
 	}else if(context->ifExpression()) {
         ExpressionStatement* ifexpr = new ExpressionStatement();
-        //IfExpression* ifexpr = new IfExpression();
         ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
-        //std::cout << "begin" << std::endl;
         return ifexpr;
     } else {
 		UNREACHABLE("visitExpressionStatement");
@@ -48,7 +46,7 @@ antlrcpp::Any Parser::visitExpressionList(DLParser::ExpressionListContext* conte
 
 antlrcpp::Any Parser::visitBlockExpression(DLParser::BlockExpressionContext* context) {
 	ExpressionStatement* be = new ExpressionStatement();
-	BlockExpession*      e  = new BlockExpession();
+	BlockExpression*      e  = new BlockExpression();
 
 	std::vector<Statement*>* stmts = visit(context->statements());
 	for (auto stm : *stmts) {
@@ -123,15 +121,29 @@ antlrcpp::Any Parser::visitUnblockExpression(DLParser::UnblockExpressionContext*
 }
 
 antlrcpp::Any Parser::visitIfExpression(DLParser::IfExpressionContext* context){
+    ExpressionStatement* es = new ExpressionStatement();  
     IfExpression* ifexpr = new IfExpression();
     ifexpr->condition = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
-
-
-    return ifexpr;
+    ifexpr->then_branch = std::unique_ptr<BlockExpression>
+        (static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get()));
+    if(context->elseExpression()) {
+        ifexpr->else_branch = std::unique_ptr<Expression>
+           (static_cast<Expression*>((static_cast<ExpressionStatement*>(visit(context->elseExpression()))->expr).get())); 
+    }
+    es->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ifexpr));
+    return es;
 }
 
-antlrcpp::Any Parser::visitConditionElem(DLParser::ConditionElemContext* context){
-    return nullptr;
+antlrcpp::Any Parser::visitElseExpression(DLParser::ElseExpressionContext* context){
+    ExpressionStatement* ifexpr = new ExpressionStatement();
+    if(context->ifExpression()){  // else if
+        ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
+    }else {   //  else
+        BlockExpression* be = new BlockExpression();
+        be = static_cast<BlockExpression*>(visit(context->blockExpression()));
+        ifexpr->expr = std::unique_ptr<Expression>(static_cast<Expression*>(be));
+    }
+    return ifexpr;
 }
 
 antlrcpp::Any Parser::visitTupleType(DLParser::TupleTypeContext* context) {
@@ -214,10 +226,7 @@ antlrcpp::Any Parser::visitStatement(DLParser::StatementContext* context) {
 	if (context->decl()) {
 		return static_cast<Statement*>(visit(context->decl()));
 	} else if (context->expressionStatement()) {
-        std::cout << "endsta" << std::endl;
         auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
-		//auto es = visit(context->expressionStatement());
-        //std::cout << "end" << std::endl;
 		return static_cast<Statement*>(es);
 	} else {
 		UNREACHABLE("visitStatement");
@@ -261,7 +270,6 @@ Module* Parser::parseModule(antlr4::ANTLRInputStream sourceStream) {
 
     std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
 	Module* module = visit(tree);
-
 	return module;
 }
 
