@@ -117,18 +117,6 @@ public:
 		return kind_ == Kind::Unit;
 	}
 
-	wabt::Type::Enum toWasmType() {
-		// TODO: complete wasm type
-		if (isI32()) {
-			return wabt::Type::I32;
-		} else if (isI64()) {
-			return wabt::Type::I64;
-		} else if (isUnit()) {
-			return wabt::Type::Void;
-		} else {
-			UNREACHABLE("can't find backend data type");
-		}
-	}
 
 	static PrimitiveType* getType() {
 		return new PrimitiveType(PrimitiveType::Kind::Unit);

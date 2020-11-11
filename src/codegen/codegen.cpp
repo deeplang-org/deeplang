@@ -104,7 +104,7 @@ public:
 		for (auto& param : funNode->params) {
 			int index = func->local_types.size();
 			func->bindings.emplace(param.get()->id.name, wabt::Binding(index));
-			func->local_types.AppendDecl(static_cast<PrimitiveType*>(param->typ.get())->toWasmType(), 1);
+			func->local_types.AppendDecl(toWasmType(static_cast<PrimitiveType*>(param->typ.get())), 1);
 		}
 
 		if (Failed(visitExpressionStatement(funNode->body.get(), true))) {
@@ -151,7 +151,7 @@ public:
 		assert(funtypeNode->Result);
 		if (auto resultType = dyn_cast<PrimitiveType>(funtypeNode->Result.get())) {
 			if (!resultType->isUnit()) {
-				func->decl.sig.result_types.push_back(resultType->toWasmType());
+				func->decl.sig.result_types.push_back(toWasmType(resultType));
 			}
 		} else {
 			UNREACHABLE("cast error");
@@ -159,7 +159,7 @@ public:
 
 		for (auto& param : funtypeNode->Params) {
 			if (auto paramType = dyn_cast<PrimitiveType>(param.get())) {
-				func->decl.sig.param_types.emplace_back(paramType->toWasmType());
+				func->decl.sig.param_types.emplace_back(toWasmType(paramType));
 			} else {
 				UNREACHABLE("cast error");
 			}
@@ -444,6 +444,20 @@ public:
 		WABT_SNPRINTF_ALLOCA(buffer, length, format);
 		errors.emplace_back(ErrorLevel::Error, loc, buffer);
 	}
+
+
+  wabt::Type::Enum toWasmType(PrimitiveType *typ) {
+    // TODO: complete wasm type
+    if (typ.isI32()) {
+      return wabt::Type::I32;
+    } else if (typ.isI64()) {
+      return wabt::Type::I64;
+    } else if (typ.isUnit()) {
+      return wabt::Type::Void;
+    } else {
+      UNREACHABLE("can't find backend data type");
+    }
+  }
 
 	std::unique_ptr<wabt::Module> module;
 	wabt::ExprList                exprs;
