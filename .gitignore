@@ -5,3 +5,4 @@ out/
 dist/
 cmake-build-debug/
 .idea/
+gen/

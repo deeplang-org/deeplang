@@ -97,14 +97,14 @@ public:
 		auto func_field = std::make_unique<wabt::FuncModuleField>(loc, name);
 		func            = &func_field->func;
 
-		if (Failed(visitFunctionType(funNode->signature.get()))) {
+		if (Failed(visitFunctionType(funNode->signature))) {
 			return Result::Error;
 		}
 
 		for (auto& param : funNode->params) {
 			int index = func->local_types.size();
 			func->bindings.emplace(param.get()->id.name, wabt::Binding(index));
-			func->local_types.AppendDecl(static_cast<PrimitiveType*>(param->typ.get())->toWasmType(), 1);
+			func->local_types.AppendDecl(toWasmType(static_cast<PrimitiveType*>(param->typ)), 1);
 		}
 
 		if (Failed(visitExpressionStatement(funNode->body.get(), true))) {
@@ -112,11 +112,11 @@ public:
 		}
 
 		if (exprType != nullptr) {
-			if (auto retType = dyn_cast<PrimitiveType>(funNode->signature->Result.get())) {
+			if (auto retType = dyn_cast<PrimitiveType>(funNode->signature->result())) {
 				if (retType->isUnit()) {
 					auto expr = std::make_unique<wabt::DropExpr>();
 					exprs.push_back(std::move(expr));
-				} else if (Type::IsSame(exprType.get(), retType)) {
+				} else if (Type::IsSame(exprType, retType)) {
 					// TODO: Return
 					Error(Location(), "");
 					return Result::Error;
@@ -148,18 +148,18 @@ public:
 	Result visitFunctionType(FunctionType* funtypeNode) {
 		wabt::Location loc;
 
-		assert(funtypeNode->Result);
-		if (auto resultType = dyn_cast<PrimitiveType>(funtypeNode->Result.get())) {
+		assert(funtypeNode->result());
+		if (auto resultType = dyn_cast<PrimitiveType>(funtypeNode->result())) {
 			if (!resultType->isUnit()) {
-				func->decl.sig.result_types.push_back(resultType->toWasmType());
+				func->decl.sig.result_types.push_back(toWasmType(resultType));
 			}
 		} else {
 			UNREACHABLE("cast error");
 		}
 
-		for (auto& param : funtypeNode->Params) {
-			if (auto paramType = dyn_cast<PrimitiveType>(param.get())) {
-				func->decl.sig.param_types.emplace_back(paramType->toWasmType());
+		for (auto& param : funtypeNode->params()) {
+			if (auto paramType = dyn_cast<PrimitiveType>(param)) {
+				func->decl.sig.param_types.emplace_back(toWasmType(paramType));
 			} else {
 				UNREACHABLE("cast error");
 			}
@@ -328,8 +328,8 @@ public:
 
 		BinaryOprandType typ{};
 
-		auto leftPrim  = cast<PrimitiveType>(leftType.get()),
-				 rightPrim = cast<PrimitiveType>(rightType.get());
+		auto leftPrim  = cast<PrimitiveType>(leftType),
+				 rightPrim = cast<PrimitiveType>(rightType);
 		if (leftPrim->kind() != rightPrim->kind()) {
 			// TODO: convert type
 		}
@@ -445,10 +445,32 @@ public:
 		errors.emplace_back(ErrorLevel::Error, loc, buffer);
 	}
 
+
+  wabt::Type::Enum toWasmType(Type *typ) {
+    // TODO: complete wasm type
+		if (auto pt = cast<PrimitiveType>(typ)) {
+      if (pt->isI32()) {
+        return wabt::Type::I32;
+      } else if (pt->isI64()) {
+				return wabt::Type::I64;
+//      } else if (pt->isUnit()) {
+//        return wabt::Type::Void;
+      } else if (pt->isF32()) {
+        return wabt::Type::F32;
+      } else if (pt->isF64()) {
+        return wabt::Type::F64;
+      } else {
+        UNREACHABLE("can't find backend data type");
+      }
+		} else {
+      UNREACHABLE("can't find backend data type");
+    }
+  }
+
 	std::unique_ptr<wabt::Module> module;
 	wabt::ExprList                exprs;
 	wabt::Func*                   func;
-	TypePtr                       exprType;
+	Type*                         exprType;
 	SymTab<int>                   constStringSymTab = 0;
 	Errors&                       errors;
 };
