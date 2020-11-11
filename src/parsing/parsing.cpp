@@ -5,6 +5,7 @@
 #include "parsing/gen/DLParser.h"
 #include "parsing/gen/DLParserVisitor.h"
 #include "utils/error.h"
+#include "utils/cast.h"
 #include <cmath>
 #include <typeinfo>
 
@@ -153,10 +154,10 @@ antlrcpp::Any Parser::visitTupleType(DLParser::TupleTypeContext* context) {
 antlrcpp::Any Parser::visitType(DLParser::TypeContext* context) {
 	if (context->IDENTIFIER()) {
 		std::string typName = context->IDENTIFIER()->getText();
-		return static_cast<Type*>(PrimitiveType::getType(typName));
+		return PrimitiveType::MakeType(typName);
 	} else {
 		// TODO: customize type and tuple
-		return static_cast<Type*>(PrimitiveType::getType());
+		return Type::Unit();
 	}
 }
 
@@ -164,7 +165,7 @@ antlrcpp::Any Parser::visitParam(DLParser::ParamContext* context) {
 	Identifier id(context->IDENTIFIER()->getText());
 	Type*      t = visit(context->type());
 	Param*     p = new Param(id);
-	p->typ       = std::move(std::unique_ptr<Type>(t));
+	p->typ       = t;
 	return p;
 }
 
@@ -192,17 +193,17 @@ antlrcpp::Any Parser::visitFunctionDecl(DLParser::FunctionDeclContext* context) 
       static_cast<ExpressionStatement*>(visit(context->blockExpression())));
 	std::vector<Param*>* params = visit(context->paramList());
 
-	FunctionType*  ft      = new FunctionType();
 	Type*          t       = visit(context->type());
 	PrimitiveType* retType = static_cast<PrimitiveType*>(t);
-	ft->Result             = std::unique_ptr<Type>(retType);
+//	ft->Result             = std::unique_ptr<Type>(retType);
+	TypeVector paramVec;
 	for (auto param : *params) {
-		PrimitiveType* t = new PrimitiveType(
-				static_cast<PrimitiveType*>(param->typ.get())->kind());
-		ft->Params.emplace_back(t);
+		paramVec.emplace_back(param->typ);
 	}
+	auto  ft      = FunctionType::MakeType(paramVec, retType);
 
-	decl->signature = std::unique_ptr<FunctionType>(ft);
+
+	decl->signature = ft;
 
 	for (auto p : *params) {
 		decl->params.emplace_back(std::unique_ptr<Param>(p));

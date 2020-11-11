@@ -127,5 +127,13 @@ FunctionType* FunctionType::MakeType(TypeVector& params, Type* result) {
 	return typ;
 }
 
+
+  TypeVector FunctionType::params() {
+	  return params_;
+  }
+  Type*      FunctionType::result() {
+		return result_;
+	}
+
 } // namespace internal
 } // namespace dp

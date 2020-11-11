@@ -131,7 +131,7 @@ public:
 	}
 
 	Identifier                  id;
-	std::unique_ptr<Type>       vartype;
+	Type*                       vartype;
 	std::unique_ptr<Expression> init;
 };
 
@@ -143,7 +143,7 @@ public:
 			: id(id) {
 	}
 	Identifier            id;
-	std::unique_ptr<Type> typ;
+	Type*                 typ;
 };
 
 typedef std::unique_ptr<Param> ParamPtr;
@@ -162,7 +162,7 @@ public:
 	}
 
 	Identifier                           id;
-	std::unique_ptr<FunctionType>        signature;
+	FunctionType*                        signature;
 	std::unique_ptr<ExpressionStatement> body;
 	ParamVector                          params;
 	bool                                 isPublic;
