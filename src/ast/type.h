@@ -1,14 +1,12 @@
 #pragma once
 
-#include <wabt/src/type.h>
 #include "common.h"
 
 namespace dp {
 namespace internal {
 
 class Type;
-typedef std::unique_ptr<Type> TypePtr;
-typedef std::vector<TypePtr>  TypeVector;
+using TypeVector = std::vector<Type*>;
 
 class PrimitiveType;
 class FunctionType;
@@ -17,7 +15,7 @@ class Type {
 public:
 	enum TypeClass {
 		Primitive,
-		Func,
+		Function,
 		Reference
 	};
 
@@ -31,16 +29,20 @@ public:
 		switch (tc_) {
 		case TypeClass::Primitive:
 			return "Primitive";
-		case TypeClass::Func:
+		case TypeClass::Function:
 			return "Function";
+		case TypeClass::Reference:
+			return "Reference";
 		}
 	}
 
-	static TypePtr I32();
-	static TypePtr I64();
-	static TypePtr F32();
-	static TypePtr F64();
-	static TypePtr String();
+	static Type* Unit();
+	static Type* I32();
+	static Type* I64();
+	static Type* F32();
+	static Type* F64();
+	static Type* String();
+	static Type* Func(TypeVector& params, Type* result);
 
 	static bool IsSame(Type* t1, Type* t2);
 
@@ -65,9 +67,6 @@ public:
 		String
 	};
 
-	PrimitiveType(Kind kind)
-			: Type(Primitive), kind_(kind) {
-	}
 	operator Kind() const {
 		return kind_;
 	}
@@ -113,59 +112,51 @@ public:
 		return kind_ == Kind::I64;
 	}
 
+	bool isF32() const {
+		return kind_ == Kind::F32;
+	}
+
+	bool isF64() const {
+		return kind_ == Kind::F64;
+	}
+
 	bool isUnit() const {
 		return kind_ == Kind::Unit;
 	}
 
-	wabt::Type::Enum toWasmType() {
-		// TODO: complete wasm type
-		if (isI32()) {
-			return wabt::Type::I32;
-		} else if (isI64()) {
-			return wabt::Type::I64;
-		} else if (isUnit()) {
-			return wabt::Type::Void;
-		} else {
-			UNREACHABLE("can't find backend data type");
-		}
-	}
-
-	static PrimitiveType* getType() {
-		return new PrimitiveType(PrimitiveType::Kind::Unit);
-	}
-
-	static PrimitiveType* getType(std::string typName) {
-		PrimitiveType::Kind t;
-		if (typName == "i32") {
-			t = PrimitiveType::Kind::I32;
-		} else if (typName == "i64") {
-			t = PrimitiveType::I64;
-		} else {
-			UNREACHABLE("can't recognize type name");
-		}
-		return new PrimitiveType(t);
-	}
+	static PrimitiveType* MakeType(Kind kind);
+	static PrimitiveType* MakeType(const std::string& typName);
 
 	static bool classof(const Type* type) {
-		return type->typeClass() == Primitive;
+		return type->typeClass() == Type::Primitive;
 	}
 
 private:
+	PrimitiveType(Kind kind)
+			: Type(Type::Primitive), kind_(kind) {
+	}
+
 	Kind kind_;
 };
 
 class FunctionType : public Type {
 public:
-	TypeVector Params;
-	TypePtr    Result;
-
-	FunctionType()
-			: Type(Func) {
-	}
-
 	static bool classof(const Type* type) {
-		return type->typeClass() == Func;
+		return type->typeClass() == Type::Function;
 	}
+
+	TypeVector params();
+	Type*      result();
+
+	static FunctionType* MakeType(TypeVector& params, Type* result);
+
+private:
+	FunctionType(TypeVector& params, Type* result)
+			: Type(Type::Function), params_(params), result_(result) {
+	}
+
+	TypeVector params_;
+	Type*      result_;
 };
 
 } // namespace internal
