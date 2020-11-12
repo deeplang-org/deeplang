@@ -4,13 +4,53 @@
 #include "wabt/src/validator.h"
 
 #include "codegen/codegen.h"
+#include "codegen/symtab.h"
+#include "codegen/stringpool.h"
 #include "utils/cast.h"
 #include "utils/error.h"
 #include "utils/result.h"
-#include "parsing/symtab.h"
 
 namespace dp {
 namespace internal {
+
+static bool toWasmType(Type* typ, wabt::Type& wtyp) {
+	if (auto ptype = dyn_cast<PrimitiveType>(typ)) {
+		switch (ptype->kind()) {
+		case PrimitiveType::I32:
+			wtyp = wabt::Type(wabt::Type::I32);
+			return true;
+		case PrimitiveType::I64:
+			wtyp = wabt::Type(wabt::Type::I32);
+			return true;
+		case PrimitiveType::F32:
+			wtyp = wabt::Type(wabt::Type::I32);
+			return true;
+		case PrimitiveType::F64:
+			wtyp = wabt::Type(wabt::Type::I32);
+			return true;
+		default:
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
+
+static void toWasmType(const TypeVector& typVec, wabt::TypeVector& wtypVec) {
+	for (auto typ : typVec) {
+		wabt::Type wtyp;
+		if (toWasmType(typ, wtyp)) {
+			wtypVec.emplace_back(wtyp);
+		}
+	}
+}
+
+static void functypet2funcsig(FunctionType* typ, wabt::FuncSignature& sig) {
+	toWasmType(typ->params(), sig.param_types);
+	TypeVector results;
+	results.push_back(typ->result());
+	toWasmType(results, sig.result_types);
+}
 
 class WasmVisitor {
 public:
@@ -29,25 +69,37 @@ public:
 		return Result::Ok;
 	}
 
-	// init some builtin function to import
-	Result initEnv() {
-		wabt::Location loc;
-		auto           import = wabt::MakeUnique<wabt::FuncImport>();
-		import->module_name   = "env";
-		import->field_name    = "puts";
-
-		auto func  = &import->func;
-		func->name = "puts";
-		func->decl.sig.param_types.emplace_back(wabt::Type::I32);
-		func->decl.sig.result_types.emplace_back(wabt::Type::I32);
-		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
+	void appendTypeField(wabt::FuncSignature& sig) {
+		auto type_field = std::make_unique<wabt::TypeModuleField>();
 		auto type       = std::make_unique<wabt::FuncType>();
-		type->sig       = func->decl.sig;
+		type->sig       = sig;
 		type_field->type.reset(type.release());
 		module->AppendField(std::move(type_field));
+	}
+
+	void importFunc(const std::string& moduleName, const std::string& funcName, FunctionType* ftyp) {
+		wabt::Location loc;
+		auto           import = wabt::MakeUnique<wabt::FuncImport>();
+		import->module_name   = moduleName;
+		import->field_name    = funcName;
+
+		symTab.addSym(funcName, module->funcs.size(), ftyp);
+
+		auto func  = &import->func;
+		func->name = funcName;
+		functypet2funcsig(ftyp, func->decl.sig);
+		appendTypeField(func->decl.sig);
 
 		auto importField = wabt::MakeUnique<wabt::ImportModuleField>(std::move(import), loc);
 		module->AppendField(std::move(importField));
+	}
+
+	// init some builtin function to import
+	Result initEnv() {
+		TypeVector params;
+		params.push_back(Type::I32());
+		auto typ = Type::Func(params, Type::I32());
+		importFunc("env", "puts", cast<FunctionType>(typ));
 
 		return Result::Ok;
 	}
@@ -58,7 +110,7 @@ public:
 		dataField->data_segment.kind       = wabt::SegmentKind::Active;
 		dataField->data_segment.memory_var = wabt::Var(module->memories.size());
 		dataField->data_segment.offset.push_back(wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(0)));
-		dataField->data_segment.data = constStringSymTab.data;
+		dataField->data_segment.data = stringPool.data;
 
 		auto     memory_field                    = wabt::MakeUnique<wabt::MemoryModuleField>(loc, "memory");
 		uint32_t byte_size                       = WABT_ALIGN_UP_TO_PAGE(dataField->data_segment.data.size());
@@ -72,6 +124,7 @@ public:
 
 		return Result::Ok;
 	}
+
 	// Statements
 
 	Result visitStatement(Statement* stmt, bool isLastStmt) {
@@ -94,6 +147,10 @@ public:
 		auto           name = funNode->id.name;
 		wabt::Location loc;
 
+		if (!symTab.addSym(name, module->funcs.size(), funNode->signature)) {
+			return Result::Error;
+		}
+
 		auto func_field = std::make_unique<wabt::FuncModuleField>(loc, name);
 		func            = &func_field->func;
 
@@ -101,15 +158,26 @@ public:
 			return Result::Error;
 		}
 
-		for (auto& param : funNode->params) {
+		symTab.newEnv();
+
+		for (auto param : funNode->params) {
 			int index = func->local_types.size();
-			func->bindings.emplace(param.get()->id.name, wabt::Binding(index));
-			func->local_types.AppendDecl(toWasmType(static_cast<PrimitiveType*>(param->typ)), 1);
+			func->bindings.emplace(param.id.name, wabt::Binding(index));
+			wabt::Type ltyp;
+			if (toWasmType(param.typ, ltyp)) {
+				func->local_types.AppendDecl(ltyp, 1);
+			} else {
+				Error(Location(), "toWasmType");
+				return Result::Error;
+			}
+			symTab.addSym(param.id.name, index, param.typ);
 		}
 
 		if (Failed(visitExpressionStatement(funNode->body.get(), true))) {
 			return Result::Error;
 		}
+
+		symTab.dropEnv();
 
 		if (exprType != nullptr) {
 			if (auto retType = dyn_cast<PrimitiveType>(funNode->signature->result())) {
@@ -118,7 +186,7 @@ public:
 					exprs.push_back(std::move(expr));
 				} else if (Type::IsSame(exprType, retType)) {
 					// TODO: Return
-					Error(Location(), "");
+					Error(Location(), "return");
 					return Result::Error;
 				} else {
 					Error(Location(), "return value is not same with return type");
@@ -145,48 +213,36 @@ public:
 		return Result::Ok;
 	}
 
-	Result visitFunctionType(FunctionType* funtypeNode) {
+	Result visitFunctionType(FunctionType* funcType) {
 		wabt::Location loc;
 
-		assert(funtypeNode->result());
-		if (auto resultType = dyn_cast<PrimitiveType>(funtypeNode->result())) {
-			if (!resultType->isUnit()) {
-				func->decl.sig.result_types.push_back(toWasmType(resultType));
-			}
-		} else {
-			UNREACHABLE("cast error");
-		}
+		functypet2funcsig(funcType, func->decl.sig);
+		appendTypeField(func->decl.sig);
 
-		for (auto& param : funtypeNode->params()) {
-			if (auto paramType = dyn_cast<PrimitiveType>(param)) {
-				func->decl.sig.param_types.emplace_back(toWasmType(paramType));
-			} else {
-				UNREACHABLE("cast error");
-			}
-		}
-
-		auto type_field = std::make_unique<wabt::TypeModuleField>(loc);
-		auto type       = std::make_unique<wabt::FuncType>();
-
-		type->sig = func->decl.sig;
-		type_field->type.reset(type.release());
-
-		module->AppendField(std::move(type_field));
 		return Result::Ok;
 	}
 
 	Result visitVariableDeclaration(VariableDeclaration* varDecl) {
-		std::string    name  = varDecl->id.name;
-		int            index = func->local_types.size();
-		wabt::Type     type  = wabt::Type::I32;
-		wabt::Location loc;
+		std::string name  = varDecl->id.name;
+		int         index = func->local_types.size();
+
+		wabt::Type type;
+		if (!toWasmType(varDecl->typ, type)) {
+			Error(Location(), "toWasmType");
+			return Result::Error;
+		}
 
 		func->bindings.emplace(name, wabt::Binding(index));
 		func->local_types.AppendDecl(type, 1);
 
 		visitExpression(varDecl->init.get());
 
-		wabt::Var var(name, loc);
+		if (!symTab.addSym(name, index, varDecl->typ)) {
+			Error(Location(), "declared variable '%s' is exists", name.c_str());
+			return Result::Error;
+		}
+
+		wabt::Var var(name);
 		var.set_index(index);
 		auto expr = std::make_unique<wabt::LocalSetExpr>(var);
 		exprs.push_back(std::move(expr));
@@ -231,14 +287,26 @@ public:
 		for (auto& param : methodCall->params) {
 			visitExpression(param.get());
 		}
-		auto                        pathExpr    = static_cast<PathExpression*>(methodCall->method.get());
-		wabt::Var                   methodName  = wabt::Var(wabt::string_view(pathExpr->id.name));
-		int                         index       = module->GetFuncIndex(methodName);
-		wabt::Var                   methodIndex = wabt::Var(index);
-		std::unique_ptr<wabt::Expr> expr        = std::make_unique<wabt::CallExpr>(methodIndex, loc);
-		exprs.push_back(std::move(expr));
-		// TODO: get call return type
-		exprType = Type::I32();
+
+		if (auto pathExpr = dyn_cast<PathExpression>(methodCall->method.get())) {
+			wabt::Var                   methodName  = wabt::Var(wabt::string_view(pathExpr->id.name));
+			int                         index       = module->GetFuncIndex(methodName);
+			wabt::Var                   methodIndex = wabt::Var(index);
+			std::unique_ptr<wabt::Expr> expr        = std::make_unique<wabt::CallExpr>(methodIndex, loc);
+			exprs.push_back(std::move(expr));
+
+			auto typ = symTab.getSymType(pathExpr->id.name);
+			if (auto ftyp = dyn_cast<FunctionType>(typ)) {
+				exprType = ftyp->result();
+			} else {
+				Error(Location(), "symbol '%s' is not functype", pathExpr->id.name.c_str());
+				return Result::Error;
+			}
+		} else {
+			Error(Location(), "method is not a pathexpr");
+			return Result::Error;
+		}
+
 		return Result::Ok;
 	}
 
@@ -263,7 +331,7 @@ public:
 			exprType = Type::F64();
 			break;
 		case LiteralExpression::String: {
-			auto offset = constStringSymTab.add(lit->strval, constStringSymTab.offset);
+			auto offset = stringPool.add(lit->strval, stringPool.offset);
 			expr        = std::make_unique<wabt::ConstExpr>(wabt::Const::I32(offset, loc), loc);
 			exprType    = Type::String();
 			break;
@@ -276,11 +344,13 @@ public:
 	}
 
 	Result visitBlockExpression(BlockExpression* block) {
+		symTab.newEnv();
 		for (auto iter = block->stmts.begin(); iter != block->stmts.end(); ++iter) {
 			if (Failed(visitStatement(iter->get(), std::next(iter) == block->stmts.end()))) {
 				return Result::Error;
 			}
 		}
+		symTab.dropEnv();
 		return Result::Ok;
 	}
 
@@ -297,8 +367,11 @@ public:
 		std::unique_ptr<wabt::Expr> expr =
 				std::make_unique<wabt::LocalGetExpr>(var);
 		exprs.push_back(std::move(expr));
-		// TODO: get var type
-		exprType = Type::I32();
+		exprType = symTab.getSymType(path->id.name);
+		if (exprType == nullptr) {
+			Error(Location(), "local variable `%s' can't find type!", path->id.name.c_str());
+			return Result::Error;
+		}
 
 		return Result::Ok;
 	}
@@ -328,11 +401,19 @@ public:
 
 		BinaryOprandType typ{};
 
+		if (!leftType->isNumberic() || !rightType->isNumberic()) {
+			Error(Location(), "binary operand is not number");
+			return Result::Error;
+		}
+
 		auto leftPrim  = cast<PrimitiveType>(leftType),
 				 rightPrim = cast<PrimitiveType>(rightType);
+
 		if (leftPrim->kind() != rightPrim->kind()) {
-			// TODO: convert type
+			Error(Location(), "binary operand is not same numberic type");
+			return Result::Error;
 		}
+
 		switch (leftPrim->kind()) {
 		case PrimitiveType::I32:
 			typ = BinaryOprandType::I32;
@@ -445,33 +526,12 @@ public:
 		errors.emplace_back(ErrorLevel::Error, loc, buffer);
 	}
 
-
-  wabt::Type::Enum toWasmType(Type *typ) {
-    // TODO: complete wasm type
-		if (auto pt = cast<PrimitiveType>(typ)) {
-      if (pt->isI32()) {
-        return wabt::Type::I32;
-      } else if (pt->isI64()) {
-				return wabt::Type::I64;
-//      } else if (pt->isUnit()) {
-//        return wabt::Type::Void;
-      } else if (pt->isF32()) {
-        return wabt::Type::F32;
-      } else if (pt->isF64()) {
-        return wabt::Type::F64;
-      } else {
-        UNREACHABLE("can't find backend data type");
-      }
-		} else {
-      UNREACHABLE("can't find backend data type");
-    }
-  }
-
 	std::unique_ptr<wabt::Module> module;
 	wabt::ExprList                exprs;
 	wabt::Func*                   func;
 	Type*                         exprType;
-	SymTab<int>                   constStringSymTab = 0;
+	SymTab                        symTab;
+	StringPool<int>               stringPool;
 	Errors&                       errors;
 };
 

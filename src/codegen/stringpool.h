@@ -10,17 +10,17 @@ namespace dp {
 namespace internal {
 
 template <class T>
-class SymTab {
+class StringPool {
 public:
 	std::unordered_map<std::string, T> table;
 	std::vector<uint8_t>               data;
 	int                                offset;
 
-	SymTab()
+	StringPool()
 			: offset(0) {
 	}
 
-	SymTab(int offset)
+	StringPool(int offset)
 			: offset(offset) {
 	}
 

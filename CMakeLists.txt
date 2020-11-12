@@ -64,10 +64,12 @@ function (deeplang_executable)
         src/ast/type.cpp
         src/codegen/codegen.h
         src/codegen/codegen.cpp
+        src/codegen/symtab.h
+        src/codegen/symtab.cpp
+        src/codegen/stringpool.h
+        src/codegen/stringpool.cpp
         src/parsing/parsing.h
         src/parsing/parsing.cpp
-        src/parsing/symtab.h
-        src/parsing/symtab.cpp
         src/utils/cast.h
         src/utils/error.h
         src/utils/error-formatter.h

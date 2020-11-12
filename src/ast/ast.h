@@ -131,7 +131,7 @@ public:
 	}
 
 	Identifier                  id;
-	Type*                       vartype;
+	Type*                       typ;
 	std::unique_ptr<Expression> init;
 };
 
@@ -142,12 +142,11 @@ public:
 	Param(Identifier id)
 			: id(id) {
 	}
-	Identifier            id;
-	Type*                 typ;
+	Identifier id;
+	Type*      typ;
 };
 
-typedef std::unique_ptr<Param> ParamPtr;
-typedef std::vector<ParamPtr>  ParamVector;
+typedef std::vector<Param>  ParamVector;
 
 class FunctionDeclaration : public StatementMixin<StatementKind::FunctionDeclaration> {
 public:
@@ -233,12 +232,12 @@ enum class BinaryOperator {
 	Div,
 	BitwiseAnd,
 	BitwiseOr,
-    Eq,
-    Neq,
-    GT,
-    GE,
-    LT,
-    LE,
+	Eq,
+	Neq,
+	GT,
+	GE,
+	LT,
+	LE,
 };
 
 class BinaryExpression : public ExpressionMixin<ExpressionKind::Binary> {
@@ -357,7 +356,7 @@ public:
 	}
 
 	std::unique_ptr<ConditionExpression> condition;
-	std::unique_ptr<BlockExpression>      then_branch;   
+	std::unique_ptr<BlockExpression>     then_branch;
 	std::unique_ptr<ElseExpression>      else_branch;
 };
 
@@ -371,7 +370,7 @@ class WhileExpression : public ExpressionMixin<ExpressionKind::While> {
 	}
 
 	std::unique_ptr<ConditionExpression> condition;
-	std::unique_ptr<BlockExpression>      body;
+	std::unique_ptr<BlockExpression>     body;
 };
 
 // class ForExpression : public ExpressionMixin<ExpressionKind::For> {

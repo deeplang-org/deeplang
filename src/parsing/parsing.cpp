@@ -23,11 +23,11 @@ antlrcpp::Any Parser::visitExpressionStatement(DLParser::ExpressionStatementCont
 		ExpressionStatement* stmt = new ExpressionStatement();
 		stmt->expr                = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
 		return stmt;
-	}else if(context->ifExpression()) {
-        ExpressionStatement* ifexpr = new ExpressionStatement();
-        ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
-        return ifexpr;
-    } else {
+	} else if (context->ifExpression()) {
+		ExpressionStatement* ifexpr = new ExpressionStatement();
+		ifexpr                      = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
+		return ifexpr;
+	} else {
 		UNREACHABLE("visitExpressionStatement");
 	}
 }
@@ -47,7 +47,7 @@ antlrcpp::Any Parser::visitExpressionList(DLParser::ExpressionListContext* conte
 
 antlrcpp::Any Parser::visitBlockExpression(DLParser::BlockExpressionContext* context) {
 	ExpressionStatement* be = new ExpressionStatement();
-	BlockExpression*      e  = new BlockExpression();
+	BlockExpression*     e  = new BlockExpression();
 
 	std::vector<Statement*>* stmts = visit(context->statements());
 	for (auto stm : *stmts) {
@@ -93,19 +93,19 @@ antlrcpp::Any Parser::visitUnblockExpression(DLParser::UnblockExpressionContext*
 				op = BinaryOperator::Mult;
 			} else if (context->DIV_OPERATOR()) {
 				op = BinaryOperator::Div;
-			}else if(context->GREATER_THAN_OPERATOR()) {
-                op = BinaryOperator::GT; 
-            }else if(context->GREATER_OR_EQUAL_OPERATOR()) {
-                op = BinaryOperator::GE; 
-            }else if(context->LESS_THAN_OPERATOR()) {
-                op = BinaryOperator::LT; 
-            }else if(context->LESS_OR_EQUAL_OPERATOR()) {
-                op = BinaryOperator::LE; 
-            }else if(context->EQUAL_OPERATOR()) {
-                op = BinaryOperator::Eq; 
-            }else if(context->NOT_EQUAL_OPERATOR()) {
-                op = BinaryOperator::Neq; 
-            }else {
+			} else if (context->GREATER_THAN_OPERATOR()) {
+				op = BinaryOperator::GT;
+			} else if (context->GREATER_OR_EQUAL_OPERATOR()) {
+				op = BinaryOperator::GE;
+			} else if (context->LESS_THAN_OPERATOR()) {
+				op = BinaryOperator::LT;
+			} else if (context->LESS_OR_EQUAL_OPERATOR()) {
+				op = BinaryOperator::LE;
+			} else if (context->EQUAL_OPERATOR()) {
+				op = BinaryOperator::Eq;
+			} else if (context->NOT_EQUAL_OPERATOR()) {
+				op = BinaryOperator::Neq;
+			} else {
 				UNREACHABLE("unsupport operator");
 			}
 			BinaryExpression* be    = new BinaryExpression(op);
@@ -121,30 +121,28 @@ antlrcpp::Any Parser::visitUnblockExpression(DLParser::UnblockExpressionContext*
 	}
 }
 
-antlrcpp::Any Parser::visitIfExpression(DLParser::IfExpressionContext* context){
-    ExpressionStatement* es = new ExpressionStatement();  
-    IfExpression* ifexpr = new IfExpression();
-    ifexpr->condition = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
-    ifexpr->then_branch = std::unique_ptr<BlockExpression>
-        (static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get()));
-    if(context->elseExpression()) {
-        ifexpr->else_branch = std::unique_ptr<Expression>
-           (static_cast<Expression*>((static_cast<ExpressionStatement*>(visit(context->elseExpression()))->expr).get())); 
-    }
-    es->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ifexpr));
-    return es;
+antlrcpp::Any Parser::visitIfExpression(DLParser::IfExpressionContext* context) {
+	ExpressionStatement* es     = new ExpressionStatement();
+	IfExpression*        ifexpr = new IfExpression();
+	ifexpr->condition           = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
+	ifexpr->then_branch         = std::unique_ptr<BlockExpression>(static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get()));
+	if (context->elseExpression()) {
+		ifexpr->else_branch = std::unique_ptr<Expression>(static_cast<Expression*>((static_cast<ExpressionStatement*>(visit(context->elseExpression()))->expr).get()));
+	}
+	es->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ifexpr));
+	return es;
 }
 
-antlrcpp::Any Parser::visitElseExpression(DLParser::ElseExpressionContext* context){
-    ExpressionStatement* ifexpr = new ExpressionStatement();
-    if(context->ifExpression()){  // else if
-        ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
-    }else {   //  else
-        BlockExpression* be = new BlockExpression();
-        be = static_cast<BlockExpression*>(visit(context->blockExpression()));
-        ifexpr->expr = std::unique_ptr<Expression>(static_cast<Expression*>(be));
-    }
-    return ifexpr;
+antlrcpp::Any Parser::visitElseExpression(DLParser::ElseExpressionContext* context) {
+	ExpressionStatement* ifexpr = new ExpressionStatement();
+	if (context->ifExpression()) { // else if
+		ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
+	} else { //  else
+		BlockExpression* be = new BlockExpression();
+		be                  = static_cast<BlockExpression*>(visit(context->blockExpression()));
+		ifexpr->expr        = std::unique_ptr<Expression>(static_cast<Expression*>(be));
+	}
+	return ifexpr;
 }
 
 antlrcpp::Any Parser::visitTupleType(DLParser::TupleTypeContext* context) {
@@ -170,11 +168,11 @@ antlrcpp::Any Parser::visitParam(DLParser::ParamContext* context) {
 }
 
 antlrcpp::Any Parser::visitParamList(DLParser::ParamListContext* context) {
-	std::vector<Param*>*                 params    = new std::vector<Param*>();
+	ParamVector*                         params    = new ParamVector();
 	std::vector<DLParser::ParamContext*> paramsCtx = context->param();
 	for (auto paramCtx : paramsCtx) {
 		Param* p = visit(paramCtx);
-		params->push_back(p);
+		params->push_back(*p);
 	}
 	return params;
 }
@@ -191,24 +189,21 @@ antlrcpp::Any Parser::visitFunctionDecl(DLParser::FunctionDeclContext* context) 
 	FunctionDeclaration* decl = new FunctionDeclaration(context->IDENTIFIER()->getText());
 	decl->body                = std::unique_ptr<ExpressionStatement>(
       static_cast<ExpressionStatement*>(visit(context->blockExpression())));
-	std::vector<Param*>* params = visit(context->paramList());
+	ParamVector* params = visit(context->paramList());
 
 	Type*          t       = visit(context->type());
 	PrimitiveType* retType = static_cast<PrimitiveType*>(t);
-//	ft->Result             = std::unique_ptr<Type>(retType);
+	//	ft->Result             = std::unique_ptr<Type>(retType);
 	TypeVector paramVec;
-	for (auto param : *params) {
-		paramVec.emplace_back(param->typ);
+	for (auto& param : *params) {
+		paramVec.emplace_back(param.typ);
 	}
-	auto  ft      = FunctionType::MakeType(paramVec, retType);
-
+	auto ft = FunctionType::MakeType(paramVec, retType);
 
 	decl->signature = ft;
-
-	for (auto p : *params) {
-		decl->params.emplace_back(std::unique_ptr<Param>(p));
-	}
+	decl->params.swap(*params);
 	delete params;
+
 	decl->isPublic = true;
 	return static_cast<Statement*>(decl);
 }
@@ -227,7 +222,7 @@ antlrcpp::Any Parser::visitStatement(DLParser::StatementContext* context) {
 	if (context->decl()) {
 		return static_cast<Statement*>(visit(context->decl()));
 	} else if (context->expressionStatement()) {
-        auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
+		auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
 		return static_cast<Statement*>(es);
 	} else {
 		UNREACHABLE("visitStatement");
@@ -262,14 +257,14 @@ Module* Parser::parseModule(antlr4::ANTLRInputStream sourceStream) {
 	antlr4::CommonTokenStream tokens(&lexer);
 
 	tokens.fill();
-    for (auto token : tokens.getTokens()) {
-        std::cout << token->toString() << std::endl;
-    }
+	for (auto token : tokens.getTokens()) {
+		std::cout << token->toString() << std::endl;
+	}
 
 	DLParser                 parser(&tokens);
 	antlr4::tree::ParseTree* tree = parser.module();
 
-    std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
+	std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
 	Module* module = visit(tree);
 	return module;
 }
