@@ -13,13 +13,13 @@ TEST(testCase, codegen) {
 	auto mainFunc = std::make_unique<FunctionDeclaration>("main");
 
 	TypeVector params;
-	auto sig            = FunctionType::MakeType(params, Type::Unit());
+	auto       sig      = FunctionType::MakeType(params, Type::Unit());
 	mainFunc->signature = std::move(sig);
 
 	auto mainFuncBody = std::make_unique<BlockExpression>();
 
-	auto var1Decl     = std::make_unique<VariableDeclaration>("var");
-	var1Decl->vartype = Type::I32();
+	auto var1Decl = std::make_unique<VariableDeclaration>("var");
+	var1Decl->typ = Type::I32();
 
 	auto addExp   = std::make_unique<BinaryExpression>(BinaryOperator::Plus);
 	addExp->left  = std::make_unique<LiteralExpression>(1);
