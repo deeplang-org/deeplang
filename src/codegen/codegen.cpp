@@ -14,6 +14,9 @@ namespace dp {
 namespace internal {
 
 static bool toWasmType(Type* typ, wabt::Type& wtyp) {
+	if (! typ) {
+		return false;
+	}
 	if (auto ptype = dyn_cast<PrimitiveType>(typ)) {
 		switch (ptype->kind()) {
 		case PrimitiveType::I32:
@@ -167,7 +170,7 @@ public:
 			if (toWasmType(param.typ, ltyp)) {
 				func->local_types.AppendDecl(ltyp, 1);
 			} else {
-				Error(Location(), "toWasmType");
+				Error(Location(), "visitFunction toWasmType");
 				return Result::Error;
 			}
 			symTab.addSym(param.id.name, index, param.typ);
@@ -228,7 +231,7 @@ public:
 
 		wabt::Type type;
 		if (!toWasmType(varDecl->typ, type)) {
-			Error(Location(), "toWasmType");
+			Error(Location(), "visitVariableDeclaration toWasmType");
 			return Result::Error;
 		}
 

@@ -4,6 +4,7 @@
 #include "codegen/codegen.h"
 #include "parsing/parsing.h"
 #include "vm/vm_interface.h"
+#include "utils/error-formatter.h"
 
 #include <fstream>
 #include <iostream>
@@ -72,12 +73,16 @@ int main(int argc, char** argv) {
 	Errors               errors;
 	auto result = CodeGen::GenerateWasmToFile(module, s_outfile, errors);
 	if (!result) {
+		auto mesg = FormatErrorsToString(errors);
+		std::cout << mesg;
 		return -1;
 	}
 
 	std::vector<uint8_t> buffer;
 	result = CodeGen::GenerateWasm(module, buffer, errors);
 	if (!result) {
+		auto mesg = FormatErrorsToString(errors);
+		std::cout << mesg;
 		return -1;
 	}
 	

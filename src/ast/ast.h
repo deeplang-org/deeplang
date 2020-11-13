@@ -12,8 +12,7 @@ public:
 	ASTNode(const Location& loc = Location())
 			: loc(loc) {
 	}
-	~ASTNode() {
-	}
+
 	std::string toString() const;
 	Location    loc;
 };
@@ -25,8 +24,7 @@ public:
 	Identifier(const std::string& name)
 			: name(name) {
 	}
-	~Identifier() {
-	}
+
 	std::string toString() const {
 		return "Identifier";
 	}
@@ -42,8 +40,6 @@ class Module : public ASTNode {
 public:
 	Module(std::string name, const Location& loc = Location())
 			: ASTNode(loc), id(name) {
-	}
-	~Module() {
 	}
 
 	std::string toString() const {
@@ -121,9 +117,7 @@ public:
 class VariableDeclaration : public StatementMixin<StatementKind::VariableDeclaration> {
 public:
 	VariableDeclaration(std::string name, const Location& loc = Location())
-			: StatementMixin<StatementKind::VariableDeclaration>(loc), id(name) {
-	}
-	~VariableDeclaration() {
+			: StatementMixin<StatementKind::VariableDeclaration>(loc), id(name), typ(nullptr) {
 	}
 
 	std::string toString() const {
@@ -140,20 +134,21 @@ class BlockExpression;
 class Param {
 public:
 	Param(Identifier id)
-			: id(id) {
+			: id(id), typ(nullptr) {
 	}
 	Identifier id;
 	Type*      typ;
 };
 
-typedef std::vector<Param>  ParamVector;
+typedef std::vector<Param> ParamVector;
 
 class FunctionDeclaration : public StatementMixin<StatementKind::FunctionDeclaration> {
 public:
 	FunctionDeclaration(std::string name, const Location& loc = Location())
-			: StatementMixin<StatementKind::FunctionDeclaration>(loc), id(name), isPublic(true) {
-	}
-	~FunctionDeclaration() {
+			: StatementMixin<StatementKind::FunctionDeclaration>(loc),
+				id(name),
+				isPublic(true),
+				signature(nullptr) {
 	}
 
 	std::string toString() const {
