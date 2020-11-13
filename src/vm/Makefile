@@ -1,7 +1,7 @@
 # 指令编译器和选项
 CC=gcc
 CFLAGS=-Wall -std=gnu99
- 
+
 # 目标文件
 TARGET=wasmvm
 SRCS = wasm_c_api.c\
@@ -28,15 +28,16 @@ SRCS = wasm_c_api.c\
 	   bh_list.c\
 	   bh_log.c\
 	   bh_common.c\
-	   bh_assert.c
+	   bh_assert.c\
+	   ./include/random/xoroshiro128plus.c
 INC = -I./include
 OBJS = $(SRCS:.c=.o)
 
 $(TARGET):$(OBJS)
 	$(CC) -o $@ $^ -lpthread -lm
- 
+
 clean:
 	rm -rf $(TARGET) $(OBJS)
- 
+
 %.o:%.c
 	$(CC) $(CFLAGS) $(INC) -o $@ -c -g $<
