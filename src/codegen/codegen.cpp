@@ -277,6 +277,8 @@ public:
 			return visitBlockExpression(static_cast<BlockExpression*>(expr));
 		case ExpressionKind::Call:
 			return visitCallExpression(static_cast<CallExpression*>(expr));
+		case ExpressionKind::If:
+			return visitIfExpression(static_cast<IfExpression*>(expr));
 		default:
 			UNREACHABLE("visitExpression");
 		}
@@ -514,6 +516,10 @@ public:
 			break;
 		}
 		exprs.push_back(std::move(expr));
+		return Result::Ok;
+	}
+
+	Result visitIfExpression(IfExpression* expr){
 		return Result::Ok;
 	}
 

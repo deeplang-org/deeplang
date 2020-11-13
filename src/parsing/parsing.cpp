@@ -181,6 +181,8 @@ antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) 
 	VariableDeclaration* v     = new VariableDeclaration(context->IDENTIFIER()->getText());
 	ExpressionStatement* estmt = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
 	v->init                    = std::move(estmt->expr);
+	PrimitiveType* t           = visit(context->type());
+	v->typ                     = static_cast<PrimitiveType*>(t);
 	delete estmt;
 	return static_cast<Statement*>(v);
 }
