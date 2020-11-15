@@ -29,6 +29,7 @@ SRCS = wasm_c_api.c\
 	   bh_log.c\
 	   bh_common.c\
 	   bh_assert.c\
+	   deep_mem_alloc.c\
 	   ./include/random/xoroshiro128plus.c
 INC = -I./include
 OBJS = $(SRCS:.c=.o)
