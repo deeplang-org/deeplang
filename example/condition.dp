@@ -5,6 +5,8 @@ fun main () -> () {
             let d : i32 = puts("d");
         }else if b == 34{
             let e : i32 = puts("e");
+        }else {
+            let f : i32 = puts("f");
         }
 
         let b : i32 = 34;
