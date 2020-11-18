@@ -129,7 +129,7 @@ antlrcpp::Any Parser::visitIfExpression(DLParser::IfExpressionContext* context) 
 	if (context->elseExpression()) {
 		ifexpr->else_branch = std::unique_ptr<Expression>(static_cast<Expression*>((static_cast<ExpressionStatement*>(visit(context->elseExpression()))->expr).get()));
 	}
-	es->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ifexpr));
+    es->expr = std::unique_ptr<IfExpression>(ifexpr);
 	return es;
 }
 
@@ -139,7 +139,7 @@ antlrcpp::Any Parser::visitElseExpression(DLParser::ElseExpressionContext* conte
 		ifexpr = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
 	} else { //  else
 		BlockExpression* be = new BlockExpression();
-		be                  = static_cast<BlockExpression*>(visit(context->blockExpression()));
+		be                  = static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get());
 		ifexpr->expr        = std::unique_ptr<Expression>(static_cast<Expression*>(be));
 	}
 	return ifexpr;

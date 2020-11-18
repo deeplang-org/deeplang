@@ -14,7 +14,7 @@ namespace dp {
 namespace internal {
 
 static bool toWasmType(Type* typ, wabt::Type& wtyp) {
-	if (! typ) {
+	if (!typ) {
 		return false;
 	}
 	if (auto ptype = dyn_cast<PrimitiveType>(typ)) {
@@ -287,6 +287,42 @@ public:
 		}
 	}
 
+	Result visitElseExpression(Expression* elseExpr) {
+		wabt::Location loc;
+		if (elseExpr->kind() == ExpressionKind::If) { // else if
+			return visitIfExpression(static_cast<IfExpression*>(elseExpr));
+		} else if (elseExpr->kind() == ExpressionKind::Block) { // else
+			return visitBlockExpression(static_cast<BlockExpression*>(elseExpr));
+		}
+		return Result::Ok;
+	}
+
+	Result visitIfExpression(IfExpression* ifexpr) {
+		wabt::Location                loc;
+		std::unique_ptr<wabt::IfExpr> expr = std::make_unique<wabt::IfExpr>(loc);
+
+		Expression* cond = ifexpr->condition.get();
+
+		expr->true_.label = "ifExpr";
+		//TODO expr->true_->decl   //FunctionDeclaration
+        
+		if (Failed(visitBlockExpression(ifexpr->then_branch.get()))) {
+			return Result::Error;
+		}
+		expr->true_.exprs.swap(exprs);
+
+		if (ifexpr->else_branch.get()) { //else
+			if (Failed(visitElseExpression(ifexpr->else_branch.get()))) {
+				return Result::Error;
+			}
+		}
+		expr->false_.swap(exprs);
+
+		/*======exprType*/
+		exprs.push_back(std::move(expr));
+		return Result::Ok;
+	}
+
 	Result visitCallExpression(CallExpression* methodCall) {
 		wabt::Location loc;
 		for (auto& param : methodCall->params) {
@@ -519,10 +555,6 @@ public:
 			break;
 		}
 		exprs.push_back(std::move(expr));
-		return Result::Ok;
-	}
-
-	Result visitIfExpression(IfExpression* expr){
 		return Result::Ok;
 	}
 
