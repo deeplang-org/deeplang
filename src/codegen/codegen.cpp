@@ -441,6 +441,15 @@ public:
 		F64
 	};
 
+	struct BinaryOpHasher {
+		size_t operator()(const std::pair<BinaryOperator, BinaryOprandType>& p) const {
+			size_t hash = 2u;
+			hash ^= static_cast<size_t>(p.first) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+			hash ^= static_cast<size_t>(p.second) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+			return hash;
+		}
+	};
+
 	Result visitBinaryExpression(BinaryExpression* bin) {
 		wabt::Location              loc;
 		std::unique_ptr<wabt::Expr> expr;
@@ -489,88 +498,19 @@ public:
 			UNREACHABLE("visitBinaryExpression");
 		}
 
-		switch (bin->op) {
-		case BinaryOperator::Plus:
-			switch (typ) {
-			case BinaryOprandType::I32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Add, loc);
-				exprType = Type::I32();
-				break;
-			case BinaryOprandType::I64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64Add, loc);
-				exprType = Type::I64();
-				break;
-			case BinaryOprandType::F32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Add, loc);
-				exprType = Type::F32();
-				break;
-			case BinaryOprandType::F64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Add, loc);
-				exprType = Type::F64();
-				break;
-			}
-			break;
-		case BinaryOperator::Minus:
-			switch (typ) {
-			case BinaryOprandType::I32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Sub, loc);
-				exprType = Type::I32();
-				break;
-			case BinaryOprandType::I64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64Sub, loc);
-				exprType = Type::I64();
-				break;
-			case BinaryOprandType::F32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Sub, loc);
-				exprType = Type::F32();
-				break;
-			case BinaryOprandType::F64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Sub, loc);
-				exprType = Type::F64();
-				break;
-			}
-			break;
-		case BinaryOperator::Mult:
-			switch (typ) {
-			case BinaryOprandType::I32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32Mul, loc);
-				exprType = Type::I32();
-				break;
-			case BinaryOprandType::I64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64Mul, loc);
-				exprType = Type::I64();
-				break;
-			case BinaryOprandType::F32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Mul, loc);
-				exprType = Type::F32();
-				break;
-			case BinaryOprandType::F64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Mul, loc);
-				exprType = Type::F64();
-				break;
-			}
-			break;
-		case BinaryOperator::Div:
-			switch (typ) {
-			case BinaryOprandType::I32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I32DivS, loc);
-				exprType = Type::I32();
-				break;
-			case BinaryOprandType::I64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::I64DivS, loc);
-				exprType = Type::I64();
-				break;
-			case BinaryOprandType::F32:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F32Div, loc);
-				exprType = Type::F32();
-				break;
-			case BinaryOprandType::F64:
-				expr     = std::make_unique<wabt::BinaryExpr>(wabt::Opcode::F64Div, loc);
-				exprType = Type::F64();
-				break;
-			}
-			break;
-		}
+#define BIN_OPCODE(binOp, binType, wOp, retType) { std::make_pair(binOp, binType), std::make_pair(wOp, retType) },
+
+		static std::unordered_map<std::pair<BinaryOperator, BinaryOprandType>,
+															std::pair<wabt::Opcode::Enum, Type*>,
+															BinaryOpHasher>
+				binaryTable = {
+#include "binaryop.def"
+				};
+
+		auto ret = binaryTable[std::make_pair(bin->op, typ)];
+		expr     = std::make_unique<wabt::BinaryExpr>(ret.first, loc);
+		exprType = ret.second;
+
 		exprs.push_back(std::move(expr));
 		return Result::Ok;
 	}

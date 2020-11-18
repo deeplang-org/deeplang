@@ -1,0 +1,49 @@
+BIN_OPCODE(BinaryOperator::Plus, BinaryOprandType::I32, wabt::Opcode::I32Add, Type::I32())
+BIN_OPCODE(BinaryOperator::Plus, BinaryOprandType::I64, wabt::Opcode::I64Add, Type::I64())
+BIN_OPCODE(BinaryOperator::Plus, BinaryOprandType::F32, wabt::Opcode::F32Add, Type::F32())
+BIN_OPCODE(BinaryOperator::Plus, BinaryOprandType::F64, wabt::Opcode::F64Add, Type::F64())
+
+BIN_OPCODE(BinaryOperator::Minus, BinaryOprandType::I32, wabt::Opcode::I32Sub, Type::I32())
+BIN_OPCODE(BinaryOperator::Minus, BinaryOprandType::I64, wabt::Opcode::I64Sub, Type::I64())
+BIN_OPCODE(BinaryOperator::Minus, BinaryOprandType::F32, wabt::Opcode::F32Sub, Type::F32())
+BIN_OPCODE(BinaryOperator::Minus, BinaryOprandType::F64, wabt::Opcode::F64Sub, Type::F64())
+
+BIN_OPCODE(BinaryOperator::Mult, BinaryOprandType::I32, wabt::Opcode::I32Mul, Type::I32())
+BIN_OPCODE(BinaryOperator::Mult, BinaryOprandType::I64, wabt::Opcode::I64Mul, Type::I64())
+BIN_OPCODE(BinaryOperator::Mult, BinaryOprandType::F32, wabt::Opcode::F32Mul, Type::F32())
+BIN_OPCODE(BinaryOperator::Mult, BinaryOprandType::F64, wabt::Opcode::F64Mul, Type::F64())
+
+BIN_OPCODE(BinaryOperator::Div, BinaryOprandType::I32, wabt::Opcode::I32DivS, Type::I32())
+BIN_OPCODE(BinaryOperator::Div, BinaryOprandType::I64, wabt::Opcode::I64DivS, Type::I64())
+BIN_OPCODE(BinaryOperator::Div, BinaryOprandType::F32, wabt::Opcode::F32Div, Type::F32())
+BIN_OPCODE(BinaryOperator::Div, BinaryOprandType::F64, wabt::Opcode::F64Div, Type::F64())
+
+BIN_OPCODE(BinaryOperator::Eq, BinaryOprandType::I32, wabt::Opcode::I32Eq, Type::I32())
+BIN_OPCODE(BinaryOperator::Eq, BinaryOprandType::I64, wabt::Opcode::I64Eq, Type::I32())
+BIN_OPCODE(BinaryOperator::Eq, BinaryOprandType::F32, wabt::Opcode::F32Eq, Type::I32())
+BIN_OPCODE(BinaryOperator::Eq, BinaryOprandType::F64, wabt::Opcode::F64Eq, Type::I32())
+
+BIN_OPCODE(BinaryOperator::Neq, BinaryOprandType::I32, wabt::Opcode::I32Ne, Type::I32())
+BIN_OPCODE(BinaryOperator::Neq, BinaryOprandType::I64, wabt::Opcode::I64Ne, Type::I32())
+BIN_OPCODE(BinaryOperator::Neq, BinaryOprandType::F32, wabt::Opcode::F32Ne, Type::I32())
+BIN_OPCODE(BinaryOperator::Neq, BinaryOprandType::F64, wabt::Opcode::F64Ne, Type::I32())
+
+BIN_OPCODE(BinaryOperator::GT, BinaryOprandType::I32, wabt::Opcode::I32GtS, Type::I32())
+BIN_OPCODE(BinaryOperator::GT, BinaryOprandType::I64, wabt::Opcode::I64GtS, Type::I32())
+BIN_OPCODE(BinaryOperator::GT, BinaryOprandType::F32, wabt::Opcode::F32Gt, Type::I32())
+BIN_OPCODE(BinaryOperator::GT, BinaryOprandType::F64, wabt::Opcode::F64Gt, Type::I32())
+
+BIN_OPCODE(BinaryOperator::GE, BinaryOprandType::I32, wabt::Opcode::I32GeS, Type::I32())
+BIN_OPCODE(BinaryOperator::GE, BinaryOprandType::I64, wabt::Opcode::I64GeS, Type::I32())
+BIN_OPCODE(BinaryOperator::GE, BinaryOprandType::F32, wabt::Opcode::F32Ge, Type::I32())
+BIN_OPCODE(BinaryOperator::GE, BinaryOprandType::F64, wabt::Opcode::F64Ge, Type::I32())
+
+BIN_OPCODE(BinaryOperator::LT, BinaryOprandType::I32, wabt::Opcode::I32LtS, Type::I32())
+BIN_OPCODE(BinaryOperator::LT, BinaryOprandType::I64, wabt::Opcode::I64LtS, Type::I32())
+BIN_OPCODE(BinaryOperator::LT, BinaryOprandType::F32, wabt::Opcode::F32Lt, Type::I32())
+BIN_OPCODE(BinaryOperator::LT, BinaryOprandType::F64, wabt::Opcode::F64Lt, Type::I32())
+
+BIN_OPCODE(BinaryOperator::LE, BinaryOprandType::I32, wabt::Opcode::I32LeS, Type::I32())
+BIN_OPCODE(BinaryOperator::LE, BinaryOprandType::I64, wabt::Opcode::I64LeS, Type::I32())
+BIN_OPCODE(BinaryOperator::LE, BinaryOprandType::F32, wabt::Opcode::F32Le, Type::I32())
+BIN_OPCODE(BinaryOperator::LE, BinaryOprandType::F64, wabt::Opcode::F64Le, Type::I32())

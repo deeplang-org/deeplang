@@ -101,8 +101,8 @@ PrimitiveType* PrimitiveType::MakeType(const std::string& typName) {
 }
 
 struct TypeVectorHasher {
-	int operator()(const TypeVector& V) const {
-		int hash = V.size();
+	size_t operator()(const TypeVector& V) const {
+		size_t hash = V.size();
 		for (auto& t : V) {
 			auto i = reinterpret_cast<intptr_t>(t);
 			hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
