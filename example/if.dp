@@ -1,5 +1,5 @@
 fun main () -> () {
     if a == 4 {
-      puts("a = 4");
+    let a : i32 =  puts("a = 4");
     }
 }

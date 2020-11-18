@@ -288,7 +288,7 @@ fragment DOUBLE_QUOTE: '"';
 
 // TODO: right?
 QUOTED_STRING:
-        DOUBLE_QUOTE (LETTER_WHEN_UNQUOTED | WHITESPACE)+ DOUBLE_QUOTE
+        DOUBLE_QUOTE .*? DOUBLE_QUOTE
 ;
 
 // There are 3 types of block comments:
