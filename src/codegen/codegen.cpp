@@ -271,28 +271,29 @@ public:
 	Result visitExpression(Expression* expr) {
 		switch (expr->kind()) {
 		case ExpressionKind::Literal:
-			return visitLiteralExpression(static_cast<LiteralExpression*>(expr));
+			return visitLiteralExpression(cast<LiteralExpression>(expr));
 		case ExpressionKind::Path:
-			return visitPathExpression(static_cast<PathExpression*>(expr));
+			return visitPathExpression(cast<PathExpression>(expr));
 		case ExpressionKind::Binary:
-			return visitBinaryExpression(static_cast<BinaryExpression*>(expr));
+			return visitBinaryExpression(cast<BinaryExpression>(expr));
 		case ExpressionKind::Block:
-			return visitBlockExpression(static_cast<BlockExpression*>(expr));
+			return visitBlockExpression(cast<BlockExpression>(expr));
 		case ExpressionKind::Call:
-			return visitCallExpression(static_cast<CallExpression*>(expr));
+			return visitCallExpression(cast<CallExpression>(expr));
 		case ExpressionKind::If:
-			return visitIfExpression(static_cast<IfExpression*>(expr));
+			return visitIfExpression(cast<IfExpression>(expr));
 		default:
 			UNREACHABLE("visitExpression");
 		}
 	}
 
-	Result visitElseExpression(Expression* elseExpr) {
-		wabt::Location loc;
+	Result visitElseExpression(ElseExpression* elseExpr) {
 		if (elseExpr->kind() == ExpressionKind::If) { // else if
-			return visitIfExpression(static_cast<IfExpression*>(elseExpr));
+			return visitIfExpression(cast<IfExpression>(elseExpr));
 		} else if (elseExpr->kind() == ExpressionKind::Block) { // else
-			return visitBlockExpression(static_cast<BlockExpression*>(elseExpr));
+			return visitBlockExpression(cast<BlockExpression>(elseExpr));
+		} else {
+			UNREACHABLE("visitElseExpression");
 		}
 		return Result::Ok;
 	}
@@ -301,24 +302,40 @@ public:
 		wabt::Location                loc;
 		std::unique_ptr<wabt::IfExpr> expr = std::make_unique<wabt::IfExpr>(loc);
 
-		Expression* cond = ifexpr->condition.get();
+		// FIXME: restrict conditonExpr
+		visitExpression(ifexpr->condition.get());
+		auto pt = dyn_cast<PrimitiveType>(exprType);
+		if (!pt || !pt->isI32()) {
+			Error(Location(), "conditonExpr is not i32 type");
+			return Result::Error;
+		}
 
 		expr->true_.label = "ifExpr";
-		//TODO expr->true_->decl   //FunctionDeclaration
-        
+
 		if (Failed(visitBlockExpression(ifexpr->then_branch.get()))) {
 			return Result::Error;
 		}
 		expr->true_.exprs.swap(exprs);
+		Type* thenType = exprType;
 
-		if (ifexpr->else_branch.get()) { //else
+		if (ifexpr->else_branch) { //else
 			if (Failed(visitElseExpression(ifexpr->else_branch.get()))) {
 				return Result::Error;
 			}
 		}
 		expr->false_.swap(exprs);
+		Type* elseType = exprType;
 
-		/*======exprType*/
+		if (!Type::IsSame(thenType, elseType)) {
+			Error(Location(), "thenExpr and elseExpr is not same type");
+			return Result::Error;
+		}
+
+		TypeVector voidVector;
+		auto       blockType = Type::Func(voidVector, thenType);
+		functypet2funcsig(cast<FunctionType>(blockType), expr->true_.decl.sig);
+		appendTypeField(expr->true_.decl.sig);
+
 		exprs.push_back(std::move(expr));
 		return Result::Ok;
 	}
