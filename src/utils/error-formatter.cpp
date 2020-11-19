@@ -13,12 +13,12 @@ std::string FormatError(const Error& error,
 	//result += color.MaybeBoldCode();
 
 	const Location& loc = error.loc;
-	if (!loc.fileName.empty()) {
-		result += loc.fileName;
-		result += ":";
-	}
+//	if (!loc.fileName.empty()) {
+//		result += loc.fileName;
+//		result += ":";
+//	}
 
-	result += StringPrintf("%d:%d: ", loc.line, loc.firstColumn);
+	result += StringPrintf("%d:%d: ", loc.range.start, loc.range.start.character);
 
 	//result += color.MaybeRedCode();
 	result += GetErrorLevelName(error.level);
