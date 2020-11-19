@@ -15,11 +15,40 @@ namespace dp {
 		exit(1);                                             \
 	} while (0)
 
+struct Position {
+  size_t line = 0;
+  size_t character = 0;
+  bool operator==(const Position &o) const {
+    return line == o.line && character == o.character;
+  }
+  bool operator<(const Position &o) const {
+    return line != o.line ? line < o.line : character < o.character;
+  }
+  bool operator<=(const Position &o) const {
+    return line != o.line ? line < o.line : character <= o.character;
+  }
+  std::string toString() const;
+};
+
+struct Range {
+  Position start;
+  Position end;
+  bool operator==(const Range &o) const {
+    return start == o.start && end == o.end;
+  }
+  bool operator<(const Range &o) const {
+    return !(start == o.start) ? start < o.start : end < o.end;
+  }
+  bool includes(const Range &o) const {
+    return start <= o.start && o.end <= end;
+  }
+  bool intersects(const Range &o) const {
+    return start < o.end && o.start < end;
+  }
+};
+
 struct Location {
-	std::string  fileName;
-	unsigned int line;
-	unsigned int firstColumn;
-	unsigned int lastColumn;
+  Range range;
 };
 
 inline std::string StringPrintf(const char* format, ...) {

@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
 
 	Parser*                  parser = new Parser();
 	antlr4::ANTLRInputStream input(infile);
+	input.name = s_infile;
 
 	auto module = parser->parseModule(input);
 
