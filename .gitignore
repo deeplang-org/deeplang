@@ -5,5 +5,5 @@ out/
 dist/
 cmake-build-debug/
 .idea/
-gen/
+src/parsing/gen/
 **/*tags
