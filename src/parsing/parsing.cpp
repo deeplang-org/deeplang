@@ -69,11 +69,13 @@ antlrcpp::Any Parser::visitBlockExpression(DLParser::BlockExpressionContext* con
 	ExpressionStatement* be = new ExpressionStatement(makeLocation(context));
 	BlockExpression*     e  = new BlockExpression(makeLocation(context));
 
-	std::vector<Statement*>* stmts = visit(context->statements());
-	for (auto stm : *stmts) {
-		e->stmts.emplace_back(stm);
+	if (context->statements()) {
+    std::vector<Statement*>* stmts = visit(context->statements());
+    for (auto stm : *stmts) {
+      e->stmts.emplace_back(stm);
+    }
+    delete stmts;
 	}
-	delete stmts;
 	be->expr = std::unique_ptr<Expression>(static_cast<Expression*>(e));
 	return be;
 }
