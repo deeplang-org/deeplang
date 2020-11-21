@@ -29,7 +29,9 @@ private:
 
 	antlrcpp::Any visitIfExpression(DLParser::IfExpressionContext* context);
 
-    antlrcpp::Any visitElseExpression(DLParser::ElseExpressionContext *context);
+	antlrcpp::Any visitElseExpression(DLParser::ElseExpressionContext* context);
+
+	antlrcpp::Any visitCallExpression(DLParser::CallExpressionContext* context);
 
 	antlrcpp::Any visitTupleType(DLParser::TupleTypeContext* context);
 
