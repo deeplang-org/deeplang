@@ -34,10 +34,10 @@ std::string FormatError(const Error& error,
 	//}
 
 	//if (!source_line.line.empty()) {
-	result += indent_str;
+	// result += indent_str;
 	//result += source_line.line;
-	result += '\n';
-	result += indent_str;
+	// result += '\n';
+	// result += indent_str;
 
 	//size_t num_spaces = (loc.firstColumn - 1) - source_line.column_offset;
 	//size_t num_carets = loc.lastColumn - loc.firstColumn;
@@ -48,7 +48,7 @@ std::string FormatError(const Error& error,
 	//result += color.MaybeGreenCode();
 	//result.append(num_carets, '^');
 	//result += color.MaybeDefaultCode();
-	result += '\n';
+	// result += '\n';
 	//}
 
 	return result;

@@ -6,6 +6,7 @@
 #include "codegen/codegen.h"
 #include "codegen/symtab.h"
 #include "codegen/stringpool.h"
+#include "codegen/wat-writer.h"
 #include "utils/cast.h"
 #include "utils/error.h"
 #include "utils/result.h"
@@ -170,7 +171,7 @@ public:
 			if (toWasmType(param.typ, ltyp)) {
 				func->local_types.AppendDecl(ltyp, 1);
 			} else {
-				Error(Location(), "visitFunction toWasmType");
+				Error(funNode->loc, "visitFunction toWasmType");
 				return Result::Error;
 			}
 			symTab.addSym(param.id.name, index, param.typ);
@@ -182,17 +183,17 @@ public:
 
 		symTab.dropEnv();
 
-		if (exprType != nullptr) {
+		if (exprType != Type::Unit()) {
 			if (auto retType = dyn_cast<PrimitiveType>(funNode->signature->result())) {
 				if (retType->isUnit()) {
 					auto expr = std::make_unique<wabt::DropExpr>();
 					exprs.push_back(std::move(expr));
 				} else if (Type::IsSame(exprType, retType)) {
 					// TODO: Return
-					Error(Location(), "return");
+					Error(funNode->loc, "return");
 					return Result::Error;
 				} else {
-					Error(Location(), "return value is not same with return type");
+					Error(funNode->loc, "return value is not same with return type");
 					return Result::Error;
 				}
 			} else {
@@ -231,7 +232,7 @@ public:
 
 		wabt::Type type;
 		if (!toWasmType(varDecl->typ, type)) {
-			Error(Location(), "visitVariableDeclaration toWasmType");
+			Error(varDecl->loc, "visitVariableDeclaration toWasmType");
 			return Result::Error;
 		}
 
@@ -241,7 +242,7 @@ public:
 		visitExpression(varDecl->init.get());
 
 		if (!symTab.addSym(name, index, varDecl->typ)) {
-			Error(Location(), "declared variable '%s' is exists", name.c_str());
+			Error(varDecl->loc, "declared variable '%s' is exists", name.c_str());
 			return Result::Error;
 		}
 
@@ -249,7 +250,7 @@ public:
 		var.set_index(index);
 		auto expr = std::make_unique<wabt::LocalSetExpr>(var);
 		exprs.push_back(std::move(expr));
-		exprType = nullptr;
+		exprType = Type::Unit();
 		return Result::Ok;
 	}
 
@@ -258,10 +259,10 @@ public:
 			return Result::Error;
 		}
 		// Drop unused oprands in stack
-		if (!isLastStmt && exprType != nullptr) {
+		if (!isLastStmt && exprType != Type::Unit()) {
 			auto expr = std::make_unique<wabt::DropExpr>();
 			exprs.push_back(std::move(expr));
-			exprType = nullptr;
+			exprType = Type::Unit();
 		}
 		return Result::Ok;
 	}
@@ -306,28 +307,31 @@ public:
 		visitExpression(ifexpr->condition.get());
 		auto pt = dyn_cast<PrimitiveType>(exprType);
 		if (!pt || !pt->isI32()) {
-			Error(Location(), "conditonExpr is not i32 type");
+			Error(ifexpr->loc, "conditonExpr is not i32 type");
 			return Result::Error;
 		}
 
-		expr->true_.label = "ifExpr";
-
+		expr->true_.exprs.swap(exprs);
 		if (Failed(visitBlockExpression(ifexpr->then_branch.get()))) {
 			return Result::Error;
 		}
 		expr->true_.exprs.swap(exprs);
 		Type* thenType = exprType;
 
+		Type* elseType{};
 		if (ifexpr->else_branch) { //else
+			expr->false_.swap(exprs);
 			if (Failed(visitElseExpression(ifexpr->else_branch.get()))) {
 				return Result::Error;
 			}
+			expr->false_.swap(exprs);
+			elseType = exprType;
+		} else {
+			elseType = Type::Unit();
 		}
-		expr->false_.swap(exprs);
-		Type* elseType = exprType;
 
 		if (!Type::IsSame(thenType, elseType)) {
-			Error(Location(), "thenExpr and elseExpr is not same type");
+			Error(ifexpr->loc, "thenExpr and elseExpr is not same type");
 			return Result::Error;
 		}
 
@@ -357,11 +361,11 @@ public:
 			if (auto ftyp = dyn_cast<FunctionType>(typ)) {
 				exprType = ftyp->result();
 			} else {
-				Error(Location(), "symbol '%s' is not functype", pathExpr->id.name.c_str());
+				Error(methodCall->loc, "symbol '%s' is not functype", pathExpr->id.name.c_str());
 				return Result::Error;
 			}
 		} else {
-			Error(Location(), "method is not a pathexpr");
+			Error(methodCall->loc, "method is not a pathexpr");
 			return Result::Error;
 		}
 
@@ -418,7 +422,7 @@ public:
 		wabt::Var      var(ind, loc);
 
 		if (ind < 0) {
-			Error(Location(), "local variable `%s' is not found!", path->id.name.c_str());
+			Error(path->loc, "local variable `%s' is not found!", path->id.name.c_str());
 			return Result::Error;
 		}
 
@@ -426,8 +430,8 @@ public:
 				std::make_unique<wabt::LocalGetExpr>(var);
 		exprs.push_back(std::move(expr));
 		exprType = symTab.getSymType(path->id.name);
-		if (exprType == nullptr) {
-			Error(Location(), "local variable `%s' can't find type!", path->id.name.c_str());
+		if (exprType == Type::Unit()) {
+			Error(path->loc, "local variable `%s' can't find type!", path->id.name.c_str());
 			return Result::Error;
 		}
 
@@ -469,7 +473,7 @@ public:
 		BinaryOprandType typ{};
 
 		if (!leftType->isNumberic() || !rightType->isNumberic()) {
-			Error(Location(), "binary operand is not number");
+			Error(bin->loc, "binary operand is not number");
 			return Result::Error;
 		}
 
@@ -477,7 +481,7 @@ public:
 				 rightPrim = cast<PrimitiveType>(rightType);
 
 		if (leftPrim->kind() != rightPrim->kind()) {
-			Error(Location(), "binary operand is not same numberic type");
+			Error(bin->loc, "binary operand is not same numberic type");
 			return Result::Error;
 		}
 
@@ -515,33 +519,32 @@ public:
 		return Result::Ok;
 	}
 
-	WasmVisitor(Errors& errors)
-			: module(std::make_unique<wabt::Module>()), errors(errors) {
-	}
-
 	void Error(Location loc, const char* format, ...) {
 		WABT_SNPRINTF_ALLOCA(buffer, length, format);
 		errors.emplace_back(ErrorLevel::Error, loc, buffer);
 	}
 
-	std::unique_ptr<wabt::Module> module;
+	WasmVisitor(Errors& errors)
+			: errors(errors) {
+	}
+
+	std::unique_ptr<wabt::Module> module   = std::make_unique<wabt::Module>();
+	wabt::Func*                   func     = nullptr;
+	Type*                         exprType = Type::Unit();
 	wabt::ExprList                exprs;
-	wabt::Func*                   func;
-	Type*                         exprType;
 	SymTab                        symTab;
 	StringPool<int>               stringPool;
 	Errors&                       errors;
 };
 
-Result ValidateModule(wabt::Module* module) {
-	wabt::Errors          errors;
+Result ValidateModule(wabt::Module* module, Errors& errors) {
+	wabt::Errors          werrs;
 	wabt::ValidateOptions options;
 
-	auto result = wabt::ValidateModule(module, &errors, options);
+	auto result = wabt::ValidateModule(module, &werrs, options);
 	if (wabt::Failed(result)) {
-		std::cout << "Codegen Error: " << std::endl;
-		for (auto err : errors) {
-			std::cout << err.message << std::endl;
+		for (auto err : werrs) {
+			errors.emplace_back(ErrorLevel::Error, Location(), "[wabt validate] " + err.message);
 		}
 		return Result::Error;
 	}
@@ -549,7 +552,7 @@ Result ValidateModule(wabt::Module* module) {
 	return Result::Ok;
 }
 
-Result WriteModule(wabt::Module* module, const std::string& fileName) {
+Result WriteBinaryModule(wabt::Module* module, const std::string& fileName, Errors& errors) {
 	wabt::MemoryStream       stream;
 	wabt::WriteBinaryOptions options;
 	auto                     result = wabt::WriteBinaryModule(&stream, module, options);
@@ -563,30 +566,41 @@ Result WriteModule(wabt::Module* module, const std::string& fileName) {
 	return Result::Error;
 }
 
+Result WriteTextModule(wabt::Module* module, const std::string& fileName, Errors& errors) {
+	wabt::MemoryStream    stream;
+	wabt::WriteWatOptions options;
+	auto                  result = wabt::WriteWat(&stream, module, options);
+
+	if (wabt::Succeeded(result)) {
+		const auto& buffer = stream.output_buffer();
+		buffer.WriteToFile(fileName);
+		return Result::Ok;
+	}
+
+	return Result::Error;
+}
+
 bool CodeGen::GenerateWasmToFile(Module* mod, const std::string& fileName, Errors& errors) {
+	Result result = Result::Ok;
 	do {
 		auto visitor = std::make_unique<WasmVisitor>(errors);
-		auto result  = visitor->visitModule(mod);
+		result       = visitor->visitModule(mod);
 		if (Failed(result)) {
 			break;
 		}
 
-		result = ValidateModule(visitor->module.get());
+		result = ValidateModule(visitor->module.get(), errors);
+		// if (Failed(result)) {
+		// 	break;
+		// }
+
+		result = WriteTextModule(visitor->module.get(), fileName, errors);
 		if (Failed(result)) {
 			break;
 		}
-
-		result = WriteModule(visitor->module.get(), fileName);
-		if (Failed(result)) {
-			break;
-		}
-
-		return true;
 	} while (false);
 
-	// TODO: print error
-
-	return false;
+	return Succeeded(result);
 }
 
 bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t>& bcBuffer, Errors& errors) {
@@ -597,7 +611,7 @@ bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t>& bcBuffer, Errors& 
 			break;
 		}
 
-		result = ValidateModule(visitor->module.get());
+		result = ValidateModule(visitor->module.get(), errors);
 		if (Failed(result)) {
 			break;
 		}
@@ -613,8 +627,6 @@ bool CodeGen::GenerateWasm(Module* mod, std::vector<uint8_t>& bcBuffer, Errors& 
 		}
 		return false;
 	} while (false);
-
-	// TODO: print error
 
 	return false;
 }

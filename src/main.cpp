@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
     std::cout << "Parsing Ended Successfully!" << std::endl;
 	if (!s_outfile.size())
-		s_outfile = "a.wasm";
+		s_outfile = "a.wat";
 
 	Errors               errors;
 	auto result = CodeGen::GenerateWasmToFile(module, s_outfile, errors);

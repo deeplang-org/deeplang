@@ -68,6 +68,8 @@ function (deeplang_executable)
         src/codegen/symtab.cpp
         src/codegen/stringpool.h
         src/codegen/stringpool.cpp
+        src/codegen/wat-writer.h
+        src/codegen/wat-writer.cpp
         src/parsing/parsing.h
         src/parsing/parsing.cpp
         src/utils/cast.h

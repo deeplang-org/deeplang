@@ -40,11 +40,11 @@ inline bool Failed(Result result) {
 	return result == Result::Error;
 }
 
-#define CHECK_RESULT(expr)          \
-	do {                              \
-		if (Failed(expr)) {             \
-			return ::wabt::Result::Error; \
-		}                               \
-	} while (0)
+// #define CHECK_RESULT(expr)  \
+// 	do {                      \
+// 		if (Failed(expr)) {     \
+// 			return ::dp::Result::Error; \
+// 		}                       \
+// 	} while (0)
 
 } // namespace dp
