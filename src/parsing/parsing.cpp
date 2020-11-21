@@ -163,18 +163,18 @@ antlrcpp::Any Parser::visitElseExpression(DLParser::ElseExpressionContext* conte
 }
 
 antlrcpp::Any Parser::visitCallExpression(DLParser::CallExpressionContext* context) {
-    ExpressionStatement* stmt = new ExpressionStatement(makeLocation(context));
-	CallExpression* ce           = new CallExpression(makeLocation(context));
-	Expression*     method       = static_cast<Expression*>(visit(context->unblockExpression()));
+	ExpressionStatement* stmt    = new ExpressionStatement(makeLocation(context));
+	CallExpression*      ce      = new CallExpression(makeLocation(context));
+	Expression*          method  = static_cast<Expression*>(visit(context->unblockExpression()));
 	ce->method                   = std::unique_ptr<Expression>(method);
 	std::vector<Expression*>* ev = visit(context->expressionList());
 	for (auto e : *ev) {
 		std::unique_ptr<Expression> p(e);
 		ce->params.emplace_back(std::move(p));
 	}
-    stmt->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ce));
+	stmt->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ce));
 	delete ev;
-    return stmt;
+	return stmt;
 }
 
 antlrcpp::Any Parser::visitTupleType(DLParser::TupleTypeContext* context) {
@@ -224,11 +224,11 @@ antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) 
 		ExpressionStatement* estmt = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
 		v->init                    = std::move(estmt->expr);
 		delete estmt;
-	}else if(context->callExpression()) {
-        ExpressionStatement* estmt = static_cast<ExpressionStatement*>(visit(context->callExpression())); 
-        v->init = std::move(estmt->expr);
-        delete estmt;
-    }
+	} else if (context->callExpression()) {
+		ExpressionStatement* estmt = static_cast<ExpressionStatement*>(visit(context->callExpression()));
+		v->init                    = std::move(estmt->expr);
+		delete estmt;
+	}
 	return static_cast<Statement*>(v);
 }
 
