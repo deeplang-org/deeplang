@@ -267,14 +267,14 @@ antlrcpp::Any Parser::visitDecl(DLParser::DeclContext* context) {
 }
 
 antlrcpp::Any Parser::visitStatement(DLParser::StatementContext* context) {
-	if (context->decl()) {
+    if (context->decl()) {
 		return static_cast<Statement*>(visit(context->decl()));
 	} else if (context->expressionStatement()) {
 		auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
 		return static_cast<Statement*>(es);
-	} else {
+	}else {
 		UNREACHABLE("visitStatement");
-	}
+    }
 }
 
 antlrcpp::Any Parser::visitStatements(DLParser::StatementsContext* context) {
