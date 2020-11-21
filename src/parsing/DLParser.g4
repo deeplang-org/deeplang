@@ -83,7 +83,8 @@ expressionList :
 expressionStatement :
     blockExpression
     | ifExpression
-    | unblockExpression
+    | callExpression
+    | unblockExpression 
 ;
 
 blockExpression :
@@ -97,7 +98,6 @@ unblockExpression :
     | unblockExpression op=(GREATER_THAN_OPERATOR | GREATER_OR_EQUAL_OPERATOR | LESS_THAN_OPERATOR | LESS_OR_EQUAL_OPERATOR) unblockExpression
     | unblockExpression op=(EQUAL_OPERATOR | NOT_EQUAL_OPERATOR) unblockExpression
     | QUOTED_STRING
-    | unblockExpression OPEN_PAR_SYMBOL expressionList CLOSE_PAR_SYMBOL
     | CONST
     | IDENTIFIER
 ;
@@ -113,6 +113,10 @@ elseExpression :
     | ELSE_SYMBOL ifExpression
 ;
 
+// TODO c = foo(para2) + 5;  
+callExpression : 
+    unblockExpression OPEN_PAR_SYMBOL expressionList CLOSE_PAR_SYMBOL SEMICOLON_SYMBOL
+;
 
 tupleType :
     OPEN_PAR_SYMBOL CLOSE_PAR_SYMBOL
@@ -124,8 +128,11 @@ type :
 ;
 
 variableDecl :
-    LET_SYMBOL IDENTIFIER COLON_SYMBOL type
-    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR expressionStatement
+    LET_SYMBOL IDENTIFIER COLON_SYMBOL type SEMICOLON_SYMBOL
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR blockExpression SEMICOLON_SYMBOL
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR unblockExpression SEMICOLON_SYMBOL
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR ifExpression SEMICOLON_SYMBOL
+    | LET_SYMBOL IDENTIFIER COLON_SYMBOL type ASSIGN_OPERATOR callExpression
 ;
 
 param :
@@ -142,7 +149,7 @@ functionDecl :
 
 decl :
     functionDecl
-    | variableDecl SEMICOLON_SYMBOL
+    | variableDecl 
 ;
 
 

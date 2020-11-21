@@ -1,6 +1,5 @@
 fun main () -> () {
-    let a : i32 = 4;
-    if a == 4 {
+    let a : i32 = if a == 4 {
         if b > 34{
             let d : i32 = puts("d");
         }else if b == 34{
@@ -11,5 +10,16 @@ fun main () -> () {
 
         let b : i32 = 34;
         let c : i32 = puts("c");
+    };
+
+
+
+    if b > 34{
+        let d : i32 = puts("d");
+    }else if b == 34{
+        let e : i32 = puts("e");
+    }else {
+        let f : i32 = puts("f");
     }
+
 }
