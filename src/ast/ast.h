@@ -55,9 +55,16 @@ typedef std::unique_ptr<Module> ModulePtr;
 // Statement
 
 enum class StatementKind {
-	VariableDeclaration,
-	FunctionDeclaration,
-	Expression
+	// local(let) binding
+	Local,
+	// Function defination
+	Function,
+	// Expression without trailing semi-colon
+	Expression,
+	// Expression with trailing semi-colon
+	SemiExpression,
+	// Just a trailing semi-colon
+	Empty
 };
 
 class Statement : public ASTNode {
@@ -114,14 +121,40 @@ public:
 	ExpressionPtr expr;
 };
 
-class VariableDeclaration : public StatementMixin<StatementKind::VariableDeclaration> {
+class SemiExpressionStatement : public StatementMixin<StatementKind::SemiExpression> {
 public:
-	VariableDeclaration(std::string name, const Location& loc = Location())
-			: StatementMixin<StatementKind::VariableDeclaration>(loc), id(name), typ(nullptr) {
+	SemiExpressionStatement(const Location& loc = Location())
+			: StatementMixin<StatementKind::SemiExpression>(loc) {
 	}
 
 	std::string toString() const {
-		return "VariableDeclaration";
+		return "SemiExpressionStatement";
+	}
+
+	ExpressionPtr expr;
+};
+
+class EmptyStatement : public StatementMixin<StatementKind::Empty> {
+public:
+	EmptyStatement(const Location& loc = Location())
+			: StatementMixin<StatementKind::Empty>(loc) {
+	}
+
+	std::string toString() const {
+		return "EmptyStatement";
+	}
+
+	ExpressionPtr expr;
+};
+
+class LocalStatement : public StatementMixin<StatementKind::Local> {
+public:
+	LocalStatement(std::string name, const Location& loc = Location())
+			: StatementMixin<StatementKind::Local>(loc), id(name), typ(nullptr) {
+	}
+
+	std::string toString() const {
+		return "LocalStatement";
 	}
 
 	Identifier                  id;
@@ -142,24 +175,24 @@ public:
 
 typedef std::vector<Param> ParamVector;
 
-class FunctionDeclaration : public StatementMixin<StatementKind::FunctionDeclaration> {
+class FunctionStatement : public StatementMixin<StatementKind::Function> {
 public:
-	FunctionDeclaration(std::string name, const Location& loc = Location())
-			: StatementMixin<StatementKind::FunctionDeclaration>(loc),
+	FunctionStatement(std::string name, const Location& loc = Location())
+			: StatementMixin<StatementKind::Function>(loc),
 				id(name),
-				isPublic(true),
-				signature(nullptr) {
+				typ(nullptr),
+				isPublic(false) {
 	}
 
 	std::string toString() const {
-		return "FunctionDeclaration";
+		return "FunctionStatement";
 	}
 
-	Identifier                           id;
-	FunctionType*                        signature;
-	std::unique_ptr<ExpressionStatement> body;
-	ParamVector                          params;
-	bool                                 isPublic;
+	Identifier                       id;
+	FunctionType*                    typ;
+	std::unique_ptr<BlockExpression> body;
+	ParamVector                      params;
+	bool                             isPublic;
 };
 
 // Expression

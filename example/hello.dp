@@ -1,5 +1,4 @@
 fun main () -> () {
-    let d : i32 = puts("hello ");
-    puts (" world");
-    {}
+    let a : Unit = {};
+    return a;
 }

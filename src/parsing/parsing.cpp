@@ -210,7 +210,7 @@ antlrcpp::Any Parser::visitParamList(DLParser::ParamListContext* context) {
 }
 
 antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) {
-	VariableDeclaration* v = new VariableDeclaration(
+	LocalStatement* v = new LocalStatement(
 			context->IDENTIFIER()->getText(), makeLocation(context));
 	PrimitiveType* t = visit(context->type());
 	v->typ           = static_cast<PrimitiveType*>(t);
@@ -233,10 +233,10 @@ antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) 
 }
 
 antlrcpp::Any Parser::visitFunctionDecl(DLParser::FunctionDeclContext* context) {
-	FunctionDeclaration* decl = new FunctionDeclaration(
+	FunctionStatement* decl = new FunctionStatement(
 			context->IDENTIFIER()->getText(), makeLocation(context));
-	decl->body = std::unique_ptr<ExpressionStatement>(
-			static_cast<ExpressionStatement*>(visit(context->blockExpression())));
+	decl->body = std::unique_ptr<BlockExpression>(
+			static_cast<BlockExpression*>(visit(context->blockExpression())));
 	ParamVector* params = visit(context->paramList());
 
 	Type*          t       = visit(context->type());
@@ -248,7 +248,7 @@ antlrcpp::Any Parser::visitFunctionDecl(DLParser::FunctionDeclContext* context) 
 	}
 	auto ft = FunctionType::MakeType(paramVec, retType);
 
-	decl->signature = ft;
+	decl->typ = ft;
 	decl->params.swap(*params);
 	delete params;
 

@@ -15,9 +15,7 @@ namespace dp {
 namespace internal {
 
 static bool toWasmType(Type* typ, wabt::Type& wtyp) {
-	if (!typ) {
-		return false;
-	}
+	assert(typ != nullptr);
 	if (auto ptype = dyn_cast<PrimitiveType>(typ)) {
 		switch (ptype->kind()) {
 		case PrimitiveType::I32:
@@ -134,66 +132,66 @@ public:
 	Result visitStatement(Statement* stmt, bool isLastStmt) {
 		switch (stmt->kind()) {
 		case StatementKind::Expression:
-			return visitExpressionStatement(static_cast<ExpressionStatement*>(stmt), isLastStmt);
+			return visitExpressionStatement(cast<ExpressionStatement>(stmt), isLastStmt);
 			break;
-		case StatementKind::FunctionDeclaration:
-			return visitFunction(static_cast<FunctionDeclaration*>(stmt));
+		case StatementKind::Function:
+			return visitFunction(cast<FunctionStatement>(stmt));
 			break;
-		case StatementKind::VariableDeclaration:
-			return visitVariableDeclaration(static_cast<VariableDeclaration*>(stmt));
+		case StatementKind::Local:
+			return visitLocalStatement(cast<LocalStatement>(stmt));
 			break;
 		default:
 			UNREACHABLE("visitStatement");
 		}
 	}
 
-	Result visitFunction(FunctionDeclaration* funNode) {
-		auto           name = funNode->id.name;
+	Result visitFunction(FunctionStatement* funcStmt) {
+		auto           name = funcStmt->id.name;
 		wabt::Location loc;
 
-		if (!symTab.addSym(name, module->funcs.size(), funNode->signature)) {
+		if (!symTab.addSym(name, module->funcs.size(), funcStmt->typ)) {
 			return Result::Error;
 		}
 
 		auto func_field = std::make_unique<wabt::FuncModuleField>(loc, name);
 		func            = &func_field->func;
 
-		if (Failed(visitFunctionType(funNode->signature))) {
+		if (Failed(visitFunctionType(funcStmt->typ))) {
 			return Result::Error;
 		}
 
 		symTab.newEnv();
 
-		for (auto param : funNode->params) {
+		for (auto param : funcStmt->params) {
 			int index = func->local_types.size();
 			func->bindings.emplace(param.id.name, wabt::Binding(index));
 			wabt::Type ltyp;
 			if (toWasmType(param.typ, ltyp)) {
 				func->local_types.AppendDecl(ltyp, 1);
 			} else {
-				Error(funNode->loc, "visitFunction toWasmType");
+				Error(funcStmt->loc, "visitFunction toWasmType");
 				return Result::Error;
 			}
 			symTab.addSym(param.id.name, index, param.typ);
 		}
 
-		if (Failed(visitExpressionStatement(funNode->body.get(), true))) {
+		if (Failed(visitBlockExpression(funcStmt->body.get()))) {
 			return Result::Error;
 		}
 
 		symTab.dropEnv();
 
 		if (exprType != Type::Unit()) {
-			if (auto retType = dyn_cast<PrimitiveType>(funNode->signature->result())) {
+			if (auto retType = dyn_cast<PrimitiveType>(funcStmt->typ->result())) {
 				if (retType->isUnit()) {
 					auto expr = std::make_unique<wabt::DropExpr>();
 					exprs.push_back(std::move(expr));
 				} else if (Type::IsSame(exprType, retType)) {
 					// TODO: Return
-					Error(funNode->loc, "return");
+					Error(funcStmt->loc, "return");
 					return Result::Error;
 				} else {
-					Error(funNode->loc, "return value is not same with return type");
+					Error(funcStmt->loc, "return value is not same with return type");
 					return Result::Error;
 				}
 			} else {
@@ -205,7 +203,7 @@ public:
 
 		module->AppendField(std::move(func_field));
 
-		if (funNode->isPublic) {
+		if (funcStmt->isPublic) {
 			auto export_field          = std::make_unique<wabt::ExportModuleField>(loc);
 			export_field->export_.kind = wabt::ExternalKind::Func;
 			export_field->export_.name = name;
@@ -226,23 +224,23 @@ public:
 		return Result::Ok;
 	}
 
-	Result visitVariableDeclaration(VariableDeclaration* varDecl) {
-		std::string name  = varDecl->id.name;
+	Result visitLocalStatement(LocalStatement* localStmt) {
+		std::string name  = localStmt->id.name;
 		int         index = func->local_types.size();
 
 		wabt::Type type;
-		if (!toWasmType(varDecl->typ, type)) {
-			Error(varDecl->loc, "visitVariableDeclaration toWasmType");
+		if (!toWasmType(localStmt->typ, type)) {
+			Error(localStmt->loc, "visitLocalStatement toWasmType");
 			return Result::Error;
 		}
 
 		func->bindings.emplace(name, wabt::Binding(index));
 		func->local_types.AppendDecl(type, 1);
 
-		visitExpression(varDecl->init.get());
+		visitExpression(localStmt->init.get());
 
-		if (!symTab.addSym(name, index, varDecl->typ)) {
-			Error(varDecl->loc, "declared variable '%s' is exists", name.c_str());
+		if (!symTab.addSym(name, index, localStmt->typ)) {
+			Error(localStmt->loc, "declared variable '%s' is exists", name.c_str());
 			return Result::Error;
 		}
 
