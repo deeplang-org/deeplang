@@ -4,6 +4,7 @@
 #include "parsing/gen/DLLexer.h"
 #include "parsing/gen/DLParser.h"
 #include "parsing/gen/DLParserVisitor.h"
+#include "parsing/parseError.h"
 #include "utils/error.h"
 #include "utils/cast.h"
 #include <cmath>
@@ -311,7 +312,9 @@ Module* Parser::parseModule(antlr4::ANTLRInputStream sourceStream) {
 	}
 
 	DLParser                 parser(&tokens);
+	parser.addErrorListener(new ParseErrorHanler());
 	antlr4::tree::ParseTree* tree = parser.module();
+
 
 	std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
 	Module* module = visit(tree);
