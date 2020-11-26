@@ -72,6 +72,8 @@ function (deeplang_executable)
         src/codegen/wat-writer.cpp
         src/parsing/parsing.h
         src/parsing/parsing.cpp
+        src/parsing/parseError.cpp
+        src/parsing/parseError.h
         src/utils/cast.h
         src/utils/error.h
         src/utils/error-formatter.h
