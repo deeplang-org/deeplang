@@ -233,11 +233,10 @@ antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) 
 	return static_cast<Statement*>(v);
 }
 
-antlrcpp::Any Parser::visitFunctionDecl(DLParser::FunctionDeclContext* context) {
+antlrcpp::Any Parser::visitFunctionStmt(DLParser::FunctionStmtContext* context) {
 	FunctionStatement* decl = new FunctionStatement(
 			context->IDENTIFIER()->getText(), makeLocation(context));
-	decl->body = std::unique_ptr<BlockExpression>(
-			static_cast<BlockExpression*>(visit(context->blockExpression())));
+    decl->body = std::unique_ptr<BlockExpression>(static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get()));
 	ParamVector* params = visit(context->paramList());
 
 	Type*          t       = visit(context->type());
@@ -258,8 +257,8 @@ antlrcpp::Any Parser::visitFunctionDecl(DLParser::FunctionDeclContext* context) 
 }
 
 antlrcpp::Any Parser::visitDecl(DLParser::DeclContext* context) {
-	if (context->functionDecl()) {
-		return static_cast<Statement*>(visit(context->functionDecl()));
+	if (context->functionStmt()) {
+		return static_cast<Statement*>(visit(context->functionStmt()));
 	} else if (context->variableDecl()) {
 		return static_cast<Statement*>(visit(context->variableDecl()));
 	} else {

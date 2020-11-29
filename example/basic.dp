@@ -3,4 +3,4 @@ fun main() -> () {
     let b : i32 = 2;
     let c : i32 = a + b;
     let r : i32 = a + b * c + a;
-};
+}
