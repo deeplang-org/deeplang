@@ -82,7 +82,7 @@ PrimitiveType* PrimitiveType::MakeType(Kind kind) {
 
 PrimitiveType* PrimitiveType::MakeType(const std::string& typName) {
 	Kind t;
-	if (typName == "unit") {
+	if (typName == "Unit") {
 		t = PrimitiveType::Unit;
 	} else if (typName == "i32") {
 		t = PrimitiveType::I32;

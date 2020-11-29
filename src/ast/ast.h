@@ -57,7 +57,7 @@ typedef std::unique_ptr<Module> ModulePtr;
 enum class StatementKind {
 	// local(let) binding
 	Local,
-	// Function defination
+	// Function definition
 	Function,
 	// Expression without trailing semi-colon
 	Expression,

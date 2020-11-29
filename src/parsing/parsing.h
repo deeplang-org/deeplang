@@ -39,7 +39,7 @@ private:
 
 	antlrcpp::Any visitVariableDecl(DLParser::VariableDeclContext* context);
 
-	antlrcpp::Any visitFunctionDecl(DLParser::FunctionDeclContext* context);
+	antlrcpp::Any visitFunctionStmt(DLParser::FunctionStmtContext* context);
 
 	antlrcpp::Any visitDecl(DLParser::DeclContext* context);
 

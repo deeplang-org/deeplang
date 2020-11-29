@@ -10,15 +10,15 @@ using namespace dp::internal;
 TEST(testCase, codegen) {
 	auto mod = std::make_unique<Module>("Test");
 
-	auto mainFunc = std::make_unique<FunctionDeclaration>("main");
+	auto mainFunc = std::make_unique<FunctionStatement>("main");
 
 	TypeVector params;
 	auto       sig      = FunctionType::MakeType(params, Type::Unit());
-	mainFunc->signature = std::move(sig);
+	mainFunc->typ = std::move(sig);
 
 	auto mainFuncBody = std::make_unique<BlockExpression>();
 
-	auto var1Decl = std::make_unique<VariableDeclaration>("var");
+	auto var1Decl = std::make_unique<LocalStatement>("var");
 	var1Decl->typ = Type::I32();
 
 	auto addExp   = std::make_unique<BinaryExpression>(BinaryOperator::Plus);

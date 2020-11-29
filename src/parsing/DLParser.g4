@@ -143,12 +143,12 @@ paramList :
     (param (',' param)*)?
 ;
 
-functionDecl :
+functionStmt : 
     FUN_SYMBOL IDENTIFIER OPEN_PAR_SYMBOL paramList CLOSE_PAR_SYMBOL JSON_SEPARATOR_SYMBOL type blockExpression
 ;
 
 decl :
-    functionDecl
+    functionStmt
     | variableDecl 
 ;
 
