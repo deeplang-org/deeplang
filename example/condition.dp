@@ -1,4 +1,35 @@
-fun main () -> () {
+fun main()->() {
+    
+    /*****BUG1
+    deep_wasm_eval::buffer char-alignment problem 
+    let b : i32 = 2;
+    if b == 34{
+        puts("eeee");
+    }else {
+        puts("ffff");
+    }
+    ******/
+
+
+    /*****BUG2
+    error: thenExpr and elseExpr is not same type
+    let b : i32 = 2;
+	if b == 2 {
+        puts("b==2");
+    }
+
+
+	let d : i32 = 3;
+	if d == 2 {
+    	puts("b==2");
+	}else if d == 1 {
+    	puts("b==1");
+    }
+
+    ******/
+
+
+	/*****Test
     let a : i32 = if a == 4 {
         if b > 34{
             let d : i32 = puts("d");
@@ -11,15 +42,5 @@ fun main () -> () {
         let b : i32 = 34;
         let c : i32 = puts("c");
     };
-
-
-
-    if b > 34{
-        let d : i32 = puts("d");
-    }else if b == 34{
-        let e : i32 = puts("e");
-    }else {
-        let f : i32 = puts("f");
-    }
-
+    *******/
 }
