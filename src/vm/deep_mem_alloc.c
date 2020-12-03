@@ -41,18 +41,21 @@ deep_mem_init (void *mem, uint32_t size)
   mem_size_t aligned_size = ALIGN_MEM_SIZE_TRUNC (size);
 
   pool = (struct mem_pool *)mem;
-  pool->free_memory
-      = aligned_size - sizeof (struct mem_pool) - sizeof (struct sorted_block);
+  pool->free_memory = aligned_size - sizeof (struct mem_pool)
+                      - sizeof (struct sorted_block) - sizeof (block_head_t);
   /* the first node in the list, to simplify implementation */
   pool->sorted_block.addr
-      = (struct sorted_block *)(mem + sizeof (struct mem_pool));
+      = (struct sorted_block *)(get_pointer_by_offset_in_bytes (
+          mem, sizeof (struct mem_pool)));
   /* all other fields are set as 0 */
   pool->sorted_block.addr->level_of_indices = SORTED_BLOCK_INDICES_LEVEL;
 
   pool->remainder_block.addr
-      = (struct sorted_block *)(mem + sizeof (struct mem_pool)
-                                + sizeof (struct sorted_block));
-  pool->remainder_block_end.addr = (struct sorted_block *)(mem + aligned_size);
+      = (struct sorted_block *)(get_pointer_by_offset_in_bytes (
+          mem, sizeof (struct mem_pool) + sizeof (struct sorted_block)));
+  pool->remainder_block_end.addr
+      = (struct sorted_block *)(get_pointer_by_offset_in_bytes (
+          mem, aligned_size - 8)); // -8 for safety
   for (int i = 0; i < FAST_BIN_LENGTH; ++i)
     {
       pool->fast_bins[i].addr = NULL;
@@ -104,8 +107,9 @@ deep_malloc_fast_bins (uint32_t size)
     }
   else if (aligned_size <= get_remainder_size (pool))
     {
-      ret = (struct fast_block *)(((uint8_t *)pool->remainder_block_end.addr)
-                                  - aligned_size);
+      ret = (struct fast_block *)(get_pointer_by_offset_in_bytes (
+          pool->remainder_block_end.addr,
+          -(int64_t)aligned_size - sizeof (block_head_t)));
       pool->remainder_block_end.addr = (struct sorted_block *)ret;
 
       payload_size = aligned_size - sizeof (block_head_t);
@@ -117,12 +121,12 @@ deep_malloc_fast_bins (uint32_t size)
       return NULL;
     }
 
-  memset (ret->payload, 0, payload_size);
+  memset (&ret->payload, 0, payload_size);
   block_set_A_flag (&ret->head, true);
   block_set_P_flag (&ret->head, P_flag);
   pool->free_memory -= payload_size;
 
-  return ret->payload;
+  return &ret->payload;
 }
 
 static void *
@@ -141,6 +145,7 @@ deep_malloc_sorted_bins (uint32_t size)
     {
       /* no suitable sorted_block */
       ret = (struct sorted_block *)pool->remainder_block.addr;
+      block_set_size (&ret->head, get_remainder_size (pool));
       _split_into_two_sorted_blocks (ret, aligned_size);
     }
   else
@@ -149,12 +154,12 @@ deep_malloc_sorted_bins (uint32_t size)
     }
 
   payload_size = aligned_size - sizeof (block_head_t);
-  memset (ret->payload, 0, payload_size);
+  memset (&ret->payload, 0, payload_size);
   block_set_A_flag (&ret->head, true);
   block_set_P_flag (&get_block_by_offset (ret, aligned_size)->head, true);
   pool->free_memory -= payload_size;
 
-  return ret->payload;
+  return &ret->payload;
 }
 
 void *
@@ -168,7 +173,8 @@ deep_free (void *ptr)
 {
   assert (pool != NULL);
 
-  void *head = (uint8_t *)ptr - sizeof (block_head_t);
+  void *head
+      = get_pointer_by_offset_in_bytes (ptr, -(int64_t)sizeof (block_head_t));
 
   if (ptr == NULL || !block_is_allocated ((block_head_t *)head))
     {
@@ -281,7 +287,7 @@ _merge_into_single_block (struct sorted_block *curr, struct sorted_block *next)
       = block_get_size (&curr->head) + block_get_size (&next->head);
 
   block_set_size (&curr->head, new_size);
-  memset (curr->payload, 0, new_size - sizeof (curr->head));
+  memset (&curr->payload, 0, new_size - sizeof (curr->head));
 
   _insert_sorted_block_to_skiplist (curr);
 
@@ -376,7 +382,7 @@ _find_sorted_block_by_size_on_index (struct sorted_block *node, uint32_t size,
 }
 
 /**
- *  returns a block with desired size; if not possible, the supremum
+ *  returns a block with desired size; if not possible, the least greater one
  *
  * NOTE:
  *   - returns NULL when supremum is not in the list
@@ -447,7 +453,7 @@ _insert_sorted_block_to_skiplist (struct sorted_block *block)
       = _find_sorted_block_by_size (pool->sorted_block.addr, size);
 
   /* insert into the chain with same size. */
-  if (block_get_size (&pos->head) == size)
+  if (pos != NULL && block_get_size (&pos->head) == size)
     {
       block->pred_offset = get_offset_between_blocks (block, pos);
       if (pos->succ_offset != 0)

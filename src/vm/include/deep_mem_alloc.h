@@ -148,23 +148,38 @@ block_set_size (block_head_t *head, block_size_t size)
           | ALIGN_MEM_SIZE (size);     /* ensure rounds up */
 }
 
-static inline mem_size_t
-get_remainder_size (struct mem_pool const *pool)
+static inline void *
+get_pointer_by_offset_in_bytes (void *p, int64_t offset)
 {
-  return pool->remainder_block_end.addr - pool->remainder_block.addr;
+  return (uint8_t *)p + offset;
+}
+
+static inline int64_t
+get_offset_between_pointers_in_bytes (void *p, void *q)
+{
+  return (uint8_t *)p - (uint8_t *)q;
 }
 
 static inline struct sorted_block *
 get_block_by_offset (struct sorted_block *node, int32_t offset)
 {
-  return (struct sorted_block *)((mem_t *)node + offset);
+  return (struct sorted_block *)(get_pointer_by_offset_in_bytes ((mem_t *)node,
+                                                                 offset));
 }
 
 static inline int32_t
 get_offset_between_blocks (struct sorted_block *origin,
                            struct sorted_block *target)
 {
-  return (mem_t *)target - (mem_t *)origin;
+  return get_offset_between_pointers_in_bytes ((mem_t *)target,
+                                               (mem_t *)origin);
+}
+
+static inline mem_size_t
+get_remainder_size (struct mem_pool const *pool)
+{
+  return get_offset_between_pointers_in_bytes (pool->remainder_block_end.addr,
+                                               pool->remainder_block.addr);
 }
 
 #endif /* _DEEP_MEM_ALLOC_H */
