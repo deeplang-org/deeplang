@@ -21,7 +21,9 @@ private:
 
 	antlrcpp::Any visitExpressionList(DLParser::ExpressionListContext* context);
 
-	antlrcpp::Any visitExpressionStatement(DLParser::ExpressionStatementContext* context);
+	antlrcpp::Any visitExpressionStmt(DLParser::ExpressionStmtContext* context);
+
+	antlrcpp::Any visitSemiexpressionStmt(DLParser::SemiexpressionStmtContext* context);
 
 	antlrcpp::Any visitBlockExpression(DLParser::BlockExpressionContext* context);
 
@@ -31,17 +33,13 @@ private:
 
 	antlrcpp::Any visitElseExpression(DLParser::ElseExpressionContext* context);
 
-	antlrcpp::Any visitCallExpression(DLParser::CallExpressionContext* context);
-
 	antlrcpp::Any visitTupleType(DLParser::TupleTypeContext* context);
 
 	antlrcpp::Any visitType(DLParser::TypeContext* context);
 
-	antlrcpp::Any visitVariableDecl(DLParser::VariableDeclContext* context);
+	antlrcpp::Any visitLocalStmt(DLParser::LocalStmtContext* context);
 
 	antlrcpp::Any visitFunctionStmt(DLParser::FunctionStmtContext* context);
-
-	antlrcpp::Any visitDecl(DLParser::DeclContext* context);
 
 	antlrcpp::Any visitStatement(DLParser::StatementContext* context);
 
