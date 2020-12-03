@@ -1,9 +1,0 @@
-fun main () -> () {
-    
-    /*
-        @BUG: puts 
-        @output: "abcdef\n23456"
-    */
-    puts("abcdef");
-:    puts("123456");
-}
