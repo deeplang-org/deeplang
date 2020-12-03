@@ -286,9 +286,15 @@ fragment DOUBLE_QUOTE: '"';
 //    )+
 //;
 
-// TODO: right?
 QUOTED_STRING:
         DOUBLE_QUOTE .*? DOUBLE_QUOTE
+;
+
+SINGLE_COMMENT:
+     '//' ~[\r\n]* '\r'? '\n' -> skip
+;
+MULTI_COMMENT: 
+     '/*'  .*?  '*/' -> skip
 ;
 
 // There are 3 types of block comments:
