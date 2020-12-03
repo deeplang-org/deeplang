@@ -1,0 +1,10 @@
+fun main()->() {
+    
+    let b : i32 = 2;
+    if b == 0{
+        puts("eeee")
+    }else {
+        puts("ffff")
+    }
+
+}

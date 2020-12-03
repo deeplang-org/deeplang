@@ -35,7 +35,23 @@ antlrcpp::Any Parser::visitAryOp(DLParser::AryOpContext* context) {
 	UNREACHABLE("op");
 }
 
-antlrcpp::Any Parser::visitExpressionStatement(DLParser::ExpressionStatementContext* context) {
+antlrcpp::Any Parser::visitSemiexpressionStmt(DLParser::SemiexpressionStmtContext* context) {
+	if (context->blockExpression()) {
+		return visit(context->blockExpression());
+	} else if (context->unblockExpression()) {
+		SemiExpressionStatement* stmt = new SemiExpressionStatement(makeLocation(context));
+		stmt->expr                = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
+		return stmt;
+	} else if (context->ifExpression()) {
+		SemiExpressionStatement* ifexpr = new SemiExpressionStatement(makeLocation(context));
+		ifexpr                      = static_cast<SemiExpressionStatement*>(visit(context->ifExpression()));
+		return ifexpr;
+	} else {
+		UNREACHABLE("visitSemiexpressionStatement");
+	}
+}
+
+antlrcpp::Any Parser::visitExpressionStmt(DLParser::ExpressionStmtContext* context) {
 	if (context->blockExpression()) {
 		return visit(context->blockExpression());
 	} else if (context->unblockExpression()) {
@@ -46,18 +62,14 @@ antlrcpp::Any Parser::visitExpressionStatement(DLParser::ExpressionStatementCont
 		ExpressionStatement* ifexpr = new ExpressionStatement(makeLocation(context));
 		ifexpr                      = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
 		return ifexpr;
-	} else if (context->callExpression()) {
-		ExpressionStatement* callexpr = new ExpressionStatement(makeLocation(context));
-		callexpr                      = static_cast<ExpressionStatement*>(visit(context->callExpression()));
-		return callexpr;
 	} else {
 		UNREACHABLE("visitExpressionStatement");
 	}
 }
 
 antlrcpp::Any Parser::visitExpressionList(DLParser::ExpressionListContext* context) {
-	std::vector<Expression*>*                          exps        = new std::vector<Expression*>();
-	std::vector<DLParser::ExpressionStatementContext*> expStmtCtxs = context->expressionStatement();
+	std::vector<Expression*>*                     exps        = new std::vector<Expression*>();
+	std::vector<DLParser::ExpressionStmtContext*> expStmtCtxs = context->expressionStmt();
 	for (auto expStmtCtx : expStmtCtxs) {
 		ExpressionStatement* es = visit(expStmtCtx);
 		Expression*          e  = es->expr.get();
@@ -93,6 +105,17 @@ antlrcpp::Any Parser::visitUnblockExpression(DLParser::UnblockExpressionContext*
 		Expression* e  = static_cast<Expression*>(
         new PathExpression(id->getText(), makeLocation(id->getSymbol())));
 		return e;
+	} else if (context->expressionList()) {
+		CallExpression* ce           = new CallExpression(makeLocation(context));
+		Expression*     method       = static_cast<Expression*>(visit(context->unblockExpression(0)));
+		ce->method                   = std::unique_ptr<Expression>(method);
+		std::vector<Expression*>* ev = visit(context->expressionList());
+		for (auto e : *ev) {
+			std::unique_ptr<Expression> p(e);
+			ce->params.emplace_back(std::move(p));
+		}
+		delete ev;
+		return static_cast<Expression*>(ce);
 	} else if (context->QUOTED_STRING()) {
 		std::string s = context->QUOTED_STRING()->getText();
 		s.pop_back();
@@ -163,21 +186,6 @@ antlrcpp::Any Parser::visitElseExpression(DLParser::ElseExpressionContext* conte
 	return ifexpr;
 }
 
-antlrcpp::Any Parser::visitCallExpression(DLParser::CallExpressionContext* context) {
-	ExpressionStatement* stmt    = new ExpressionStatement(makeLocation(context));
-	CallExpression*      ce      = new CallExpression(makeLocation(context));
-	Expression*          method  = static_cast<Expression*>(visit(context->unblockExpression()));
-	ce->method                   = std::unique_ptr<Expression>(method);
-	std::vector<Expression*>* ev = visit(context->expressionList());
-	for (auto e : *ev) {
-		std::unique_ptr<Expression> p(e);
-		ce->params.emplace_back(std::move(p));
-	}
-	stmt->expr = std::unique_ptr<Expression>(static_cast<Expression*>(ce));
-	delete ev;
-	return stmt;
-}
-
 antlrcpp::Any Parser::visitTupleType(DLParser::TupleTypeContext* context) {
 	UNREACHABLE("visitTupleType");
 }
@@ -210,7 +218,7 @@ antlrcpp::Any Parser::visitParamList(DLParser::ParamListContext* context) {
 	return params;
 }
 
-antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) {
+antlrcpp::Any Parser::visitLocalStmt(DLParser::LocalStmtContext* context) {
 	LocalStatement* v = new LocalStatement(
 			context->IDENTIFIER()->getText(), makeLocation(context));
 	PrimitiveType* t = visit(context->type());
@@ -225,10 +233,6 @@ antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) 
 		ExpressionStatement* estmt = static_cast<ExpressionStatement*>(visit(context->ifExpression()));
 		v->init                    = std::move(estmt->expr);
 		delete estmt;
-	} else if (context->callExpression()) {
-		ExpressionStatement* estmt = static_cast<ExpressionStatement*>(visit(context->callExpression()));
-		v->init                    = std::move(estmt->expr);
-		delete estmt;
 	}
 	return static_cast<Statement*>(v);
 }
@@ -236,7 +240,7 @@ antlrcpp::Any Parser::visitVariableDecl(DLParser::VariableDeclContext* context) 
 antlrcpp::Any Parser::visitFunctionStmt(DLParser::FunctionStmtContext* context) {
 	FunctionStatement* decl = new FunctionStatement(
 			context->IDENTIFIER()->getText(), makeLocation(context));
-    decl->body = std::unique_ptr<BlockExpression>(static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get()));
+	decl->body          = std::unique_ptr<BlockExpression>(static_cast<BlockExpression*>((static_cast<ExpressionStatement*>(visit(context->blockExpression()))->expr).get()));
 	ParamVector* params = visit(context->paramList());
 
 	Type*          t       = visit(context->type());
@@ -256,25 +260,20 @@ antlrcpp::Any Parser::visitFunctionStmt(DLParser::FunctionStmtContext* context) 
 	return static_cast<Statement*>(decl);
 }
 
-antlrcpp::Any Parser::visitDecl(DLParser::DeclContext* context) {
-	if (context->functionStmt()) {
-		return static_cast<Statement*>(visit(context->functionStmt()));
-	} else if (context->variableDecl()) {
-		return static_cast<Statement*>(visit(context->variableDecl()));
-	} else {
-		UNREACHABLE("visitDecl");
-	}
-}
-
 antlrcpp::Any Parser::visitStatement(DLParser::StatementContext* context) {
-    if (context->decl()) {
-		return static_cast<Statement*>(visit(context->decl()));
-	} else if (context->expressionStatement()) {
-		auto es = static_cast<ExpressionStatement*>(visit(context->expressionStatement()));
+	if (context->localStmt()) {
+		return static_cast<Statement*>(visit(context->localStmt()));
+	} else if (context->functionStmt()) {
+		return static_cast<Statement*>(visit(context->functionStmt()));
+	} else if (context->expressionStmt()) {
+		auto es = static_cast<ExpressionStatement*>(visit(context->expressionStmt()));
 		return static_cast<Statement*>(es);
-	}else {
+	} else if (context->semiexpressionStmt()) {
+		auto ses = static_cast<SemiExpressionStatement*>(visit(context->semiexpressionStmt()));
+		return static_cast<Statement*>(ses);
+	} else {
 		UNREACHABLE("visitStatement");
-    }
+	}
 }
 
 antlrcpp::Any Parser::visitStatements(DLParser::StatementsContext* context) {
@@ -310,10 +309,9 @@ Module* Parser::parseModule(antlr4::ANTLRInputStream sourceStream) {
 		std::cout << token->toString() << std::endl;
 	}
 
-	DLParser                 parser(&tokens);
+	DLParser parser(&tokens);
 	parser.addErrorListener(new ParseErrorHanler());
 	antlr4::tree::ParseTree* tree = parser.module();
-
 
 	std::cout << prettyPrint(tree->toStringTree(&parser)) << std::endl;
 	Module* module = visit(tree);
