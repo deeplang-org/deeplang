@@ -28,20 +28,6 @@ fun main() -> () {
 
 
 
-### Condition
-
-```
-if b > 34{
-      let d : i32 = puts("d");
-}else if b == 34{
-      let e : i32 = puts("e");
-}else {
-      let f : i32 = puts("f");
-}
-```
-
-
-
 ### Let 
 
 ```rust
@@ -58,9 +44,45 @@ let f : i32 = a + b + c * d / f;
 
 
 
+### Condition
+
+```
+if b > 34{
+      puts("d");
+}else if b == 34{
+      puts("e");
+}else {
+      puts("f");
+};
+```
+
+
+
+### Condition_noSemi
+
+```c++
+if b > 34{
+     	puts("d")
+}else if b == 34{
+      puts("e")
+}else {
+      puts("f")
+}
+```
+
+
+
 ### Call 
 
 ```rust
 puts("hello world");
+```
+
+
+
+### Call_noSemi
+
+```rust
+puts("hello world")
 ```
 
