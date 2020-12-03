@@ -37,14 +37,16 @@ antlrcpp::Any Parser::visitAryOp(DLParser::AryOpContext* context) {
 
 antlrcpp::Any Parser::visitSemiexpressionStmt(DLParser::SemiexpressionStmtContext* context) {
 	if (context->blockExpression()) {
-		return visit(context->blockExpression());
+        SemiExpressionStatement* semiStmt = new SemiExpressionStatement(makeLocation(context));
+        semiStmt->expr = std::move((static_cast<ExpressionStatement*>(visit(context->blockExpression())))->expr);
+		return semiStmt;
 	} else if (context->unblockExpression()) {
 		SemiExpressionStatement* stmt = new SemiExpressionStatement(makeLocation(context));
 		stmt->expr                = std::unique_ptr<Expression>(static_cast<Expression*>(visit(context->unblockExpression())));
 		return stmt;
 	} else if (context->ifExpression()) {
 		SemiExpressionStatement* ifexpr = new SemiExpressionStatement(makeLocation(context));
-		ifexpr                      = static_cast<SemiExpressionStatement*>(visit(context->ifExpression()));
+		ifexpr->expr                      = std::move((static_cast<ExpressionStatement*>(visit(context->ifExpression())))->expr); 
 		return ifexpr;
 	} else {
 		UNREACHABLE("visitSemiexpressionStatement");
