@@ -173,11 +173,12 @@ fragment Z: [zZ];
 fragment NONZERODIGIT:  [1-9];
 fragment DIGIT:    [0-9];
 fragment DIGITS:   DIGIT+;
+fragment ZERO: [0];
 //fragment HEXDIGIT: [0-9a-fA-F];
 
 CONST:     INTEGERCONST;
 
-INTEGERCONST: NONZERODIGIT | (NONZERODIGIT DIGITS);
+INTEGERCONST: ZERO | NONZERODIGIT | (NONZERODIGIT DIGITS);
 
 // Only lower case 'x' and 'b' count for hex + bin numbers. Otherwise it's an identifier.
 //HEX_NUMBER: ('0x' HEXDIGIT+) | ('x\'' HEXDIGIT+ '\'');
