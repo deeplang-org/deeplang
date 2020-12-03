@@ -112,7 +112,7 @@ public:
 		dataField->data_segment.kind       = wabt::SegmentKind::Active;
 		dataField->data_segment.memory_var = wabt::Var(module->memories.size());
 		dataField->data_segment.offset.push_back(wabt::MakeUnique<wabt::ConstExpr>(wabt::Const::I32(0)));
-		dataField->data_segment.data = stringPool.data;
+		dataField->data_segment.data = stringPool.data();
 
 		auto     memory_field                    = wabt::MakeUnique<wabt::MemoryModuleField>(loc, "memory");
 		uint32_t byte_size                       = WABT_ALIGN_UP_TO_PAGE(dataField->data_segment.data.size());
@@ -133,13 +133,12 @@ public:
 		switch (stmt->kind()) {
 		case StatementKind::Expression:
 			return visitExpressionStatement(cast<ExpressionStatement>(stmt), isLastStmt);
-			break;
+		case StatementKind::SemiExpression:
+			return visitSemiExpressionStatement(cast<SemiExpressionStatement>(stmt));
 		case StatementKind::Function:
 			return visitFunction(cast<FunctionStatement>(stmt));
-			break;
 		case StatementKind::Local:
 			return visitLocalStatement(cast<LocalStatement>(stmt));
-			break;
 		default:
 			UNREACHABLE("visitStatement");
 		}
@@ -258,6 +257,18 @@ public:
 		}
 		// Drop unused oprands in stack
 		if (!isLastStmt && exprType != Type::Unit()) {
+			auto expr = std::make_unique<wabt::DropExpr>();
+			exprs.push_back(std::move(expr));
+			exprType = Type::Unit();
+		}
+		return Result::Ok;
+	}
+
+	Result visitSemiExpressionStatement(SemiExpressionStatement* semiStmt) {
+		if (Failed(visitExpression(semiStmt->expr.get()))) {
+			return Result::Error;
+		}
+		if (exprType != Type::Unit()) {
 			auto expr = std::make_unique<wabt::DropExpr>();
 			exprs.push_back(std::move(expr));
 			exprType = Type::Unit();
@@ -391,7 +402,7 @@ public:
 			exprType = Type::F64();
 			break;
 		case LiteralExpression::String: {
-			auto offset = stringPool.add(lit->strval, stringPool.offset);
+			auto offset = stringPool.add(lit->strval);
 			expr        = std::make_unique<wabt::ConstExpr>(wabt::Const::I32(offset, loc), loc);
 			exprType    = Type::String();
 			break;
@@ -456,17 +467,17 @@ public:
 		wabt::Location              loc;
 		std::unique_ptr<wabt::Expr> expr;
 
-		if (Failed(visitExpression(bin->right.get()))) {
-			return Result::Error;
-		}
-		auto rightType = std::move(exprType);
-		assert(rightType);
-
 		if (Failed(visitExpression(bin->left.get()))) {
 			return Result::Error;
 		}
 		auto leftType = std::move(exprType);
 		assert(leftType);
+
+		if (Failed(visitExpression(bin->right.get()))) {
+			return Result::Error;
+		}
+		auto rightType = std::move(exprType);
+		assert(rightType);
 
 		BinaryOprandType typ{};
 
@@ -531,7 +542,7 @@ public:
 	Type*                         exprType = Type::Unit();
 	wabt::ExprList                exprs;
 	SymTab                        symTab;
-	StringPool<int>               stringPool;
+	StringPool                    stringPool;
 	Errors&                       errors;
 };
 

@@ -9,39 +9,48 @@
 namespace dp {
 namespace internal {
 
-template <class T>
 class StringPool {
 public:
-	std::unordered_map<std::string, T> table;
-	std::vector<uint8_t>               data;
-	int                                offset;
-
 	StringPool()
-			: offset(0) {
+			: offset_(0) {
 	}
 
 	StringPool(int offset)
-			: offset(offset) {
+			: offset_(offset) {
 	}
 
-	T add(const std::string& k, T v) {
-		if (table.find(k) != table.end()) {
-			return table.at(k);
+	int add(const std::string& k) {
+		auto off = find(k);
+		if (off < 0) {
+			off = offset_;
+			table_.insert(std::make_pair(k, offset_));
+			std::copy(k.begin(), k.end(), std::back_inserter(data_));
+			data_.push_back('\0');
+			offset_ += data_.size();
 		}
-		table.insert(std::make_pair(k, v));
-		std::copy(k.begin(), k.end(), std::back_inserter(data));
-		data.push_back('\0');
-		offset = data.size() + 1;
-		return v;
+		return off;
 	}
 
-	void remove(T v) {
-		table.erase(table.find(v));
+	void remove(const std::string& k) {
+		table_.erase(table_.find(k));
 	}
 
-	T find(std::string k) {
-		return table.find(k);
+	int find(std::string k) {
+		auto it = table_.find(k);
+		if (it != table_.end()) {
+			return it->second;
+		}
+		return -1;
 	}
+
+	std::vector<uint8_t> data() {
+		return data_;
+	}
+
+private:
+	std::unordered_map<std::string, int> table_;
+	std::vector<uint8_t>                 data_;
+	int                                  offset_;
 };
 
 } // namespace internal
