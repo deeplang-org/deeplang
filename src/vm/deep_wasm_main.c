@@ -86,7 +86,6 @@ deep_wasm_eval (uint8 * wasm_buf, uint32 wasm_size)
     uint32 stack_size = DEEPVM_HEAP_SIZE, heap_size = DEEPVM_STACK_SIZE;
     wasm_module_t wasm_module = NULL;
     wasm_module_inst_t wasm_module_inst = NULL;
-    dump ("wasm_buf", wasm_buf, wasm_size);
     /* load WASM module */
     if (!(wasm_module = wasm_runtime_load(wasm_buf, wasm_size,
                                           error_buf, sizeof(error_buf)))) {

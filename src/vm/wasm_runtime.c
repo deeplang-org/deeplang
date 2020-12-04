@@ -850,7 +850,6 @@ wasm_instantiate(WASMModule *module, bool is_sub_inst,
         uint8 *memory_data = NULL;
         uint32 memory_size = 0;
         WASMDataSeg *data_seg = module->data_segments[i];
-		dump ("data_seg",data_seg->data, data_seg->data_length);
         /* has check it in loader */
         memory = module_inst->memories[data_seg->memory_index];
         bh_assert(memory);
@@ -901,7 +900,6 @@ wasm_instantiate(WASMModule *module, bool is_sub_inst,
         bh_memcpy_s(memory_data + base_offset, memory_size - base_offset,
                     data_seg->data, length);
     }
-	dump ("memory_data", module_inst->memories[0]->memory_data, 64);
     /* Initialize the table data with table segment section */
     module_inst->default_table =
       module_inst->table_count ? module_inst->tables[0] : NULL;

@@ -2672,7 +2672,6 @@ wasm_runtime_invoke_native(WASMExecEnv *exec_env, void *func_ptr,
             {
                 arg_i32 = *argv_src++;
                 arg_i64 = arg_i32;
-				debug ("signature:%s",signature);
                 if (signature) {
                     if (signature[i + 1] == '*') {
                         /* param is a pointer */
