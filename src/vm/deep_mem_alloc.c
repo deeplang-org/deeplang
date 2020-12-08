@@ -222,7 +222,7 @@ deep_free_sorted_bins (void *ptr)
   block_set_A_flag (&block->head, false);
 
   /* try to merge */
-  if (prev_block_is_allocated (&block->head))
+  if (!prev_block_is_allocated (&block->head))
     {
       block_size_t prev_size
           = block_get_size ((block_head_t *)(block - sizeof (block_head_t)));
@@ -288,6 +288,10 @@ _merge_into_single_block (struct sorted_block *curr, struct sorted_block *next)
 
   block_set_size (&curr->head, new_size);
   memset (&curr->payload, 0, new_size - sizeof (curr->head));
+  // copy over new head info to footer
+  *(block_head_t *)get_pointer_by_offset_in_bytes (
+      &curr->head, new_size - sizeof (block_head_t))
+      = curr->head;
 
   _insert_sorted_block_to_skiplist (curr);
 
