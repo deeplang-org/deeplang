@@ -1,13 +1,12 @@
-<a href = "https://github.com/thomasyonug/deeplang">
-<img width = "90%" height = "auto" src = "https://raw.githubusercontent.com/thomasyonug/deeplang/develop/assets/banner.jpg" alt = "The Deep Programming Language">
-</a>
+<a href = "https://github.com/deeplang-org/deeplang">
+<img width="40%" src="./assets/banner.jpg" alt="Deeplang" /></a>
 
 
-deeplang语言是一种自制编程语言，由来自浙大和中科大的同学共同完成。
-   
-我们致力于将deeplang语言打造为具有鲜明内存安全特性的面向IoT场景的语言，设计过程中参考Rust的安全机制，但又根据IoT场景的特性选择了更合适的解释执行的模式。这是一种静态类型、强类型语言，按照C-style设计语法，同时支持面向对象、过程式和逻辑式的混合范式。
-   
-deeplang的独特安全特性帮助其具有一定的竞争力。作者正在持续的开发和迭代中。
+Deeplang语言是一种自制编程语言，由来自浙大、中科大、帝国理工等学校的同学共同完成。
+
+我们致力于将Deeplang语言打造为具有鲜明内存安全特性的面向IoT场景的语言，设计过程中参考Rust的安全机制，但又根据IoT场景的特性选择了更合适的解释执行的模式。这是一种静态类型、强类型语言，按照C-style设计语法，同时支持面向对象、过程式和逻辑式的混合范式。
+
+Deeplang的独特安全特性帮助其具有一定的竞争力。作者正在持续的开发和迭代中。
 
 
 ---
@@ -46,7 +45,7 @@ code
 ```
 
 # 程序入口
-在deeplang程序中，顶层代码没有表达式，只有各类定义。
+在Deeplang程序中，顶层代码没有表达式，只有各类定义。
 
 比如类，函数，变量等：
 ``` dp
@@ -69,7 +68,7 @@ if (t) {
     bar();
 };
 ```
-循环控制语句，与流行语言不通，deeplang中的for语句初始化需要用花括号包裹
+循环控制语句，与流行语言不通，Deeplang中的for语句初始化需要用花括号包裹
 
 所定义的变量生命周期在退出for循环后结束
 ``` dp
@@ -103,7 +102,7 @@ fun multiParam(x: i32, y: i32) {};
 
 # 类与接口
 ## 类定义
-在deeplang中，一个class可以单继承，也可以impl多个interface。
+在Deeplang中，一个class可以单继承，也可以impl多个interface。
 
 每个类定义中，都需要定义一个构造函数，即constructor。
 
@@ -146,7 +145,7 @@ foo.bar();
 
 # 表达式
 ## 常量表达式
-目前deeplang中有两种常量表达式
+目前Deeplang中有两种常量表达式
 1. Int
 2. String
 ``` dp
@@ -173,7 +172,7 @@ false == !foo;
 ```
 
 ## 宏调用表达式
-目前deeplang不支持自定义宏，并只提供builtin的数组方法宏，可以用来简化数组操作
+目前Deeplang不支持自定义宏，并只提供builtin的数组方法宏，可以用来简化数组操作
 
 宏调用以 @ 操作符开始，后跟调用的宏名
 ``` dp
