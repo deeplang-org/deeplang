@@ -11,6 +11,7 @@
 
 #include "bh_platform.h"
 #include "bh_read_file.h"
+#include "deep_mem_alloc.h"
 #include "wasm_export.h"
 #include "wasm_runtime_common.h"
 
@@ -19,6 +20,7 @@
 #define DEEPVM_STACK_SIZE 16 * 1024
 #define DEEPVM_GLOBAL_HEAP_SIZE 10 * 1024 * 1024
 #define MODULE_PATH ("--module-path=")
+#define MEM_SIZE  (DEEPVM_GLOBAL_HEAP_SIZE) // 1 MB
 
 static int app_argc;
 static char **app_argv;
@@ -143,6 +145,12 @@ main (int argc, char *argv[])
 
     memset(&init_args, 0, sizeof(RuntimeInitArgs));
 
+    void *mem_pool = malloc (MEM_SIZE);
+    if (!deep_mem_init (mem_pool, MEM_SIZE)) {
+        printf("Init runtime memory pool failed.\n");
+        return -1;
+    }
+
     init_args.mem_alloc_type = Alloc_With_Pool;
     init_args.mem_alloc_option.pool.heap_buf = global_heap_buf;
     init_args.mem_alloc_option.pool.heap_size = sizeof(global_heap_buf);
@@ -190,5 +198,6 @@ fail2:
 fail1:
     /* destroy runtime environment */
     wasm_runtime_destroy();
+    free(mem_pool);
     return 0;
 }

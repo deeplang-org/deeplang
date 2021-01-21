@@ -5,6 +5,7 @@
 
 #include "bh_common.h"
 #include "bh_log.h"
+#include "deep_mem_alloc.h"
 #include "wasm_export.h"
 #include "wasm.h"
 
@@ -1013,12 +1014,12 @@ static NativeSymbol native_symbols_libc_builtin[] = {
     REG_NATIVE_FUNC(strlen, "($)i"),
     REG_NATIVE_FUNC(strncmp, "(**~)i"),
     REG_NATIVE_FUNC(strncpy, "(**~)i"),
-    REG_NATIVE_FUNC(malloc, "(i)i"),
+    REG_NATIVE_FUNC(deep_malloc, "(i)i"),
     REG_NATIVE_FUNC(calloc, "(ii)i"),
     REG_NATIVE_FUNC(strdup, "($)i"),
     /* clang may introduce __strdup */
     REG_NATIVE_FUNC(_strdup, "($)i"),
-    REG_NATIVE_FUNC(free, "(*)"),
+    REG_NATIVE_FUNC(deep_free, "(*)"),
     REG_NATIVE_FUNC(atoi, "($)i"),
     REG_NATIVE_FUNC(exit, "(i)"),
     REG_NATIVE_FUNC(strtol, "($*i)i"),
