@@ -68,7 +68,7 @@ if (t) {
     bar();
 };
 ```
-循环控制语句，与流行语言不通，Deeplang中的for语句初始化需要用花括号包裹
+循环控制语句，与流行语言不同，Deeplang中的for语句初始化需要用花括号包裹
 
 所定义的变量生命周期在退出for循环后结束
 ``` dp
@@ -78,7 +78,7 @@ for ({let i: Int = 0}; i < 10, i++) {
 ```
 
 # 变量定义
-以let定义的变量是常量，letmut定义的变量是可变的。
+以let定义的变量是常量，let mut定义的变量是可变的。
 ``` dp
 let foo: Int = 1;
 let mut bar: Int = 1;
