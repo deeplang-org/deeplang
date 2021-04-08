@@ -36,9 +36,13 @@ typedef struct DeepStack{
 
 //创建操作数栈
 DeepStack stack_cons(){
+
     DeepStack stack;
+    
     stack.capacity=100;
+    
     stack.sp=(int*)malloc(sizeof(int));
+    
     return stack;
 }
 
