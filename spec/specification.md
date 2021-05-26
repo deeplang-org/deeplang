@@ -20,8 +20,8 @@ new  break  return  mut  sig  constructor
 ```
 #### 2.0.1 Symbols
 ```g4
-ASSIGN_OPERATOR:           '==';
-EQUAL_OPERATOR:            '=';
+ASSIGN_OPERATOR:           '=';
+EQUAL_OPERATOR:            '==';
 PLUS_OPERATOR:             '+';
 MINUS_OPERATOR:            '-';
 MULT_OPERATOR:             '*';
