@@ -53,7 +53,7 @@ class Foo {};
 
 fun bar() -> () {};
 
-let a: Int = 1;
+let a: i32 = 1;
 ```
 整个程序的入口有且只有一个，就是以main作为名字的函数。
 
@@ -78,10 +78,10 @@ for ({let i: Int = 0}; i < 10, i++) {
 ```
 
 # 变量定义
-以let定义的变量是常量，letmut定义的变量是可变的。
+以let定义的变量是常量，let mut定义的变量是可变的。
 ``` dp
-let foo: Int = 1;
-let mut bar: Int = 1;
+let foo: i32 = 1;
+let mut bar: i32 = 1;
 
 foo = 2; // illegal
 bar = 2;
@@ -100,50 +100,187 @@ fun foo(bar: Bar) -> Foo {};
 fun multiParam(x: i32, y: i32) {};
 ```
 
-# 类与接口
-## 类定义
-在Deeplang中，一个class可以单继承，也可以impl多个interface。
+# 基础类型
 
-每个类定义中，都需要定义一个构造函数，即constructor。
-
-在类体内部的代码都要求写访问控制权限，目前只提供public，private两种访问控制操作。
+## 基本类型
 
 ``` dp
-class Foo extends Bar impl Foo1, Foo2 {
-    constructor() {};
+    bool
+    tuple                
+    ()                   // empty tuple alias Unit type
+    i8, i16, i32, i64
+    u8, u16, u32, u64
+    f32, f64
+    char                 // 16bit
+    array: [T; N]        // T is a parameter type, N is length
+    list: [T]
+    lambda: ->
+```
 
-    private fun foo1(bar: Bar, foo: Foo) {
-        
-    };
+## 数组
 
-    public let foo2: i32;
-    
+数组作为一种builtin的参数化类型，可以与其他类型结合实例化(proposed)
+比如array和i32，那么类型表达式就是 [i32; 10]
+
+``` dp
+let arr: [i32;10] = [];
+```
+
+
+
+# 高级类型
+
+## 代数数据类型
+
+使用 `type` 构造新的类型，后跟值构造器的数组。
+
+`this` 表示自身的值，`This` 则表示自身的类型。
+
+```
+type Shape [
+	Rectangle(width: i32, height: i32),
+	Circle(radius: i32)
+] {
+    fun area(this: This) -> i32 {
+        return this.width * this.height;
+    }
+};
+
+```
+
+## 结构体
+
+和 C++ 等的 class 不同，是 ADT 中 Product Type 的语法糖。
+
+```
+type Rectangle(width: i32, height: i32) {
+	fun area(this: This) -> i32 {
+        return this.width * this.height;
+    }
+};
+
+//desugar
+type Rectangle [
+	Rectangle(width: i32, height: i32)
+] {
+	fun area(this: This) -> i32 {
+        return this.width * this.height;
+    }
 };
 ```
 
-## 接口定义
-interface的定义与class类似，也可以单继承interface。
+## Trait
 
-interface体内只有声明，不能有具体的定义。
+参考了 rust 中的 `trait` 和 haskell 中的 `typeclass`，类似于 typescript 里的 `interface`，但只能定义方法。
 
-``` dp
-interface Foo {};
+用 `type` 关键字进行定义。
 
-interface Bar extends Foo {
-    public let a: i32;
-    private fun b(Bar) -> ();
+```
+type Show {
+    show: This -> string
 };
 ```
 
-## 实例化class
-可以使用new操作符来实例化一个class, 并且可以使用point操作符来访问实例中的方法和属性。
-``` dp
-let foo: Foo = new Foo();
+类型定义中，使用 `impl` 关键字来派生 `trait` 。
 
-foo.bar();
 ```
+type Person (age: i32, name: string) impl Show {
+    fun show(this: This) -> string {
+        return "Hello Deeplang";
+    }
+};
+
+```
+
+## 实例化
+
+可以使用值构造子来实例化一个 type , 并且可以使用 point 操作符来访问实例中的方法和属性。
+
+拥有默认的构造函数。
+
+``` dp
+let foo: Rectangle = Rectangle(10, 10);
+
+foo.area(); // 100
+```
+
+## 静态结构化类型
+
+参考了 Typescript 的设计。
+
+Deeplang 的类型系统是静态的结构化类型，判断类型兼容性的时候基于成员变量的兼容性。
+
+```
+type Animal(weight: i32);
+type Human(weight: i32, age: i32);
+
+fun printWeight(animal: Animal) -> i32 {
+	return animal.weight;
+}
+fun printAge(human: Human) -> i32 {
+	return human.age;
+}
+
+let a: Animal = Animal(30);
+let b: Human = Human(60, 20);
+printWeight(b); // Passed.
+printAge(a);    // Error.
+
+let c: Animal = Human(60, 20);
+```
+
+## 鸭子类型
+
+结构化类型天然支持鸭子类型。
+
+```
+type Quack {
+    quack: () -> ();
+}
+
+type Duck() impl Quack {
+    fun quack() -> () {
+        print("quaaaack");
+    }
+}
+
+type Bird() impl Quack {
+    fun quack() -> () {
+        print("bird quaaaack");
+    }
+}
+
+fun sound(animal: Quack) -> () {
+    animal.quack();
+}
+
+let duck: Duck = Duck();
+let bird: Bird = Bird();
+
+// type checking pass
+sound(duck); // quaaaak
+sound(bird); // bird quaaaak
+```
+
+## 委托
+
+将一个类型的数据域委托到当前层级。
+
+```
+type Animal (weight: i32);
+type Person (
+    age: i32,
+    name: string,
+    as animal: Animal // delegate
+);
+let p: Person = Person(60, 30, 30);
+p.weight;
+```
+
+
 
 # 表达式
+
 ## 常量表达式
 目前Deeplang中有两种常量表达式
 1. Int
@@ -176,31 +313,9 @@ false == !foo;
 
 宏调用以 @ 操作符开始，后跟调用的宏名
 ``` dp
-let arr: [Int] = [];
+let arr: [i32; 100] = [];
 arr@match([s] == 1, [s + 10] == 1);
 ```
-
-# 基础类型
-## 基本类型
-``` dp
-object
-    bool
-    tuple                // empty tuple alias Unit type
-    i8, i16, i32, i64
-    u8, u16, u32, u64
-    f32, f64
-    char                 // 16bit
-    array: [T; N]        // T is a parameter type, N is length
-    list: [T]
-    lambda: ->
-```
-## 数组
-数组作为一种builtin的参数化类型，可以与其他类型结合实例化(proposed)
-比如array和i32，那么类型表达式就是 [i32; 10]
-``` dp
-let arr: [i32;10] = [];
-```
-
 
 
 
