@@ -1,34 +1,25 @@
 <a href = "https://github.com/deeplang-org/deeplang">
 <img width="40%" src="./assets/banner.jpg" alt="Deeplang" /></a>
 
-
-Deeplang语言是一种自制编程语言，由来自浙大、中科大、帝国理工等学校的同学共同完成。
-
-我们致力于将Deeplang语言打造为具有鲜明内存安全特性的面向IoT场景的语言，设计过程中参考Rust的安全机制，但又根据IoT场景的特性选择了更合适的解释执行的模式。这是一种静态类型、强类型语言，按照C-style设计语法，同时支持面向对象、过程式和逻辑式的混合范式。
+Deeplang语言是一个学生科研性质的编程语言，由来自浙大、中科大、帝国理工等学校的同学共同完成。这是一种静态类型、强类型语言，按照C-style设计语法，同时支持面向对象、过程式和逻辑式的混合范式。我们致力于将Deeplang语言打造为一个具有鲜明内存安全特性的面向IoT场景的语言。安全特性参考Rust、Cyclone、Verona等语言的安全机制。为了在资源受限的IoT场景下运行该语言，我们选择了更合适的解释执行的模式。
 
 Deeplang的独特安全特性帮助其具有一定的竞争力。作者正在持续的开发和迭代中。
 
+协同项目:
 
----
-# How to build
+- [Deeplang Type System](https://github.com/deeplang-org/deeplang-type-system) : Deeplang Frontend based on [OCaml](https://ocaml.org/)
+- [DeepVM](https://github.com/deeplang-org/deepvm) : Deeplang Backend based on [wasm](https://webassembly.org/)
 
-``` bash
-$ git submodule update --init --recursive
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make -j4
-```
 ---
 # 目录
 1. [注释](#注释)
 1. [程序入口](#程序入口)
 1. [控制语句](#控制语句)
-1. [函数定义](#函数定义)
 1. [变量定义](#变量定义)
-1. [类与接口](#类与接口)
-1. [表达式](#表达式)
+1. [函数](#函数)
 1. [基础类型](#基础类型)
+1. [高级类型](#高级类型)
+1. [表达式](#表达式)
 
 
 # 注释
