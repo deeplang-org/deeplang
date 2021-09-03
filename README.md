@@ -140,13 +140,37 @@ let arr: [i32;10] = [];
 type Shape [
 	Rectangle(width: i32, height: i32),
 	Circle(radius: i32)
-] {
-    fun area(this: This) -> i32 {
-        return this.width * this.height;
-    }
-};
+];
 
 ```
+
+## match 控制流
+
+代数数据类型可以绑定方法。
+
+可以用 `match` 语句访问数据域。
+
+```
+type Shape [
+	Rectangle(width: i32, height: i32),
+	Circle(radius: i32)
+] {
+	fun area(this: This) -> i32 {
+		let ret: i32;
+		match(this) {
+			Rectangle(width, height) {
+				ret = width * height;
+			}
+			Circle(radius) {
+				ret = PI * radius * radius;
+			}
+		}
+		return ret;
+	}
+};
+```
+
+
 
 ## 结构体
 
@@ -169,7 +193,7 @@ type Rectangle [
 };
 ```
 
-## Trait
+## Interface
 
 参考了 rust 中的 `trait` 和 haskell 中的 `typeclass`，类似于 typescript 里的 `interface`，但只能定义方法。
 
@@ -204,34 +228,9 @@ let foo: Rectangle = Rectangle(10, 10);
 foo.area(); // 100
 ```
 
-## 静态结构化类型
-
-参考了 Typescript 的设计。
-
-Deeplang 的类型系统是静态的结构化类型，判断类型兼容性的时候基于成员变量的兼容性。
-
-```
-type Animal(weight: i32);
-type Human(weight: i32, age: i32);
-
-fun printWeight(animal: Animal) -> i32 {
-	return animal.weight;
-}
-fun printAge(human: Human) -> i32 {
-	return human.age;
-}
-
-let a: Animal = Animal(30);
-let b: Human = Human(60, 20);
-printWeight(b); // Passed.
-printAge(a);    // Error.
-
-let c: Animal = Human(60, 20);
-```
-
 ## 鸭子类型
 
-结构化类型天然支持鸭子类型。
+通过 `interface` 来实现鸭子类型。
 
 ```
 type Quack {
