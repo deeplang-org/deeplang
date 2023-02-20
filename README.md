@@ -1,5 +1,5 @@
 <a href = "https://github.com/deeplang-org/deeplang">
-<img width = "60%" height = "auto" src = "./assets/banner.jpg" alt = "Deeplang: a new programming language for IoT">
+<img width = "40%" height = "auto" src = "./assets/banner.jpg" alt = "Deeplang: a new programming language for IoT">
 </a>
 
 # Deeplang 简介
